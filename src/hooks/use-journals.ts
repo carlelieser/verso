@@ -1,99 +1,74 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import { GUEST_USER_ID } from '@/constants/user';
 import { useDatabaseContext } from '@/providers/database-provider';
-import { createJournalService } from '@/services/journal-service';
+import {
+  createJournal as createJournalService,
+  deleteJournal as deleteJournalService,
+  getJournalEntryCounts,
+  listJournals,
+  updateJournal as updateJournalService,
+} from '@/services/journal-service';
 import type { Journal } from '@/types/journal';
-
-const GUEST_USER_ID = 'guest';
 
 interface UseJournalsResult {
   readonly journals: readonly Journal[];
+  readonly entryCounts: ReadonlyMap<string, number>;
   readonly isLoading: boolean;
-  readonly error: Error | null;
-  readonly createJournal: (name: string) => Promise<Journal>;
-  readonly renameJournal: (id: string, name: string) => Promise<void>;
-  readonly reorderJournals: (orderedIds: readonly string[]) => Promise<void>;
-  readonly deleteJournal: (id: string) => Promise<void>;
   readonly refresh: () => Promise<void>;
+  readonly createJournal: (name: string, icon: string) => Promise<Journal>;
+  readonly updateJournal: (id: string, updates: { name?: string; icon?: string }) => Promise<void>;
+  readonly deleteJournal: (id: string) => Promise<void>;
 }
 
 export function useJournals(): UseJournalsResult {
   const { db } = useDatabaseContext();
-  const service = useMemo(() => createJournalService(db), [db]);
-
   const [journals, setJournals] = useState<readonly Journal[]>([]);
+  const [entryCounts, setEntryCounts] = useState<ReadonlyMap<string, number>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
 
-  const loadJournals = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const result = await service.getAll(GUEST_USER_ID);
-      setJournals(result);
-      setError(null);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [service]);
+  const refresh = useCallback(async () => {
+    const [journalList, counts] = await Promise.all([
+      listJournals(db, GUEST_USER_ID),
+      getJournalEntryCounts(db, GUEST_USER_ID),
+    ]);
+    setJournals(journalList);
+    setEntryCounts(counts);
+    setIsLoading(false);
+  }, [db]);
 
   useEffect(() => {
-    loadJournals();
-  }, [loadJournals]);
+    refresh();
+  }, [refresh]);
 
   const createJournal = useCallback(
-    async (name: string): Promise<Journal> => {
-      const journal = await service.create({ name, userId: GUEST_USER_ID });
-      setJournals((prev) => [...prev, journal]);
+    async (name: string, icon: string): Promise<Journal> => {
+      const journal = await createJournalService(db, {
+        userId: GUEST_USER_ID,
+        name,
+        icon,
+      });
+      await refresh();
       return journal;
     },
-    [service],
+    [db, refresh],
   );
 
-  const renameJournal = useCallback(
-    async (id: string, name: string): Promise<void> => {
-      await service.rename(id, name);
-      setJournals((prev) =>
-        prev.map((j) => (j.id === id ? { ...j, name, updatedAt: Date.now() } : j)),
-      );
+  const updateJournal = useCallback(
+    async (id: string, updates: { name?: string; icon?: string }): Promise<void> => {
+      await updateJournalService(db, { id, ...updates });
+      await refresh();
     },
-    [service],
-  );
-
-  const reorderJournals = useCallback(
-    async (orderedIds: readonly string[]): Promise<void> => {
-      setJournals((prev) => {
-        const map = new Map(prev.map((j) => [j.id, j]));
-        return orderedIds
-          .map((id, index) => {
-            const journal = map.get(id);
-            return journal ? { ...journal, displayOrder: index } : undefined;
-          })
-          .filter((j): j is Journal => j !== undefined);
-      });
-
-      await service.reorder(orderedIds);
-    },
-    [service],
+    [db, refresh],
   );
 
   const deleteJournal = useCallback(
     async (id: string): Promise<void> => {
-      await service.delete(id);
-      setJournals((prev) => prev.filter((j) => j.id !== id));
+      await deleteJournalService(db, id);
+      await refresh();
     },
-    [service],
+    [db, refresh],
   );
 
-  return {
-    journals,
-    isLoading,
-    error,
-    createJournal,
-    renameJournal,
-    reorderJournals,
-    deleteJournal,
-    refresh: loadJournals,
-  };
+  return { journals, entryCounts, isLoading, refresh, createJournal, updateJournal, deleteJournal };
 }
