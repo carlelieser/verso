@@ -38,6 +38,7 @@ export async function createDatabase(): Promise<ReturnType<typeof drizzle>> {
   sqliteDb.execSync('PRAGMA synchronous = NORMAL');
   sqliteDb.execSync('PRAGMA cache_size = -8192');
   sqliteDb.execSync('PRAGMA foreign_keys = ON');
+  sqliteDb.execSync('PRAGMA recursive_triggers = ON');
 
   const db = drizzle(sqliteDb, { schema: { ...schema, ...relations } });
 

@@ -4,6 +4,7 @@ export interface Journal {
   readonly id: string;
   readonly userId: string;
   readonly name: string;
+  readonly icon: string;
   readonly displayOrder: number;
   readonly createdAt: Timestamp;
   readonly updatedAt: Timestamp;
