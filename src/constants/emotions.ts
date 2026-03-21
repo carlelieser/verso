@@ -13,17 +13,21 @@ export const EMOTION_CATEGORIES: readonly EmotionCategory[] = [
   'tired',
 ] as const;
 
-export const EMOTION_EMOJI_MAP: Record<EmotionCategory, string> = {
-  happy: '😊',
-  sad: '😢',
-  anxious: '😰',
-  calm: '😌',
-  frustrated: '😤',
-  excited: '🤩',
-  grateful: '🙏',
-  angry: '😠',
-  hopeful: '🌟',
-  tired: '😴',
+/**
+ * Maps each emotion category to a lucide-react-native icon name.
+ * Consumers should import the corresponding icon from 'lucide-react-native'.
+ */
+export const EMOTION_ICON_MAP: Record<EmotionCategory, string> = {
+  happy: 'Smile',
+  sad: 'Frown',
+  anxious: 'AlertCircle',
+  calm: 'Wind',
+  frustrated: 'AlertTriangle',
+  excited: 'Zap',
+  grateful: 'Heart',
+  angry: 'Flame',
+  hopeful: 'Sun',
+  tired: 'Moon',
 };
 
 export const EMOTION_COLOR_MAP: Record<EmotionCategory, string> = {

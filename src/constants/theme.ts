@@ -45,8 +45,11 @@ export const COLORS = DARK_COLORS;
 
 export const TYPOGRAPHY = {
   fontFamily: {
-    heading: 'Cormorant',
-    body: 'System',
+    heading: 'DMSerifDisplay_400Regular',
+    body: 'GoogleSansFlex_400Regular',
+    bodyMedium: 'GoogleSansFlex_500Medium',
+    bodySemibold: 'GoogleSansFlex_600SemiBold',
+    bodyBold: 'GoogleSansFlex_700Bold',
   },
   fontSize: {
     xs: 12,

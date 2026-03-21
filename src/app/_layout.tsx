@@ -1,110 +1,60 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
-import { Stack } from 'expo-router';
+import '../global.css';
+
+import {useFonts as useDMSerif} from '@expo-google-fonts/dm-serif-display';
+import {useFonts as useGoogleSans} from '@expo-google-fonts/google-sans-flex';
+import {useFonts as useLibreBaskerville} from '@expo-google-fonts/libre-baskerville';
+import {Stack} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {StatusBar} from 'expo-status-bar';
+import React, {useEffect} from 'react';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
-import { ErrorBoundary } from '@/components/common/error-boundary';
-import { COLORS } from '@/constants/theme';
-import { AuthProvider, useAuthContext } from '@/providers/auth-provider';
-import { DatabaseProvider } from '@/providers/database-provider';
-import { SyncProvider } from '@/providers/sync-provider';
-import { ThemeProvider } from '@/providers/theme-provider';
+import {HeroUINativeProvider} from 'heroui-native';
 
-export { ErrorBoundary };
-
-export const unstable_settings = {
-  initialRouteName: '(tabs)',
-};
+import {DatabaseProvider} from '@/providers/database-provider';
 
 SplashScreen.preventAutoHideAsync();
 
-const supabaseUrl =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL as string | undefined) ??
-  process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY as string | undefined) ??
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-const supabase: SupabaseClient | null =
-  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
-
-function AppStack(): React.JSX.Element {
-  return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: COLORS.background },
-        headerTintColor: COLORS.text.primary,
-        headerTitleStyle: { fontWeight: '600' },
-        contentStyle: { backgroundColor: COLORS.background },
-      }}
-    >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="journal/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="entry/[id]" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="entry/emotions"
-        options={{ presentation: 'modal', headerShown: false }}
-      />
-      <Stack.Screen name="settings/reminders" options={{ headerShown: false }} />
-      <Stack.Screen name="settings/export" options={{ headerShown: false }} />
-      <Stack.Screen name="settings/appearance" options={{ headerShown: false }} />
-      <Stack.Screen name="auth" options={{ headerShown: false }} />
-      <Stack.Screen name="search" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
-    </Stack>
-  );
-}
-
-/**
- * Wraps children with SyncProvider when auth is available.
- * Reads auth state from AuthProvider context.
- */
-function SyncWrapper({ children }: { readonly children: React.ReactNode }): React.JSX.Element {
-  const { authState } = useAuthContext();
-  return <SyncProvider authState={authState}>{children}</SyncProvider>;
-}
-
-/**
- * Conditionally wraps the app tree with auth and sync providers.
- * When Supabase credentials are not configured, the app runs in guest-only
- * mode without auth or sync capabilities.
- */
-function AppShell({ children }: { readonly children: React.ReactNode }): React.JSX.Element {
-  if (!supabase) {
-    return <>{children}</>;
-  }
-
-  return (
-    <AuthProvider supabase={supabase}>
-      <SyncWrapper>{children}</SyncWrapper>
-    </AuthProvider>
-  );
-}
-
 export default function RootLayout(): React.JSX.Element {
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+	const [dmSerifLoaded] = useDMSerif({
+		DMSerifDisplay_400Regular: require('@expo-google-fonts/dm-serif-display/400Regular/DMSerifDisplay_400Regular.ttf'),
+	});
 
-  return (
-    <ThemeProvider>
-      <GestureHandlerRootView style={styles.root}>
-        <DatabaseProvider>
-          <AppShell>
-            <AppStack />
-          </AppShell>
-        </DatabaseProvider>
-      </GestureHandlerRootView>
-    </ThemeProvider>
-  );
+	const [googleSansLoaded] = useGoogleSans({
+		GoogleSansFlex_400Regular: require('@expo-google-fonts/google-sans-flex/400Regular/GoogleSansFlex_400Regular.ttf'),
+		GoogleSansFlex_500Medium: require('@expo-google-fonts/google-sans-flex/500Medium/GoogleSansFlex_500Medium.ttf'),
+		GoogleSansFlex_600SemiBold: require('@expo-google-fonts/google-sans-flex/600SemiBold/GoogleSansFlex_600SemiBold.ttf'),
+		GoogleSansFlex_700Bold: require('@expo-google-fonts/google-sans-flex/700Bold/GoogleSansFlex_700Bold.ttf'),
+	});
+
+	const [libreBaskervilleLoaded] = useLibreBaskerville({
+		LibreBaskerville_400Regular: require('@expo-google-fonts/libre-baskerville/400Regular/LibreBaskerville_400Regular.ttf'),
+		LibreBaskerville_400Regular_Italic: require('@expo-google-fonts/libre-baskerville/400Regular_Italic/LibreBaskerville_400Regular_Italic.ttf'),
+		LibreBaskerville_700Bold: require('@expo-google-fonts/libre-baskerville/700Bold/LibreBaskerville_700Bold.ttf'),
+	});
+
+	const fontsLoaded = dmSerifLoaded && googleSansLoaded && libreBaskervilleLoaded;
+
+	useEffect(() => {
+		if (fontsLoaded) {
+			SplashScreen.hideAsync();
+		}
+	}, [fontsLoaded]);
+
+	if (!fontsLoaded) {
+		return <></>;
+	}
+
+	return (
+		<GestureHandlerRootView className="flex-1 bg-background">
+			<HeroUINativeProvider>
+				<DatabaseProvider>
+					<Stack screenOptions={{
+						headerShown: false
+					}}/>
+				</DatabaseProvider>
+				<StatusBar style="auto"/>
+			</HeroUINativeProvider>
+		</GestureHandlerRootView>
+	);
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-});

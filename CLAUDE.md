@@ -1,8 +1,8 @@
 # Code Standards
 
-Synthesized from our TypeScript guide and general coding principles. Every statement is classified as **MUST** (
-non-negotiable), **SHOULD** (strong default, break with documented reason), or **NEVER** (no exceptions in normal
-development).
+Synthesized from our TypeScript guide, React guide, and general coding principles. Every statement is classified as
+**MUST** (non-negotiable), **SHOULD** (strong default, break with documented reason), or **NEVER** (no exceptions in
+normal development).
 
 Refer to documentation @docs/coding.
 
@@ -169,6 +169,78 @@ Refer to documentation @docs/coding.
 - **SHOULD** enforce import ordering via `eslint-plugin-import` or `prettier-plugin-organize-imports`.
 - **SHOULD** ban default exports via ESLint.
 - **SHOULD** configure path aliases (`@/*`) in `tsconfig.json`.
+
+## React Components
+
+- **MUST** use function components exclusively — class components are legacy.
+- **MUST** give each component a single responsibility — if it handles data fetching, validation, layout, and business logic, split it.
+- **MUST** call hooks at the top level only — never inside loops, conditions, or nested functions.
+- **MUST** call hooks only from React functions (components or custom hooks), never from plain functions.
+- **MUST** be honest about `useEffect` dependencies — never suppress the `exhaustive-deps` lint rule.
+- **MUST** clean up effects (abort controllers, unsubscribe, clear timers).
+- **MUST** use stable, unique keys for list items from data IDs.
+- **MUST** type props with `interface` — do not use `React.FC`.
+- **MUST** use discriminated unions for variant props instead of optional props.
+- **SHOULD** keep components under 150–200 lines — look for extraction opportunities beyond that.
+- **SHOULD** separate presentational components (what it looks like) from container components (how it works).
+- **SHOULD** extract complex JSX logic into variables or helper functions — the return statement should read like a UI description.
+- **SHOULD** use fragments (`<>`) to avoid unnecessary wrapper DOM nodes.
+- **SHOULD** destructure props explicitly and collect the rest deliberately — avoid indiscriminate `{...props}` spreading.
+- **SHOULD** derive state instead of syncing it — if a value can be computed from existing state, compute it during render.
+- **SHOULD** use the functional updater form for `useState` when new state depends on previous state.
+- **SHOULD** use `useReducer` when state transitions involve multiple related values or conditional logic.
+- **SHOULD** use `useEffect` only for syncing with external systems — not for derivations or transformations.
+- **SHOULD** extract repeated `useState` + `useEffect` patterns into custom hooks (prefixed with `use`).
+- **SHOULD** prefer custom hooks over render props for logic reuse; use render props only when controlling render placement.
+- **SHOULD** keep state local until it needs to be shared — don't make something global "just in case."
+- **SHOULD** use Context for low-frequency global state (theme, locale, auth) — not for high-frequency updates.
+- **SHOULD** measure before optimizing — use React DevTools Profiler to identify actual bottlenecks before adding `React.memo`, `useMemo`, or `useCallback`.
+- **SHOULD** place error boundaries around risky UI sections, not a single boundary around the entire app.
+- **SHOULD** use `handle` prefix for handler definitions and `on` prefix for props that accept handlers.
+- **SHOULD** use early returns for guard clauses after all hook calls.
+- **SHOULD** use object lookups instead of ternary chains for multiple rendering variants.
+- **SHOULD** test user behavior (accessible roles, labels) not implementation details (internal state, re-render counts).
+- **SHOULD** use query priority: `getByRole` → `getByLabelText` → `getByPlaceholderText` → `getByText` → `getByTestId`.
+- **NEVER** use array index as key for dynamic lists — causes state bugs on reorder.
+- **NEVER** nest ternary operators in JSX.
+- **NEVER** store derived state in `useState` — compute it during render instead.
+- **NEVER** create objects or functions inline in JSX when passing to memoized children — define them outside or use `useMemo`/`useCallback`.
+- **NEVER** use `forEach` with async callbacks in React effects or handlers — it doesn't await them.
+
+---
+
+## React State Management
+
+- **MUST** follow this decision framework: single component → `useState`; parent + children → lift state up; complex transitions → `useReducer`; distant tree access → Context or state library; server data → React Query/SWR.
+- **SHOULD** treat server state differently from client UI state — use caching libraries (React Query) for server data.
+- **SHOULD** memoize Context values with `useMemo` to prevent unnecessary re-renders.
+- **SHOULD** throw from context hooks when used outside their provider.
+- **NEVER** reach for a state management library before trying local state and lifting.
+
+---
+
+## React Performance
+
+- **MUST** measure before optimizing — profile first, then act.
+- **SHOULD** use `React.memo` only when a component re-renders frequently with unchanged props and rendering is expensive.
+- **SHOULD** stabilize object/function references with `useMemo`/`useCallback` when passing to `React.memo` children.
+- **SHOULD** use virtualization (`@tanstack/react-virtual` or `FlashList`) for lists with hundreds+ items.
+- **SHOULD** use lazy loading (`React.lazy` + `Suspense`) for route-level code splitting.
+- **SHOULD** let the React Compiler handle memoization on React 19+ — only intervene when profiling reveals an issue.
+- **NEVER** add `useMemo`/`useCallback` everywhere "just in case" — unnecessary memoization adds complexity.
+
+---
+
+## React Project Structure
+
+- **MUST** organize code by feature, not by file type.
+- **MUST** use one component per file — small helpers used exclusively by one parent may colocate.
+- **MUST** use `kebab-case` for file names, `PascalCase` for component names.
+- **MUST** use `camelCase` with `use` prefix for custom hooks.
+- **SHOULD** use barrel files (`index.ts`) only for public API boundaries of feature folders.
+- **SHOULD** colocate tests next to their source files.
+
+---
 
 ## Active Technologies
 - TypeScript 5.x, React Native 0.84+, Expo SDK 54+ + heroui-native, react-native-enriched, whisper.rn, drizzle-orm, expo-sqlite (SQLCipher), @supabase/supabase-js, @powersync/react-native, react-native-calendars, react-native-gifted-charts, expo-notifications, expo-prin (001-daily-journal-app)

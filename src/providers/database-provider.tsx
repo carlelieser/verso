@@ -1,16 +1,15 @@
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
-// Use `any` for schema generic to avoid type mismatch with createDatabase return
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = ExpoSQLiteDatabase<any>;
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { COLORS } from '@/constants/theme';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
+
 import { createDatabase } from '@/db/client';
 import { setupFts } from '@/db/fts';
 import { useRunMigrations } from '@/db/migrations';
-import type { AuthState } from '@/types/common';
+import { ensureGuestUser } from '@/db/seed';
 
 interface DatabaseContextValue {
   readonly db: Db;
@@ -27,11 +26,10 @@ export function useDatabaseContext(): DatabaseContextValue {
 }
 
 interface DatabaseProviderProps {
-  readonly authState?: AuthState;
   readonly children: React.ReactNode;
 }
 
-export function DatabaseProvider({ authState, children }: DatabaseProviderProps): React.JSX.Element {
+export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX.Element {
   const [db, setDb] = useState<Db | null>(null);
   const [initError, setInitError] = useState<Error | null>(null);
 
@@ -45,29 +43,20 @@ export function DatabaseProvider({ authState, children }: DatabaseProviderProps)
       });
   }, []);
 
-  // TODO: When PowerSync is integrated, switch to sync-enabled database
-  // for authenticated users instead of the local-only database.
-  useEffect(() => {
-    if (authState?.status === 'authenticated') {
-      // eslint-disable-next-line no-console
-      console.log('[DatabaseProvider] Authenticated user detected — sync mode would activate here');
-    }
-  }, [authState?.status]);
-
   if (initError) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Failed to initialize database</Text>
-        <Text style={styles.errorDetail}>{initError.message}</Text>
+      <View className="flex-1 items-center justify-center bg-background">
+        <Text className="text-lg font-semibold text-danger">Failed to initialize database</Text>
+        <Text className="mt-2 px-8 text-center text-sm text-muted">{initError.message}</Text>
       </View>
     );
   }
 
   if (!db) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.accent} />
-        <Text style={styles.loadingText}>Initializing...</Text>
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" />
+        <Text className="mt-3 text-base text-muted">Initializing...</Text>
       </View>
     );
   }
@@ -83,56 +72,44 @@ function DatabaseProviderInner({
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   const { success, error } = useRunMigrations(db);
+  const [isSeeded, setIsSeeded] = useState(false);
+  const [seedError, setSeedError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (success) {
       setupFts(db);
+      ensureGuestUser(db)
+        .then(() => {
+          setIsSeeded(true);
+        })
+        .catch((err: unknown) => {
+          setSeedError(err instanceof Error ? err : new Error(String(err)));
+        });
     }
   }, [success, db]);
 
-  if (error) {
+  if (error ?? seedError) {
+    const displayError = error ?? seedError;
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Migration failed</Text>
-        <Text style={styles.errorDetail}>{error.message}</Text>
+      <View className="flex-1 items-center justify-center bg-background">
+        <Text className="text-lg font-semibold text-danger">
+          {error ? 'Migration failed' : 'Database setup failed'}
+        </Text>
+        <Text className="mt-2 px-8 text-center text-sm text-muted">{displayError?.message}</Text>
       </View>
     );
   }
 
-  if (!success) {
+  if (!success || !isSeeded) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.accent} />
-        <Text style={styles.loadingText}>Running migrations...</Text>
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" />
+        <Text className="mt-3 text-base text-muted">
+          {success ? 'Setting up...' : 'Running migrations...'}
+        </Text>
       </View>
     );
   }
 
   return <DatabaseContext.Provider value={{ db }}>{children}</DatabaseContext.Provider>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: COLORS.text.secondary,
-    fontSize: 16,
-  },
-  errorText: {
-    color: COLORS.status.error,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  errorDetail: {
-    marginTop: 8,
-    color: COLORS.text.secondary,
-    fontSize: 14,
-    textAlign: 'center',
-    paddingHorizontal: 32,
-  },
-});

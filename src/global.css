@@ -1,14 +1,129 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'uniwind';
 
-:root {
-  --color-background: #1A1A1C;
-  --color-accent: #C9A962;
-  --color-card: #242426;
-  --color-text-primary: #F5F5F0;
-  --color-text-secondary: #6E6E70;
-  --color-text-tertiary: #4A4A4C;
-  --color-border: #2A2A2C;
-  --color-surface: #1E1E20;
+@import 'heroui-native/styles';
+
+@source '../node_modules/heroui-native/lib';
+
+@theme {
+  --font-normal: 'GoogleSansFlex_400Regular';
+  --font-medium: 'GoogleSansFlex_500Medium';
+  --font-semibold: 'GoogleSansFlex_600SemiBold';
+  --font-heading: 'DMSerifDisplay_400Regular';
+  --font-editor: 'LibreBaskerville_400Regular';
+  --font-editor-bold: 'LibreBaskerville_700Bold';
+}
+
+@layer theme {
+  :root {
+    @variant dark {
+      /* Verso dark palette overrides */
+      --background: oklch(0.1451 0.0015 286.07); /* #1A1A1C */
+      --foreground: oklch(0.9654 0.0018 106.42); /* #F5F5F0 */
+
+      --surface: oklch(0.215 0.006 285.899); /* #242426 */
+      --surface-foreground: var(--foreground);
+
+      --surface-secondary: oklch(0.1647 0.0015 286.07); /* #1E1E20 */
+      --surface-secondary-foreground: var(--foreground);
+
+      --surface-tertiary: oklch(0.2103 0.0059 285.89); /* #2A2A2C */
+      --surface-tertiary-foreground: var(--foreground);
+
+      --overlay: var(--surface);
+      --overlay-foreground: var(--foreground);
+
+      --muted: oklch(0.5087 0.0041 286.07); /* #6E6E70 */
+
+      --default: oklch(0.2103 0.0059 285.89); /* #2A2A2C */
+      --default-foreground: var(--foreground);
+
+      --accent: oklch(0.7512 0.0920 82.72); /* #C9A962 */
+      --accent-foreground: oklch(0.1451 0.0015 286.07);
+
+      --field-background: var(--surface);
+      --field-foreground: var(--foreground);
+      --field-placeholder: var(--muted);
+      --field-border: transparent;
+
+      --success: oklch(0.6892 0.1611 146.37); /* #66BB6A */
+      --success-foreground: oklch(0.1451 0.0015 286.07);
+
+      --warning: oklch(0.7627 0.1396 58.57); /* #FFA726 */
+      --warning-foreground: oklch(0.1451 0.0015 286.07);
+
+      --danger: oklch(0.5986 0.2057 25.74); /* #EF5350 */
+      --danger-foreground: oklch(0.9654 0.0018 106.42);
+
+      --segment: oklch(0.3 0.006 286.07);
+      --segment-foreground: var(--foreground);
+
+      --border: oklch(0.2103 0.0059 285.89); /* #2A2A2C */
+      --separator: oklch(0.35 0.006 286.07);
+      --focus: var(--accent);
+      --link: var(--foreground);
+
+      --surface-shadow: 0 0 0 0 transparent inset;
+      --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+      --field-shadow: 0 0 0 0 transparent inset;
+    }
+
+    @variant light {
+      /* Verso light palette overrides */
+      --background: oklch(0.9778 0.0018 106.42); /* #F8F8F5 */
+      --foreground: oklch(0.1451 0.0015 286.07); /* #1A1A1C */
+
+      --surface: oklch(1 0 0); /* #FFFFFF */
+      --surface-foreground: var(--foreground);
+
+      --surface-secondary: oklch(0.9529 0.0018 106.42); /* #F0F0ED */
+      --surface-secondary-foreground: var(--foreground);
+
+      --surface-tertiary: oklch(0.9373 0.0013 286.37); /* #E0E0DC */
+      --surface-tertiary-foreground: var(--foreground);
+
+      --overlay: var(--surface);
+      --overlay-foreground: var(--foreground);
+
+      --muted: oklch(0.5087 0.0041 286.07); /* #6E6E70 */
+
+      --default: oklch(0.9 0.001 286.37);
+      --default-foreground: var(--foreground);
+
+      --accent: oklch(0.6818 0.0920 82.72); /* #B8943F */
+      --accent-foreground: oklch(0.9654 0.0018 106.42);
+
+      --field-background: var(--surface);
+      --field-foreground: var(--foreground);
+      --field-placeholder: var(--muted);
+      --field-border: transparent;
+
+      --success: oklch(0.5878 0.1611 146.37); /* #388E3C */
+      --success-foreground: oklch(0.9654 0.0018 106.42);
+
+      --warning: oklch(0.6627 0.1396 58.57); /* #F57C00 */
+      --warning-foreground: oklch(0.1451 0.0015 286.07);
+
+      --danger: oklch(0.5186 0.2057 25.74); /* #D32F2F */
+      --danger-foreground: oklch(0.9654 0.0018 106.42);
+
+      --segment: var(--surface);
+      --segment-foreground: var(--foreground);
+
+      --border: oklch(0.9 0.003 286.32); /* #E0E0DC */
+      --separator: oklch(0.74 0.004 286.32);
+      --focus: var(--accent);
+      --link: var(--foreground);
+
+      --surface-shadow:
+        0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+        0 0 1px 0 rgba(0, 0, 0, 0.06);
+      --overlay-shadow:
+        0 2px 8px 0 rgba(0, 0, 0, 0.02), 0 -6px 12px 0 rgba(0, 0, 0, 0.01),
+        0 14px 28px 0 rgba(0, 0, 0, 0.03);
+      --field-shadow:
+        0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+        0 0 1px 0 rgba(0, 0, 0, 0.06);
+    }
+  }
 }

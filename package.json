@@ -9,6 +9,9 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/dm-serif-display": "^0.4.2",
+    "@expo-google-fonts/google-sans-flex": "^0.4.1",
+    "@expo-google-fonts/libre-baskerville": "^0.4.3",
     "@fugood/react-native-audio-pcm-stream": "^1.1.4",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@powersync/drizzle-driver": "^0.7.3",
@@ -39,6 +42,7 @@
     "expo-symbols": "~55.0.5",
     "expo-web-browser": "~55.0.10",
     "heroui-native": "^1.0.0-rc.4",
+    "lucide-react-native": "^0.577.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.2",
@@ -60,10 +64,12 @@
     "whisper.rn": "^0.5.5"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/react": "~19.2.2",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
     "babel-plugin-inline-import": "^3.0.0",
+    "better-sqlite3": "^12.8.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0",
