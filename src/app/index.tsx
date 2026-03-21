@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Check, History, Plus, SmilePlus } from 'lucide-react-native';
+import { Check, History, SmilePlus } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -104,8 +104,8 @@ export default function HomeScreen(): React.JSX.Element {
   }, []);
 
   const handleEmotionSave = useCallback(
-    (selections: Array<{ emotion: EmotionCategory; intensity: EmotionIntensity }>) => {
-      emotionSelectionsRef.current = selections;
+    (selections: readonly { readonly emotion: EmotionCategory; readonly intensity: EmotionIntensity }[]) => {
+      emotionSelectionsRef.current = [...selections];
       closeEmotionCheckin();
     },
     [closeEmotionCheckin],
