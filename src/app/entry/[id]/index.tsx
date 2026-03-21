@@ -1,6 +1,6 @@
 import { ChevronLeft, Pencil } from 'lucide-react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
@@ -25,14 +25,16 @@ export default function EntryViewScreen(): React.JSX.Element {
   const [entry, setEntry] = useState<EntryWithEmotions | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      loadEntry(id).then((result) => {
-        setEntry(result);
-        setIsLoading(false);
-      });
-    }
-  }, [id, loadEntry]);
+  useFocusEffect(
+    useCallback(() => {
+      if (id) {
+        loadEntry(id).then((result) => {
+          setEntry(result);
+          setIsLoading(false);
+        });
+      }
+    }, [id, loadEntry]),
+  );
 
   if (isLoading) {
     return (
