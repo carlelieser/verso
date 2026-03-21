@@ -29,7 +29,6 @@ export function JournalSelect({
 	const selected = journals.find((j) => j.id === selectedId);
 	const label = selected?.name ?? 'Select journal';
 	const visibleJournals = journals.slice(0, MAX_VISIBLE);
-	const hasMore = journals.length > MAX_VISIBLE;
 
 	return (
 		<Menu presentation={"bottom-sheet"}>
@@ -72,18 +71,16 @@ export function JournalSelect({
 						</View>
 					)}
 					<Separator className="mx-2 my-2 opacity-75"/>
-					{hasMore ? (
-						<Menu.Item
-							id="__view_all__"
-							shouldCloseOnSelect
-							onSelectedChange={() => onViewAll?.()}
-						>
-							<ArrowUpRight size={16} color={muted as string}/>
-							<Menu.ItemTitle>
-								<Text >View all</Text>
-							</Menu.ItemTitle>
-						</Menu.Item>
-					) : null}
+					<Menu.Item
+						id="__view_all__"
+						shouldCloseOnSelect
+						onSelectedChange={() => onViewAll?.()}
+					>
+						<ArrowUpRight size={16} color={muted as string}/>
+						<Menu.ItemTitle>
+							<Text>View all</Text>
+						</Menu.ItemTitle>
+					</Menu.Item>
 					<Menu.Item
 						id="__create__"
 						shouldCloseOnSelect
