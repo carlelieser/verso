@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/common/empty-state';
@@ -10,6 +10,7 @@ import { StreakCounter } from '@/components/insights/streak-counter';
 import { COLORS, RADII, SPACING } from '@/constants/theme';
 import { useInsights } from '@/hooks/use-insights';
 import type { TimeRange } from '@/types/common';
+import { exportInsightAsImage, shareInsight } from '@/utils/insight-export';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -32,12 +33,25 @@ export default function InsightsScreen(): React.JSX.Element {
     isLoadingTopEmotions,
   } = useInsights();
 
+  const scrollContentRef = useRef<View>(null);
+
   const handleRangeChange = useCallback(
     (range: TimeRange) => {
       setTimeRange(range);
     },
     [setTimeRange],
   );
+
+  const handleShare = useCallback(async () => {
+    if (scrollContentRef.current === null) return;
+    try {
+      const uri = await exportInsightAsImage(scrollContentRef);
+      await shareInsight(uri);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to share insights';
+      Alert.alert('Export Failed', message);
+    }
+  }, []);
 
   const hasData = streak !== null && streak.totalEntries > 0;
 
@@ -63,6 +77,7 @@ export default function InsightsScreen(): React.JSX.Element {
           style={styles.shareButton}
           accessibilityRole="button"
           accessibilityLabel="Share insights"
+          onPress={handleShare}
         >
           <Text style={styles.shareIcon}>↗</Text>
         </Pressable>
@@ -73,6 +88,7 @@ export default function InsightsScreen(): React.JSX.Element {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View ref={scrollContentRef} collapsable={false}>
         {streak !== null ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Your Streak</Text>
@@ -107,6 +123,7 @@ export default function InsightsScreen(): React.JSX.Element {
             month={heatmapMonth}
             year={heatmapYear}
           />
+        </View>
         </View>
       </ScrollView>
     </View>

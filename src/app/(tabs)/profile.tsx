@@ -37,6 +37,24 @@ function showPlaceholderAlert(feature: string): void {
   Alert.alert('Coming Soon', `${feature} will be available in a future update.`);
 }
 
+function handleDeleteAccount(): void {
+  Alert.alert(
+    'Delete Account',
+    'This will permanently delete your account and all local data. This action cannot be undone.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          // Clear local data and navigate to welcome
+          router.replace('/auth/welcome');
+        },
+      },
+    ],
+  );
+}
+
 export default function ProfileScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
 
@@ -65,14 +83,14 @@ export default function ProfileScreen(): React.JSX.Element {
         <View style={styles.separator} />
         <SettingsRow
           label="Export Entries"
-          onPress={() => showPlaceholderAlert('Export Entries')}
+          onPress={() => router.push('/settings/export')}
         />
       </Section>
 
       <Section title="APP">
         <SettingsRow
           label="Appearance"
-          onPress={() => showPlaceholderAlert('Appearance')}
+          onPress={() => router.push('/settings/appearance')}
         />
         <View style={styles.separator} />
         <SettingsRow
@@ -85,6 +103,11 @@ export default function ProfileScreen(): React.JSX.Element {
         <SettingsRow
           label="Sign In / Create Account"
           onPress={() => router.push('/auth/welcome')}
+        />
+        <View style={styles.separator} />
+        <SettingsRow
+          label="Delete Account"
+          onPress={() => handleDeleteAccount()}
         />
       </Section>
     </ScrollView>

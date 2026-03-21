@@ -1,4 +1,4 @@
-export const COLORS = {
+const DARK_COLORS = {
   background: '#1A1A1C',
   accent: '#C9A962',
   card: '#242426',
@@ -15,6 +15,33 @@ export const COLORS = {
     warning: '#FFA726',
   },
 } as const;
+
+const LIGHT_COLORS = {
+  background: '#F8F8F5',
+  accent: '#B8943F',
+  card: '#FFFFFF',
+  surface: '#F0F0ED',
+  border: '#E0E0DC',
+  text: {
+    primary: '#1A1A1C',
+    secondary: '#6E6E70',
+    tertiary: '#9E9EA0',
+  },
+  status: {
+    error: '#D32F2F',
+    success: '#388E3C',
+    warning: '#F57C00',
+  },
+} as const;
+
+export type ThemeColors = typeof DARK_COLORS;
+
+export function getColors(mode: 'dark' | 'light'): ThemeColors {
+  return mode === 'dark' ? DARK_COLORS : LIGHT_COLORS;
+}
+
+/** Default dark theme colors — used when theme context is unavailable */
+export const COLORS = DARK_COLORS;
 
 export const TYPOGRAPHY = {
   fontFamily: {
