@@ -1,7 +1,7 @@
 import { ArrowLeft, Plus, Search } from 'lucide-react-native';
 import { router } from 'expo-router';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { FlatList, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -16,27 +16,31 @@ import type { Journal } from '@/types/journal';
 function JournalCard({
   journal,
   entryCount,
+  onPress,
 }: {
   readonly journal: Journal;
   readonly entryCount: number;
+  readonly onPress: () => void;
 }): React.JSX.Element {
   const [muted] = useCSSVariable(['--color-muted']);
   const Icon = getJournalIcon(journal.icon);
 
   return (
-    <Card>
-      <Card.Body>
-        <View className="flex-row items-center gap-3">
-          <Icon size={20} color={muted as string} />
-          <View className="flex-1">
-            <Card.Title>{journal.name}</Card.Title>
-            <Card.Description>
-              {entryCount} {entryCount === 1 ? 'entry' : 'entries'}
-            </Card.Description>
+    <Pressable onPress={onPress}>
+      <Card>
+        <Card.Body>
+          <View className="flex-row items-center gap-3">
+            <Icon size={20} color={muted as string} />
+            <View className="flex-1">
+              <Card.Title>{journal.name}</Card.Title>
+              <Card.Description>
+                {entryCount} {entryCount === 1 ? 'entry' : 'entries'}
+              </Card.Description>
+            </View>
           </View>
-        </View>
-      </Card.Body>
-    </Card>
+        </Card.Body>
+      </Card>
+    </Pressable>
   );
 }
 
@@ -110,7 +114,11 @@ export default function JournalsScreen(): React.JSX.Element {
         data={filteredJournals}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <JournalCard journal={item} entryCount={entryCounts.get(item.id) ?? 0} />
+          <JournalCard
+            journal={item}
+            entryCount={entryCounts.get(item.id) ?? 0}
+            onPress={() => router.push(`/journal/${item.id}`)}
+          />
         )}
         contentContainerStyle={{
           paddingTop: 8,
