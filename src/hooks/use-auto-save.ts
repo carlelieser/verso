@@ -1,76 +1,42 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useDatabaseContext } from '@/providers/database-provider';
-import { createEntryService } from '@/services/entry-service';
+import { updateEntry } from '@/services/entry-service';
 
 const DEBOUNCE_MS = 500;
 
-interface UseAutoSaveResult {
-  readonly isDirty: boolean;
-  readonly isSaving: boolean;
-  readonly save: (contentHtml: string, contentText: string) => void;
-  readonly flush: () => Promise<void>;
+interface AutoSaveContent {
+  readonly html: string;
+  readonly text: string;
 }
 
-export function useAutoSave(entryId: string | null): UseAutoSaveResult {
+/**
+ * Debounced auto-save for entry content.
+ * No-ops when entryId is null (entry not yet created).
+ * The caller should track html/text in refs and pass current values.
+ */
+export function useAutoSave(entryId: string | null, content: AutoSaveContent): void {
   const { db } = useDatabaseContext();
-  const service = useMemo(() => createEntryService(db), [db]);
-
-  const [isDirty, setIsDirty] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingRef = useRef<{ contentHtml: string; contentText: string } | null>(null);
-
-  const doSave = useCallback(async () => {
-    if (!entryId || !pendingRef.current) return;
-
-    const { contentHtml, contentText } = pendingRef.current;
-    pendingRef.current = null;
-
-    try {
-      setIsSaving(true);
-      await service.updateContent(entryId, { contentHtml, contentText });
-      setIsDirty(false);
-    } catch {
-      // Re-queue failed save
-      pendingRef.current = { contentHtml, contentText };
-    } finally {
-      setIsSaving(false);
-    }
-  }, [entryId, service]);
-
-  const save = useCallback(
-    (contentHtml: string, contentText: string) => {
-      pendingRef.current = { contentHtml, contentText };
-      setIsDirty(true);
-
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-
-      timerRef.current = setTimeout(() => {
-        doSave();
-      }, DEBOUNCE_MS);
-    },
-    [doSave],
-  );
-
-  const flush = useCallback(async () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    await doSave();
-  }, [doSave]);
+  const latestRef = useRef(content);
+  latestRef.current = content;
 
   useEffect(() => {
+    if (!entryId) return;
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = setTimeout(() => {
+      const { html, text } = latestRef.current;
+      updateEntry(db, { id: entryId, contentHtml: html, contentText: text });
+    }, DEBOUNCE_MS);
+
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
     };
-  }, []);
-
-  return { isDirty, isSaving, save, flush };
+  }, [db, entryId, content.html, content.text]);
 }
