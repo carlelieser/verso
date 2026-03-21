@@ -29,6 +29,7 @@ export default function EntryEditScreen(): React.JSX.Element {
 
   const [isLoading, setIsLoading] = useState(true);
   const [defaultHtml, setDefaultHtml] = useState('');
+  const [defaultEmotions, setDefaultEmotions] = useState<Array<{ emotion: EmotionCategory; intensity: EmotionIntensity }>>([]);
   const [autoSaveContent, setAutoSaveContent] = useState({ html: '', text: '' });
 
   const editorRef = useRef<EditorHandle>(null);
@@ -49,10 +50,12 @@ export default function EntryEditScreen(): React.JSX.Element {
         setAutoSaveContent({ html: entry.contentHtml, text: entry.contentText });
       }
       if (emotions.length > 0) {
-        emotionSelectionsRef.current = emotions.map((e) => ({
+        const mapped = emotions.map((e) => ({
           emotion: e.category,
           intensity: e.intensity,
         }));
+        emotionSelectionsRef.current = mapped;
+        setDefaultEmotions(mapped);
       }
       setIsLoading(false);
     });
@@ -138,7 +141,7 @@ export default function EntryEditScreen(): React.JSX.Element {
         handleIndicatorStyle={{ backgroundColor: muted as string }}
       >
         <BottomSheetScrollView>
-          <EmotionCheckin onSave={handleEmotionSave} />
+          <EmotionCheckin onSave={handleEmotionSave} defaultSelections={defaultEmotions} />
         </BottomSheetScrollView>
       </BottomSheet>
     </View>

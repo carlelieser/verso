@@ -42,10 +42,14 @@ interface EmotionSelection {
 
 interface EmotionCheckinProps {
 	readonly onSave: (selections: readonly EmotionSelection[]) => void;
+	readonly defaultSelections?: readonly EmotionSelection[];
 }
 
-export function EmotionCheckin({onSave}: EmotionCheckinProps): React.JSX.Element {
-	const [selected, setSelected] = useState<Map<EmotionCategory, EmotionIntensity>>(new Map());
+export function EmotionCheckin({onSave, defaultSelections}: EmotionCheckinProps): React.JSX.Element {
+	const [selected, setSelected] = useState<Map<EmotionCategory, EmotionIntensity>>(() => {
+		if (!defaultSelections || defaultSelections.length === 0) return new Map();
+		return new Map(defaultSelections.map((s) => [s.emotion, s.intensity]));
+	});
 	const [accent, accentForeground, foreground, muted, border] = useCSSVariable([
 		'--color-accent',
 		'--color-accent-foreground',
