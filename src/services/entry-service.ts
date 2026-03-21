@@ -1,168 +1,50 @@
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
-import { entries } from '@/db/schema';
-import { EntryNotFoundError } from '@/errors/domain-errors';
-import type { EmotionCategory } from '@/types/common';
+import { emotionRecords, entries, journals } from '@/db/schema';
+import type { EmotionCategory, EmotionIntensity } from '@/types/common';
+import type { EmotionRecord } from '@/types/emotion';
 import type { Entry } from '@/types/entry';
 import { generateId } from '@/utils/id';
 
-interface PaginationParams {
-  readonly limit?: number;
-  readonly offset?: number;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Db = ExpoSQLiteDatabase<any>;
 
-interface UpdateContentParams {
+interface CreateEntryInput {
+  readonly journalId: string;
   readonly contentHtml: string;
   readonly contentText: string;
 }
 
-interface DateRangeParams {
-  readonly start: Date;
-  readonly end: Date;
+interface UpdateEntryInput {
+  readonly id: string;
+  readonly contentHtml: string;
+  readonly contentText: string;
 }
 
-export function createEntryService(db: ExpoSQLiteDatabase): {
-  create: (params: { journalId: string }) => Promise<Entry>;
-  getById: (id: string) => Promise<Entry | undefined>;
-  getByJournal: (journalId: string, params?: PaginationParams) => Promise<readonly Entry[]>;
-  getByDate: (journalId: string, date: string) => Promise<readonly Entry[]>;
-  updateContent: (id: string, params: UpdateContentParams) => Promise<void>;
-  delete: (id: string) => Promise<void>;
-  search: (journalId: string, query: string) => Promise<readonly Entry[]>;
-  filterByEmotion: (journalId: string, category: EmotionCategory) => Promise<readonly Entry[]>;
-  filterByDateRange: (journalId: string, params: DateRangeParams) => Promise<readonly Entry[]>;
-} {
-  return {
-    async create({ journalId }): Promise<Entry> {
-      const now = Date.now();
-      const id = generateId();
-
-      const entry: Entry = {
-        id,
-        journalId,
-        contentHtml: '',
-        contentText: '',
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      await db.insert(entries).values({
-        id,
-        journalId,
-        contentHtml: '',
-        contentText: '',
-        createdAt: new Date(now),
-        updatedAt: new Date(now),
-      });
-
-      return entry;
-    },
-
-    async getById(id): Promise<Entry | undefined> {
-      const rows = await db.select().from(entries).where(eq(entries.id, id)).limit(1);
-      const row = rows[0];
-      return row ? toEntry(row) : undefined;
-    },
-
-    async getByJournal(journalId, params): Promise<readonly Entry[]> {
-      const limit = params?.limit ?? 20;
-      const offset = params?.offset ?? 0;
-
-      const rows = await db
-        .select()
-        .from(entries)
-        .where(eq(entries.journalId, journalId))
-        .orderBy(desc(entries.createdAt))
-        .limit(limit)
-        .offset(offset);
-
-      return rows.map(toEntry);
-    },
-
-    async getByDate(journalId, date): Promise<readonly Entry[]> {
-      const startOfDay = new Date(`${date}T00:00:00.000Z`);
-      const endOfDay = new Date(`${date}T23:59:59.999Z`);
-
-      const rows = await db
-        .select()
-        .from(entries)
-        .where(
-          and(
-            eq(entries.journalId, journalId),
-            gte(entries.createdAt, startOfDay),
-            lte(entries.createdAt, endOfDay),
-          ),
-        )
-        .orderBy(desc(entries.createdAt));
-
-      return rows.map(toEntry);
-    },
-
-    async updateContent(id, { contentHtml, contentText }): Promise<void> {
-      const result = await db
-        .update(entries)
-        .set({ contentHtml, contentText, updatedAt: new Date() })
-        .where(eq(entries.id, id));
-
-      if (result.changes === 0) {
-        throw new EntryNotFoundError(id);
-      }
-    },
-
-    async delete(id): Promise<void> {
-      const result = await db.delete(entries).where(eq(entries.id, id));
-      if (result.changes === 0) {
-        throw new EntryNotFoundError(id);
-      }
-    },
-
-    async search(journalId, query): Promise<readonly Entry[]> {
-      const rawDb = (db as unknown as { $client: { getAllSync: (sql: string, params: unknown[]) => Array<Record<string, unknown>> } }).$client;
-      const rows = rawDb.getAllSync(
-        `SELECT e.* FROM entry e
-         JOIN entry_fts ON entry_fts.rowid = e.rowid
-         WHERE entry_fts MATCH ?
-           AND e.journal_id = ?
-         ORDER BY rank`,
-        [query, journalId],
-      );
-
-      return rows.map(rawToEntry);
-    },
-
-    async filterByEmotion(journalId, category): Promise<readonly Entry[]> {
-      const rawDb = (db as unknown as { $client: { getAllSync: (sql: string, params: unknown[]) => Array<Record<string, unknown>> } }).$client;
-      const rows = rawDb.getAllSync(
-        `SELECT DISTINCT e.* FROM entry e
-         JOIN emotion_record er ON er.entry_id = e.id
-         WHERE e.journal_id = ? AND er.category = ?
-         ORDER BY e.created_at DESC`,
-        [journalId, category],
-      );
-
-      return rows.map(rawToEntry);
-    },
-
-    async filterByDateRange(journalId, { start, end }): Promise<readonly Entry[]> {
-      const rows = await db
-        .select()
-        .from(entries)
-        .where(
-          and(
-            eq(entries.journalId, journalId),
-            gte(entries.createdAt, start),
-            lte(entries.createdAt, end),
-          ),
-        )
-        .orderBy(desc(entries.createdAt));
-
-      return rows.map(toEntry);
-    },
-  };
+interface ListEntriesInput {
+  readonly userId: string;
+  readonly journalId?: string;
+  readonly limit?: number;
+  readonly offset?: number;
 }
 
-function toEntry(row: typeof entries.$inferSelect): Entry {
+export interface EntryWithJournal extends Entry {
+  readonly journalName: string;
+}
+
+export interface EntryWithEmotions extends Entry {
+  readonly emotions: readonly EmotionRecord[];
+}
+
+function toEntry(row: {
+  id: string;
+  journalId: string;
+  contentHtml: string;
+  contentText: string;
+  createdAt: Date;
+  updatedAt: Date;
+}): Entry {
   return {
     id: row.id,
     journalId: row.journalId,
@@ -173,13 +55,125 @@ function toEntry(row: typeof entries.$inferSelect): Entry {
   };
 }
 
-function rawToEntry(row: Record<string, unknown>): Entry {
+export async function createEntry(db: Db, input: CreateEntryInput): Promise<Entry> {
+  const now = new Date();
+  const id = generateId();
+
+  await db.insert(entries).values({
+    id,
+    journalId: input.journalId,
+    contentHtml: input.contentHtml,
+    contentText: input.contentText,
+    createdAt: now,
+    updatedAt: now,
+  });
+
   return {
-    id: row['id'] as string,
-    journalId: row['journal_id'] as string,
-    contentHtml: row['content_html'] as string,
-    contentText: row['content_text'] as string,
-    createdAt: row['created_at'] as number,
-    updatedAt: row['updated_at'] as number,
+    id,
+    journalId: input.journalId,
+    contentHtml: input.contentHtml,
+    contentText: input.contentText,
+    createdAt: now.getTime(),
+    updatedAt: now.getTime(),
   };
+}
+
+export async function updateEntry(db: Db, input: UpdateEntryInput): Promise<void> {
+  await db
+    .update(entries)
+    .set({
+      contentHtml: input.contentHtml,
+      contentText: input.contentText,
+      updatedAt: new Date(),
+    })
+    .where(eq(entries.id, input.id));
+}
+
+export async function deleteEntry(db: Db, id: string): Promise<void> {
+  await db.delete(entries).where(eq(entries.id, id));
+}
+
+export async function getEntry(db: Db, id: string): Promise<EntryWithEmotions | null> {
+  const [row] = await db.select().from(entries).where(eq(entries.id, id)).limit(1);
+
+  if (!row) return null;
+
+  const emotions = await db
+    .select()
+    .from(emotionRecords)
+    .where(eq(emotionRecords.entryId, id));
+
+  return {
+    ...toEntry(row),
+    emotions: emotions.map((e) => ({
+      id: e.id,
+      entryId: e.entryId,
+      category: e.category as EmotionCategory,
+      intensity: e.intensity as EmotionIntensity,
+      createdAt: e.createdAt.getTime(),
+    })),
+  };
+}
+
+export async function listEntries(db: Db, input: ListEntriesInput): Promise<EntryWithJournal[]> {
+  const limit = input.limit ?? 50;
+  const offset = input.offset ?? 0;
+
+  const baseFilter = input.journalId
+    ? eq(entries.journalId, input.journalId)
+    : eq(journals.userId, input.userId);
+
+  const rows = await db
+    .select({
+      id: entries.id,
+      journalId: entries.journalId,
+      contentHtml: entries.contentHtml,
+      contentText: entries.contentText,
+      createdAt: entries.createdAt,
+      updatedAt: entries.updatedAt,
+      journalName: journals.name,
+    })
+    .from(entries)
+    .innerJoin(journals, eq(entries.journalId, journals.id))
+    .where(baseFilter)
+    .orderBy(desc(entries.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return rows.map((row) => ({
+    ...toEntry(row as unknown as { id: string; journalId: string; contentHtml: string; contentText: string; createdAt: Date; updatedAt: Date }),
+    journalName: row.journalName,
+  }));
+}
+
+export async function searchEntries(db: Db, query: string): Promise<EntryWithJournal[]> {
+  const rawDb = (db as unknown as { $client: { getAllSync: (sql: string, params: unknown[]) => unknown[] } }).$client;
+
+  const rows = rawDb.getAllSync(
+    `SELECT e.id, e.journal_id, e.content_html, e.content_text, e.created_at, e.updated_at, j.name as journal_name
+     FROM entry_fts fts
+     JOIN entry e ON e.rowid = fts.rowid
+     JOIN journal j ON j.id = e.journal_id
+     WHERE entry_fts MATCH ?
+     ORDER BY rank`,
+    [query],
+  ) as Array<{
+    id: string;
+    journal_id: string;
+    content_html: string;
+    content_text: string;
+    created_at: number;
+    updated_at: number;
+    journal_name: string;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    journalId: row.journal_id,
+    contentHtml: row.content_html,
+    contentText: row.content_text,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    journalName: row.journal_name,
+  }));
 }
