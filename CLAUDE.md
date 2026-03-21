@@ -169,3 +169,10 @@ Refer to documentation @docs/coding.
 - **SHOULD** enforce import ordering via `eslint-plugin-import` or `prettier-plugin-organize-imports`.
 - **SHOULD** ban default exports via ESLint.
 - **SHOULD** configure path aliases (`@/*`) in `tsconfig.json`.
+
+## Active Technologies
+- TypeScript 5.x, React Native 0.84+, Expo SDK 54+ + heroui-native, react-native-enriched, whisper.rn, drizzle-orm, expo-sqlite (SQLCipher), @supabase/supabase-js, @powersync/react-native, react-native-calendars, react-native-gifted-charts, expo-notifications, expo-prin (001-daily-journal-app)
+- SQLite (local, encrypted via SQLCipher) + Supabase Postgres (cloud sync for authenticated users) (001-daily-journal-app)
+
+## Recent Changes
+- 001-daily-journal-app: Added TypeScript 5.x, React Native 0.84+, Expo SDK 54+ + heroui-native, react-native-enriched, whisper.rn, drizzle-orm, expo-sqlite (SQLCipher), @supabase/supabase-js, @powersync/react-native, react-native-calendars, react-native-gifted-charts, expo-notifications, expo-prin
