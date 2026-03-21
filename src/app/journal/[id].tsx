@@ -1,4 +1,4 @@
-import {ChevronLeft, Search} from 'lucide-react-native';
+import {ChevronLeft, Plus, Search} from 'lucide-react-native';
 import {router, useLocalSearchParams} from 'expo-router';
 import React, {useCallback, useState} from 'react';
 import {FlatList, Pressable, Text, TextInput, View} from 'react-native';
@@ -45,11 +45,12 @@ function EntryCard({
 export default function JournalDetailScreen(): React.JSX.Element {
 	const {id} = useLocalSearchParams<{ id: string }>();
 	const insets = useSafeAreaInsets();
-	const [muted, surface, foreground, border] = useCSSVariable([
+	const [muted, surface, foreground, border, accentForeground] = useCSSVariable([
 		'--color-muted',
 		'--color-surface',
 		'--color-foreground',
 		'--color-border',
+		'--color-accent-foreground',
 	]);
 
 	const {journals} = useJournals();
@@ -128,6 +129,17 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					</View>
 				}
 			/>
+
+			<Button
+				variant="primary"
+				size="lg"
+				isIconOnly
+				onPress={() => router.push({pathname: '/', params: {journalId: id}})}
+				className="absolute bottom-8 right-5 w-14 h-14 rounded-full shadow-2xl"
+				style={{bottom: insets.bottom + 16}}
+			>
+				<Plus size={24} color={accentForeground as string}/>
+			</Button>
 		</View>
 	);
 }
