@@ -1,106 +1,105 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import { GUEST_USER_ID } from '@/constants/user';
 import { useDatabaseContext } from '@/providers/database-provider';
-import { createEntryService } from '@/services/entry-service';
+import {
+  createEntry as createEntryService,
+  deleteEntry as deleteEntryService,
+  type EntryWithEmotions,
+  type EntryWithJournal,
+  getEntry,
+  listEntries as listEntriesService,
+  searchEntries as searchEntriesService,
+  updateEntry as updateEntryService,
+} from '@/services/entry-service';
 import type { Entry } from '@/types/entry';
 
 interface UseEntriesResult {
-  readonly entries: readonly Entry[];
+  readonly entries: readonly EntryWithJournal[];
   readonly isLoading: boolean;
-  readonly error: Error | null;
-  readonly hasMore: boolean;
-  readonly createEntry: (journalId: string) => Promise<Entry>;
+  readonly refresh: (journalId?: string) => Promise<void>;
+  readonly createEntry: (journalId: string, html: string, text: string) => Promise<Entry>;
+  readonly updateEntry: (id: string, html: string, text: string) => Promise<void>;
   readonly deleteEntry: (id: string) => Promise<void>;
-  readonly loadMore: () => Promise<void>;
-  readonly refresh: () => Promise<void>;
+  readonly loadEntry: (id: string) => Promise<EntryWithEmotions | null>;
+  readonly searchEntries: (query: string) => Promise<void>;
 }
 
-const PAGE_SIZE = 20;
-
-export function useEntries(journalId: string | null): UseEntriesResult {
+export function useEntries(journalId?: string): UseEntriesResult {
   const { db } = useDatabaseContext();
-  const service = useMemo(() => createEntryService(db), [db]);
+  const [entries, setEntries] = useState<readonly EntryWithJournal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [entries, setEntries] = useState<readonly Entry[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
-
-  const loadEntries = useCallback(
-    async (reset = false) => {
-      if (!journalId) return;
-
-      try {
-        setIsLoading(true);
-        const currentOffset = reset ? 0 : offset;
-        const result = await service.getByJournal(journalId, {
-          limit: PAGE_SIZE,
-          offset: currentOffset,
-        });
-
-        if (reset) {
-          setEntries(result);
-          setOffset(result.length);
-        } else {
-          setEntries((prev) => [...prev, ...result]);
-          setOffset(currentOffset + result.length);
-        }
-
-        setHasMore(result.length === PAGE_SIZE);
-        setError(null);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        setIsLoading(false);
-      }
+  const refresh = useCallback(
+    async (filterJournalId?: string) => {
+      const list = await listEntriesService(db, {
+        userId: GUEST_USER_ID,
+        journalId: filterJournalId ?? journalId,
+      });
+      setEntries(list);
+      setIsLoading(false);
     },
-    [journalId, offset, service],
+    [db, journalId],
   );
 
   useEffect(() => {
-    if (journalId) {
-      loadEntries(true);
-    }
-    // Only reload when journalId changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [journalId]);
+    refresh();
+  }, [refresh]);
 
   const createEntry = useCallback(
-    async (jId: string): Promise<Entry> => {
-      const entry = await service.create({ journalId: jId });
-      setEntries((prev) => [entry, ...prev]);
+    async (entryJournalId: string, html: string, text: string): Promise<Entry> => {
+      const entry = await createEntryService(db, {
+        journalId: entryJournalId,
+        contentHtml: html,
+        contentText: text,
+      });
       return entry;
     },
-    [service],
+    [db],
+  );
+
+  const updateEntry = useCallback(
+    async (id: string, html: string, text: string): Promise<void> => {
+      await updateEntryService(db, { id, contentHtml: html, contentText: text });
+    },
+    [db],
   );
 
   const deleteEntry = useCallback(
     async (id: string): Promise<void> => {
-      await service.delete(id);
-      setEntries((prev) => prev.filter((e) => e.id !== id));
+      await deleteEntryService(db, id);
+      await refresh();
     },
-    [service],
+    [db, refresh],
   );
 
-  const loadMore = useCallback(async () => {
-    if (!isLoading && hasMore) {
-      await loadEntries(false);
-    }
-  }, [isLoading, hasMore, loadEntries]);
+  const loadEntry = useCallback(
+    async (id: string): Promise<EntryWithEmotions | null> => {
+      return getEntry(db, id);
+    },
+    [db],
+  );
 
-  const refresh = useCallback(async () => {
-    await loadEntries(true);
-  }, [loadEntries]);
+  const searchEntries = useCallback(
+    async (query: string): Promise<void> => {
+      if (query.trim().length === 0) {
+        await refresh();
+        return;
+      }
+      const results = await searchEntriesService(db, query);
+      setEntries(results);
+    },
+    [db, refresh],
+  );
 
   return {
     entries,
     isLoading,
-    error,
-    hasMore,
-    createEntry,
-    deleteEntry,
-    loadMore,
     refresh,
+    createEntry,
+    updateEntry,
+    deleteEntry,
+    loadEntry,
+    searchEntries,
   };
 }
