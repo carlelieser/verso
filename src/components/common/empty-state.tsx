@@ -24,7 +24,7 @@ export function EmptyState({
       <Text style={styles.title}>{title}</Text>
       {description ? <Text style={styles.description}>{description}</Text> : null}
       {ctaLabel && onCtaPress ? (
-        <Pressable style={styles.cta} onPress={onCtaPress}>
+        <Pressable style={styles.cta} onPress={onCtaPress} accessibilityRole="button" accessibilityLabel={ctaLabel}>
           <Text style={styles.ctaText}>{ctaLabel}</Text>
         </Pressable>
       ) : null}

@@ -21,7 +21,7 @@ export function JournalCard({
   onLongPress,
 }: JournalCardProps): React.JSX.Element {
   return (
-    <Pressable style={styles.card} onPress={onPress} onLongPress={onLongPress}>
+    <Pressable style={styles.card} onPress={onPress} onLongPress={onLongPress} accessibilityRole="button" accessibilityLabel={`Journal: ${journal.name}`}>
       <Text style={styles.name} numberOfLines={1}>
         {journal.name}
       </Text>

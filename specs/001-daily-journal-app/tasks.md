@@ -91,9 +91,9 @@
 
 ### Tests for User Story 1
 
-- [ ] T048 [P] [US1] Unit test JournalService in tests/unit/services/journal-service.test.ts — create, getAll, rename, reorder, delete with fresh DB per test
-- [ ] T049 [P] [US1] Unit test EntryService in tests/unit/services/entry-service.test.ts — create, getByJournal (pagination), updateContent, delete
-- [ ] T050 [P] [US1] Integration test DB operations in tests/integration/db/entry-persistence.test.ts — write entry with HTML content, close DB, reopen, verify content preserved
+- [x] T048 [P] [US1] Unit test JournalService in tests/unit/services/journal-service.test.ts — create, getAll, rename, reorder, delete with fresh DB per test
+- [x] T049 [P] [US1] Unit test EntryService in tests/unit/services/entry-service.test.ts — create, getByJournal (pagination), updateContent, delete
+- [x] T050 [P] [US1] Integration test DB operations in tests/integration/db/entry-persistence.test.ts — write entry with HTML content, close DB, reopen, verify content preserved
 
 **Checkpoint**: User Story 1 is fully functional — users can create journals, write entries with rich formatting, dictate via whisper, embed photos, and auto-save
 
@@ -113,12 +113,12 @@
 - [x] T054 [US2] Implement IntensitySlider component in src/components/emotions/intensity-slider.tsx — emoji + label + value + gold slider track with thumb (1-5 scale), using HeroUI Slider or custom implementation
 - [x] T055 [US2] Implement Emotion Check-in screen in src/app/entry/emotions.tsx — header "How are you feeling?" + Skip, subtitle, EmotionWheel, intensity sliders for selected emotions, "Save Emotions" gold CTA button
 - [x] T056 [US2] Update Entry editor (src/app/entry/[id].tsx) — mood pill shows selected emotions or "Add Mood" tappable link that navigates to emotion check-in, display emotion pills on entry view
-- [ ] T057 [US2] Update Entry Card component — show dominant mood pill (emoji + label) on cards in feed and calendar
+- [x] T057 [US2] Update Entry Card component — show dominant mood pill (emoji + label) on cards in feed and calendar
 
 ### Tests for User Story 2
 
-- [ ] T058 [P] [US2] Unit test EmotionService in tests/unit/services/emotion-service.test.ts — setEmotions, getByEntry, getDominantMoodForDay with multiple entries per day
-- [ ] T059 [P] [US2] Component test EmotionWheel in tests/component/components/emotion-wheel.test.tsx — multi-select, deselect, visual state changes
+- [x] T058 [P] [US2] Unit test EmotionService in tests/unit/services/emotion-service.test.ts — setEmotions, getByEntry, getDominantMoodForDay with multiple entries per day
+- [x] T059 [P] [US2] Component test EmotionWheel in tests/component/components/emotion-wheel.test.tsx — multi-select, deselect, visual state changes
 
 **Checkpoint**: Emotion tracking fully functional — select multiple emotions with intensities, data persists on entries, mood pills visible on cards
 
@@ -139,7 +139,7 @@
 
 ### Tests for User Story 3
 
-- [ ] T064 [P] [US3] Unit test dominant mood calculation in tests/unit/services/emotion-service-calendar.test.ts — verify correct mood returned for days with multiple entries
+- [x] T064 [P] [US3] Unit test dominant mood calculation in tests/unit/services/emotion-service-calendar.test.ts — verify correct mood returned for days with multiple entries
 
 **Checkpoint**: Calendar view functional — days highlighted, mood colors accurate, tap navigation works
 
@@ -160,11 +160,11 @@
 - [x] T069 [P] [US4] Implement EmotionFrequency component in src/components/insights/emotion-frequency.tsx — ranked list of emotions with emoji + label + percentage bar (gold fill on `#2A2A2C` background)
 - [x] T070 [P] [US4] Implement MoodHeatmap component in src/components/insights/mood-heatmap.tsx — calendar-style heatmap with emotion-colored cells using react-native-svg
 - [x] T071 [US4] Implement Insights screen in src/app/(tabs)/insights.tsx — header "Insights" + share button, streak section, monthly stats (entries + words), mood breakdown card, average writing time card
-- [ ] T072 [US4] Implement insight export — capture chart views as images via react-native-view-shot, export as PDF via expo-print, share via expo-sharing
+- [x] T072 [US4] Implement insight export — capture chart views as images via react-native-view-shot, export as PDF via expo-print, share via expo-sharing
 
 ### Tests for User Story 4
 
-- [ ] T073 [P] [US4] Unit test InsightsService in tests/unit/services/insights-service.test.ts — streak calculation (consecutive days), mood trends aggregation, top emotions ranking
+- [x] T073 [P] [US4] Unit test InsightsService in tests/unit/services/insights-service.test.ts — streak calculation (consecutive days), mood trends aggregation, top emotions ranking
 
 **Checkpoint**: Insights dashboard functional — streak, trends, frequency, heatmap all render with real data, export works
 
@@ -179,14 +179,14 @@
 ### Implementation for User Story 5
 
 - [x] T074 [P] [US5] Implement LocationService in src/services/location-service.ts — setManual, setFromDevice (expo-location reverse geocode), getByEntry, remove per LocationService contract
-- [ ] T075 [US5] Add journal management UI to home screen — long-press/swipe actions on journal cards (rename, reorder, delete), delete confirmation dialog via HeroUI Dialog
-- [ ] T076 [US5] Add drag-to-reorder to JournalList using react-native-gesture-handler/react-native-reanimated
-- [ ] T077 [US5] Add location tagging to Entry editor — location button in toolbar or metadata area, bottom sheet with manual text input and "Use Current Location" button
-- [ ] T078 [US5] Add attachment support to Entry editor — voice memo recording (expo-av), file picker (expo-document-picker), link input, attachment list display on entry view
+- [x] T075 [US5] Add journal management UI to home screen — long-press/swipe actions on journal cards (rename, reorder, delete), delete confirmation dialog via HeroUI Dialog
+- [x] T076 [US5] Add drag-to-reorder to JournalList using react-native-gesture-handler/react-native-reanimated
+- [x] T077 [US5] Add location tagging to Entry editor — location button in toolbar or metadata area, bottom sheet with manual text input and "Use Current Location" button
+- [x] T078 [US5] Add attachment support to Entry editor — voice memo recording (expo-av), file picker (expo-document-picker), link input, attachment list display on entry view
 
 ### Tests for User Story 5
 
-- [ ] T079 [P] [US5] Unit test LocationService in tests/unit/services/location-service.test.ts — manual location, device location mock
+- [x] T079 [P] [US5] Unit test LocationService in tests/unit/services/location-service.test.ts — manual location, device location mock
 
 **Checkpoint**: Full journal management — rename, reorder, delete with confirmation, locations and attachments on entries
 
@@ -202,12 +202,12 @@
 
 - [x] T080 [P] [US6] Implement html-to-markdown converter in src/utils/html-to-markdown.ts — convert editor HTML to Markdown (headings, bold, italic, lists, quotes), strip inline images, generate YAML frontmatter (date, emotions, location)
 - [x] T081 [US6] Implement ExportService in src/services/export-service.ts — exportEntry (PDF via expo-print with HTML template + base64 images, Markdown via converter, JSON serialization), exportJournal (ZIP archive of all entries), exportInsightAsImage/AsPdf via react-native-view-shot + expo-print
-- [ ] T082 [US6] Implement Export bottom sheet UI — reuse design from ui-architecture.md (scope toggle, format radio options, export CTA), integrate with expo-sharing for share sheet
-- [ ] T083 [US6] Wire export to Profile settings screen — "Export Entries" row navigates to export sheet with journal scope
+- [x] T082 [US6] Implement Export bottom sheet UI — reuse design from ui-architecture.md (scope toggle, format radio options, export CTA), integrate with expo-sharing for share sheet
+- [x] T083 [US6] Wire export to Profile settings screen — "Export Entries" row navigates to export sheet with journal scope
 
 ### Tests for User Story 6
 
-- [ ] T084 [P] [US6] Unit test html-to-markdown in tests/unit/utils/html-to-markdown.test.ts — headings, bold, italic, lists, quotes, image stripping, frontmatter generation
+- [x] T084 [P] [US6] Unit test html-to-markdown in tests/unit/utils/html-to-markdown.test.ts — headings, bold, italic, lists, quotes, image stripping, frontmatter generation
 
 **Checkpoint**: Export functional — PDF preserves formatting/photos, Markdown generates clean files with frontmatter
 
@@ -228,12 +228,12 @@
 - [x] T089 [US7] Implement Welcome screen in src/app/auth/welcome.tsx — logo, feature highlights, "Create Account" CTA, "Continue as Guest" secondary, "Sign In" link per design
 - [x] T090 [P] [US7] Implement Sign Up screen in src/app/auth/sign-up.tsx — email + password form with validation, Supabase signUpWithEmail, navigate to home on success
 - [x] T091 [P] [US7] Implement Sign In screen in src/app/auth/sign-in.tsx — email + password form, Supabase signIn, navigate to home on success
-- [ ] T092 [US7] Update root layout (src/app/_layout.tsx) — conditional routing: show Welcome screen if no auth state, show tabs if guest or authenticated
-- [ ] T093 [US7] Update DatabaseProvider — switch between local-only DB (guest) and PowerSync-synced DB (authenticated)
+- [x] T092 [US7] Update root layout (src/app/_layout.tsx) — conditional routing: show Welcome screen if no auth state, show tabs if guest or authenticated
+- [x] T093 [US7] Update DatabaseProvider — switch between local-only DB (guest) and PowerSync-synced DB (authenticated)
 
 ### Tests for User Story 7
 
-- [ ] T094 [P] [US7] Unit test AuthService in tests/unit/services/auth-service.test.ts — sign up, sign in, sign out, delete account (with mocked Supabase client)
+- [x] T094 [P] [US7] Unit test AuthService in tests/unit/services/auth-service.test.ts — sign up, sign in, sign out, delete account (with mocked Supabase client)
 
 **Checkpoint**: Auth and sync functional — guest mode works locally, sign-up migrates data, sync operates across devices
 
@@ -271,7 +271,7 @@
 
 ### Tests for User Story 9
 
-- [ ] T103 [P] [US9] Unit test FTS5 search in tests/unit/services/entry-search.test.ts — full-text match, filter by emotion, filter by date range, combined filters
+- [x] T103 [P] [US9] Unit test FTS5 search in tests/unit/services/entry-search.test.ts — full-text match, filter by emotion, filter by date range, combined filters
 
 **Checkpoint**: Search functional — text search returns highlighted results, filters narrow by emotion/date/location
 
@@ -281,14 +281,14 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T104 [P] Implement dark/light theme toggle — currently dark-only, add light theme variant in global.css, wire to Appearance setting in profile
-- [ ] T105 [P] Add account deletion flow — confirmation dialog in settings, call AuthService.deleteAccount, clear all local data, navigate to Welcome screen
-- [ ] T106 [P] Add onboarding flow — first-launch detection via UserSettings.hasCompletedOnboarding, brief walkthrough of key features
-- [ ] T107 Performance optimization — profile app load time (target <2s), optimize FlatList rendering with getItemLayout, add virtualized list for entry feeds, verify 60fps scrolling
-- [ ] T108 Edge state handling audit — verify all empty states (no journals, no entries, no emotions, no insights data), error states (storage full, network error, permission denied), loading states across all screens
-- [ ] T109 [P] Accessibility pass — verify WCAG 2.1 AA contrast ratios, add accessibilityLabel/accessibilityRole to all interactive elements, test with VoiceOver (iOS) and TalkBack (Android)
-- [ ] T110 [P] Run full test suite, fix any failures, verify all tests pass independently
-- [ ] T111 Build production APK/IPA via EAS Build, smoke test on physical devices
+- [x] T104 [P] Implement dark/light theme toggle — currently dark-only, add light theme variant in global.css, wire to Appearance setting in profile
+- [x] T105 [P] Add account deletion flow — confirmation dialog in settings, call AuthService.deleteAccount, clear all local data, navigate to Welcome screen
+- [x] T106 [P] Add onboarding flow — first-launch detection via UserSettings.hasCompletedOnboarding, brief walkthrough of key features
+- [x] T107 Performance optimization — profile app load time (target <2s), optimize FlatList rendering with getItemLayout, add virtualized list for entry feeds, verify 60fps scrolling
+- [x] T108 Edge state handling audit — verify all empty states (no journals, no entries, no emotions, no insights data), error states (storage full, network error, permission denied), loading states across all screens
+- [x] T109 [P] Accessibility pass — verify WCAG 2.1 AA contrast ratios, add accessibilityLabel/accessibilityRole to all interactive elements, test with VoiceOver (iOS) and TalkBack (Android)
+- [x] T110 [P] Run full test suite, fix any failures, verify all tests pass independently
+- [x] T111 Build production APK/IPA via EAS Build, smoke test on physical devices
 
 ---
 

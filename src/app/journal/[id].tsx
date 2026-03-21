@@ -5,12 +5,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { LoadingState } from '@/components/common/loading-state';
-import { COLORS, RADII, SPACING } from '@/constants/theme';
+import { EntryCard } from '@/components/entries/entry-card';
+import { COLORS, SPACING } from '@/constants/theme';
 import { useDatabaseContext } from '@/providers/database-provider';
 import { createEntryService } from '@/services/entry-service';
 import { createJournalService } from '@/services/journal-service';
 import type { Entry } from '@/types/entry';
-import { formatDate } from '@/utils/date';
 
 export default function JournalTimelineScreen(): React.JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -73,15 +73,10 @@ export default function JournalTimelineScreen(): React.JSX.Element {
           data={entries}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <Pressable style={styles.entryCard} onPress={() => handleEntryPress(item)}>
-              <Text style={styles.entryDate}>{formatDate(item.createdAt)}</Text>
-              <Text style={styles.entryPreview} numberOfLines={2}>
-                {item.contentText || 'Empty entry'}
-              </Text>
-              <Text style={styles.wordCount}>
-                {item.contentText.split(/\s+/).filter(Boolean).length} words
-              </Text>
-            </Pressable>
+            <EntryCard
+              entry={item}
+              onPress={() => handleEntryPress(item)}
+            />
           )}
           contentContainerStyle={styles.list}
         />
@@ -121,26 +116,5 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: SPACING.lg,
-  },
-  entryCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADII.lg,
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
-  },
-  entryDate: {
-    fontSize: 12,
-    color: COLORS.text.secondary,
-    marginBottom: SPACING.xs,
-  },
-  entryPreview: {
-    fontSize: 16,
-    color: COLORS.text.primary,
-    lineHeight: 22,
-  },
-  wordCount: {
-    fontSize: 12,
-    color: COLORS.text.tertiary,
-    marginTop: SPACING.sm,
   },
 });

@@ -10,6 +10,7 @@ import { COLORS } from '@/constants/theme';
 import { createDatabase } from '@/db/client';
 import { setupFts } from '@/db/fts';
 import { useRunMigrations } from '@/db/migrations';
+import type { AuthState } from '@/types/common';
 
 interface DatabaseContextValue {
   readonly db: Db;
@@ -25,7 +26,12 @@ export function useDatabaseContext(): DatabaseContextValue {
   return context;
 }
 
-export function DatabaseProvider({ children }: { readonly children: React.ReactNode }): React.JSX.Element {
+interface DatabaseProviderProps {
+  readonly authState?: AuthState;
+  readonly children: React.ReactNode;
+}
+
+export function DatabaseProvider({ authState, children }: DatabaseProviderProps): React.JSX.Element {
   const [db, setDb] = useState<Db | null>(null);
   const [initError, setInitError] = useState<Error | null>(null);
 
@@ -38,6 +44,15 @@ export function DatabaseProvider({ children }: { readonly children: React.ReactN
         setInitError(error instanceof Error ? error : new Error(String(error)));
       });
   }, []);
+
+  // TODO: When PowerSync is integrated, switch to sync-enabled database
+  // for authenticated users instead of the local-only database.
+  useEffect(() => {
+    if (authState?.status === 'authenticated') {
+      // eslint-disable-next-line no-console
+      console.log('[DatabaseProvider] Authenticated user detected — sync mode would activate here');
+    }
+  }, [authState?.status]);
 
   if (initError) {
     return (
