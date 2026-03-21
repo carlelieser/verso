@@ -39,3 +39,21 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Drizzle migrations output
+drizzle/
+
+# Coverage
+coverage/
+
+# Build
+build/
