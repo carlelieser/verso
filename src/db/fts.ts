@@ -1,6 +1,13 @@
 import { getRawClient } from './client';
 import type { Db } from './client';
 
+/**
+ * Creates the FTS5 virtual table and triggers for full-text search on entries.
+ *
+ * SCHEMA DEPENDENCY: These triggers reference the `entry` table's `content_text` column.
+ * If `schema.ts` renames or removes `entries.contentText` (mapped to `content_text`),
+ * these triggers must be updated to match.
+ */
 export function setupFts(db: Db): void {
   const rawDb = getRawClient(db);
 

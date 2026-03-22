@@ -30,6 +30,12 @@ export const journals = sqliteTable(
   ],
 );
 
+/**
+ * Journal entries table.
+ *
+ * NOTE: The `contentText` column is mirrored by FTS5 triggers defined in `fts.ts`.
+ * If this column is renamed or removed, the FTS triggers must be updated in lockstep.
+ */
 export const entries = sqliteTable(
   'entry',
   {
