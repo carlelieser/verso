@@ -25,12 +25,19 @@ export default function EntryViewScreen(): React.JSX.Element {
       let isActive = true;
 
       if (id) {
-        loadEntry(id).then((result) => {
-          if (isActive) {
-            setEntry(result);
-            setIsLoading(false);
-          }
-        });
+        loadEntry(id)
+          .then((result) => {
+            if (isActive) {
+              setEntry(result);
+              setIsLoading(false);
+            }
+          })
+          .catch(() => {
+            if (isActive) {
+              setEntry(null);
+              setIsLoading(false);
+            }
+          });
       }
 
       return () => {

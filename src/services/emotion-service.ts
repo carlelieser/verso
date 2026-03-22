@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import type { Db } from '@/db/client';
 import { emotionRecords } from '@/db/schema';
+import { ValidationError } from '@/errors/domain-errors';
 import { isEmotionCategory, isEmotionIntensity } from '@/types/common';
 import type { EmotionInput, EmotionRecord } from '@/types/emotion';
 import { generateId } from '@/utils/id';
@@ -11,6 +12,16 @@ export async function saveEmotions(
   entryId: string,
   emotions: readonly EmotionInput[],
 ): Promise<void> {
+  // Validate BEFORE deleting existing records
+  for (const e of emotions) {
+    if (!isEmotionCategory(e.category)) {
+      throw new ValidationError(`Invalid emotion category: ${e.category}`);
+    }
+    if (!isEmotionIntensity(e.intensity)) {
+      throw new ValidationError(`Invalid emotion intensity: ${e.intensity}. Must be 1-5.`);
+    }
+  }
+
   await db.delete(emotionRecords).where(eq(emotionRecords.entryId, entryId));
 
   if (emotions.length === 0) return;

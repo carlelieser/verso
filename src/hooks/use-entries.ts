@@ -19,7 +19,7 @@ interface UseEntriesResult {
   readonly createEntry: (journalId: string, html: string, text: string) => Promise<Entry>;
   readonly updateEntry: (id: string, html: string, text: string, journalId?: string) => Promise<void>;
   readonly deleteEntry: (id: string) => Promise<void>;
-  readonly loadEntry: (id: string) => Promise<EntryWithEmotions | null>;
+  readonly loadEntry: (id: string) => Promise<EntryWithEmotions>;
   readonly searchEntries: (query: string) => Promise<void>;
 }
 
@@ -72,7 +72,7 @@ export function useEntries(journalId?: string): UseEntriesResult {
   );
 
   const loadEntry = useCallback(
-    async (id: string): Promise<EntryWithEmotions | null> => {
+    async (id: string): Promise<EntryWithEmotions> => {
       return getEntry(db, id);
     },
     [db],

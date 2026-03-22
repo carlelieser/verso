@@ -2,6 +2,7 @@ import { asc, count, eq, sql } from 'drizzle-orm';
 
 import type { Db } from '@/db/client';
 import { entries, journals } from '@/db/schema';
+import { JournalNotFoundError } from '@/errors/domain-errors';
 import type { Journal } from '@/types/journal';
 import { generateId } from '@/utils/id';
 
@@ -76,6 +77,8 @@ export async function updateJournal(db: Db, input: UpdateJournalInput): Promise<
 }
 
 export async function deleteJournal(db: Db, id: string): Promise<void> {
+  const [existing] = await db.select({ id: journals.id }).from(journals).where(eq(journals.id, id)).limit(1);
+  if (!existing) throw new JournalNotFoundError(id);
   await db.delete(journals).where(eq(journals.id, id));
 }
 

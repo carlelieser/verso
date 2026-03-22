@@ -3,6 +3,7 @@ import { desc, eq } from 'drizzle-orm';
 import type { Db } from '@/db/client';
 import { getRawClient } from '@/db/client';
 import { emotionRecords, entries, journals } from '@/db/schema';
+import { EntryNotFoundError } from '@/errors/domain-errors';
 import { isEmotionCategory, isEmotionIntensity } from '@/types/common';
 import type { EmotionRecord } from '@/types/emotion';
 import type { Entry, EntryWithEmotions, EntryWithJournal } from '@/types/entry';
@@ -84,13 +85,15 @@ export async function updateEntry(db: Db, input: UpdateEntryInput): Promise<void
 }
 
 export async function deleteEntry(db: Db, id: string): Promise<void> {
+  const [existing] = await db.select({ id: entries.id }).from(entries).where(eq(entries.id, id)).limit(1);
+  if (!existing) throw new EntryNotFoundError(id);
   await db.delete(entries).where(eq(entries.id, id));
 }
 
-export async function getEntry(db: Db, id: string): Promise<EntryWithEmotions | null> {
+export async function getEntry(db: Db, id: string): Promise<EntryWithEmotions> {
   const [row] = await db.select().from(entries).where(eq(entries.id, id)).limit(1);
 
-  if (!row) return null;
+  if (!row) throw new EntryNotFoundError(id);
 
   const emotions = await db
     .select()
