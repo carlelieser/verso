@@ -12,12 +12,13 @@ import {
 } from 'lucide-react-native';
 import React, {useCallback, useState} from 'react';
 import {Pressable, Text, View} from 'react-native';
-import {useCSSVariable} from 'uniwind';
 
 import {Button, Slider} from 'heroui-native';
 
+import { isEmotionIntensity } from '@/types/common';
 import type {EmotionCategory, EmotionIntensity} from '@/types/common';
 import {EMOTION_LABELS} from '@/constants/emotions';
+import {useThemeColors} from '@/hooks/use-theme-colors';
 
 const EMOTION_ICONS: Record<EmotionCategory, React.ComponentType<{ size?: number; color?: string }>> = {
 	happy: Smile,
@@ -50,13 +51,7 @@ export function EmotionCheckin({onSave, defaultSelections}: EmotionCheckinProps)
 		if (!defaultSelections || defaultSelections.length === 0) return new Map();
 		return new Map(defaultSelections.map((s) => [s.emotion, s.intensity]));
 	});
-	const [accent, accentForeground, foreground, muted, border] = useCSSVariable([
-		'--color-accent',
-		'--color-accent-foreground',
-		'--color-foreground',
-		'--color-muted',
-		'--color-border',
-	]);
+	const {accent, accentForeground, foreground, muted, border} = useThemeColors();
 
 	const toggleEmotion = useCallback((emotion: EmotionCategory) => {
 		setSelected((prev) => {
@@ -93,16 +88,16 @@ export function EmotionCheckin({onSave, defaultSelections}: EmotionCheckinProps)
 					alignItems: 'center',
 					justifyContent: 'center',
 					gap: 4,
-					backgroundColor: isSelected ? (accent as string) : 'transparent',
+					backgroundColor: isSelected ? accent : 'transparent',
 					borderWidth: 1,
-					borderColor: isSelected ? (accent as string) : (border as string),
+					borderColor: isSelected ? accent : border,
 				}}
 			>
-				<Icon size={24} color={isSelected ? (accentForeground as string) : (muted as string)}/>
+				<Icon size={24} color={isSelected ? accentForeground : muted}/>
 				<Text style={{
 					fontSize: 9,
 					fontWeight: isSelected ? '600' : '500',
-					color: isSelected ? (accentForeground as string) : (muted as string),
+					color: isSelected ? accentForeground : muted,
 				}}>
 					{EMOTION_LABELS[emotion]}
 				</Text>
@@ -136,7 +131,7 @@ export function EmotionCheckin({onSave, defaultSelections}: EmotionCheckinProps)
 						fontSize: 11,
 						fontWeight: '500',
 						letterSpacing: 3,
-						color: muted as string,
+						color: muted,
 					}}>
 						INTENSITY
 					</Text>
@@ -146,12 +141,12 @@ export function EmotionCheckin({onSave, defaultSelections}: EmotionCheckinProps)
 							<View key={emotion} style={{gap: 10}}>
 								<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
 									<View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-										<Icon size={16} color={foreground as string}/>
+										<Icon size={16} color={foreground}/>
 										<Text className="text-sm font-medium text-foreground">
 											{EMOTION_LABELS[emotion]}
 										</Text>
 									</View>
-									<Text style={{fontSize: 14, fontWeight: '600', color: accent as string}}>
+									<Text style={{fontSize: 14, fontWeight: '600', color: accent}}>
 										{intensity}
 									</Text>
 								</View>
@@ -160,7 +155,12 @@ export function EmotionCheckin({onSave, defaultSelections}: EmotionCheckinProps)
 									minValue={1}
 									maxValue={5}
 									step={1}
-									onChange={(val) => updateIntensity(emotion, Math.round(Array.isArray(val) ? val[0] ?? 3 : val) as EmotionIntensity)}
+									onChange={(val) => {
+									const rounded = Math.round(Array.isArray(val) ? val[0] ?? 3 : val);
+									if (isEmotionIntensity(rounded)) {
+										updateIntensity(emotion, rounded);
+									}
+								}}
 								>
 									<Slider.Track>
 										<Slider.Fill/>

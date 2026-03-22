@@ -1,11 +1,7 @@
-import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Db = ExpoSQLiteDatabase<any>;
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
+import type { Db } from '@/db/client';
 import { createDatabase } from '@/db/client';
 import { setupFts } from '@/db/fts';
 import { useRunMigrations } from '@/db/migrations';

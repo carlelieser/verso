@@ -1,16 +1,5 @@
 export type Timestamp = number;
 
-export type AuthState =
-  | { readonly status: 'guest' }
-  | { readonly status: 'authenticated'; readonly userId: string; readonly email: string }
-  | { readonly status: 'loading' };
-
-export type TranscriptionStatus = 'idle' | 'loading_model' | 'recording' | 'error';
-
-export type ExportFormat = 'pdf' | 'markdown' | 'json';
-
-export type AttachmentType = 'photo' | 'voice_memo' | 'file' | 'link';
-
 export type EmotionCategory =
   | 'happy'
   | 'sad'
@@ -25,4 +14,17 @@ export type EmotionCategory =
 
 export type EmotionIntensity = 1 | 2 | 3 | 4 | 5;
 
-export type TimeRange = 'week' | 'month' | '3months' | 'year';
+const EMOTION_CATEGORIES_SET: ReadonlySet<string> = new Set<EmotionCategory>([
+  'happy', 'sad', 'anxious', 'calm', 'frustrated',
+  'excited', 'grateful', 'angry', 'hopeful', 'tired',
+]);
+
+const EMOTION_INTENSITIES_SET: ReadonlySet<number> = new Set<EmotionIntensity>([1, 2, 3, 4, 5]);
+
+export function isEmotionCategory(value: string): value is EmotionCategory {
+  return EMOTION_CATEGORIES_SET.has(value);
+}
+
+export function isEmotionIntensity(value: number): value is EmotionIntensity {
+  return EMOTION_INTENSITIES_SET.has(value);
+}

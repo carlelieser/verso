@@ -13,13 +13,14 @@ import {
 import React, {forwardRef, useImperativeHandle, useRef, useState} from 'react';
 import type {NativeSyntheticEvent} from 'react-native';
 import {Pressable, View} from 'react-native';
-import {useCSSVariable} from 'uniwind';
 
 import {
 	EnrichedTextInput,
 	type EnrichedTextInputInstance,
 	type OnChangeStateEvent,
 } from 'react-native-enriched';
+
+import {useThemeColors} from '@/hooks/use-theme-colors';
 
 interface FormatAction {
 	readonly key: string;
@@ -60,14 +61,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 	const ref = useRef<EnrichedTextInputInstance>(null);
 	const [styleState, setStyleState] = useState<OnChangeStateEvent | null>(null);
 
-	const [foreground, accent, muted, surface, border, editorFont] = useCSSVariable([
-		'--color-foreground',
-		'--color-accent',
-		'--color-muted',
-		'--color-border',
-		'--color-surface',
-		'--font-editor',
-	]);
+	const {foreground, accent, muted, surface, border, editorFont} = useThemeColors();
 
 	useImperativeHandle(forwardedRef, () => ({
 		clear: () => ref.current?.setValue(''),
@@ -84,16 +78,16 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 				ref={ref}
 				defaultValue={defaultValue}
 				placeholder={placeholder ?? 'Start writing...'}
-				placeholderTextColor={muted as string}
-				cursorColor={accent as string}
-				selectionColor={accent as string}
+				placeholderTextColor={muted}
+				cursorColor={accent}
+				selectionColor={accent}
 				onChangeState={handleStateChange}
 				onChangeHtml={(e) => onChangeHtml?.(e.nativeEvent.value)}
 				onChangeText={(e) => onChangeText?.(e.nativeEvent.value)}
 				style={{
 					flex: 1,
-					fontFamily: editorFont as string,
-					color: foreground as string,
+					fontFamily: editorFont,
+					color: foreground,
 					fontSize: 17,
 					lineHeight: 28,
 					paddingHorizontal: 20,
@@ -104,31 +98,31 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 					h1: {fontSize: 28, bold: true},
 					h2: {fontSize: 22, bold: true},
 					blockquote: {
-						borderColor: accent as string,
+						borderColor: accent,
 						borderWidth: 3,
 						gapWidth: 12,
-						color: muted as string,
+						color: muted,
 					},
 					codeblock: {
-						backgroundColor: surface as string,
+						backgroundColor: surface,
 						borderRadius: 8,
-						color: foreground as string,
+						color: foreground,
 					},
 					code: {
-						backgroundColor: surface as string,
-						color: foreground as string,
+						backgroundColor: surface,
+						color: foreground,
 					},
 					ul: {
-						bulletColor: foreground as string,
+						bulletColor: foreground,
 					},
 					ol: {
-						markerColor: foreground as string,
+						markerColor: foreground,
 					},
 					ulCheckbox: {
-						boxColor: muted as string,
+						boxColor: muted,
 					},
 					a: {
-						color: accent as string,
+						color: accent,
 						textDecorationLine: 'underline',
 					},
 				}}
@@ -139,7 +133,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 					flexDirection: 'row',
 					alignItems: 'center',
 					borderTopWidth: 1,
-					borderTopColor: border as string,
+					borderTopColor: border,
 					paddingHorizontal: 8,
 					paddingVertical: 6,
 					gap: 2,
@@ -163,12 +157,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 								alignItems: 'center',
 								justifyContent: 'center',
 								borderRadius: 8,
-								backgroundColor: isActive ? (surface as string) : 'transparent',
+								backgroundColor: isActive ? surface : 'transparent',
 							}}
 						>
 							<IconComponent
 								size={18}
-								color={isActive ? (accent as string) : (muted as string)}
+								color={isActive ? accent : muted}
 							/>
 						</Pressable>
 					);

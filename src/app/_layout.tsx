@@ -50,7 +50,7 @@ export default function RootLayout(): React.JSX.Element {
 			<HeroUINativeProvider>
 				<DatabaseProvider>
 					<Stack screenOptions={{
-						headerShown: false
+						headerShown: false,
 					}}/>
 				</DatabaseProvider>
 				<StatusBar style="auto"/>

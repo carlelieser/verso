@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
-import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
 import { GUEST_USER_ID } from '@/constants/user';
+import type { Db } from '@/db/client';
 import { users } from '@/db/schema';
 
 /**
@@ -11,7 +11,7 @@ import { users } from '@/db/schema';
  * users.id, so a guest user row must be present before any data
  * can be inserted for unauthenticated users.
  */
-export async function ensureGuestUser(db: ExpoSQLiteDatabase): Promise<void> {
+export async function ensureGuestUser(db: Db): Promise<void> {
   const existing = await db
     .select({ id: users.id })
     .from(users)

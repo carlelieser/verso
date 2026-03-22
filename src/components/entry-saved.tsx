@@ -10,7 +10,8 @@ import Animated, {
 	withDelay,
 	withSpring,
 } from 'react-native-reanimated';
-import {useCSSVariable} from 'uniwind';
+
+import {useThemeColors} from '@/hooks/use-theme-colors';
 
 const ENCOURAGEMENTS = [
 	'Thoughts captured.',
@@ -31,7 +32,7 @@ interface EntrySavedProps {
 }
 
 export function EntrySaved({onComplete}: EntrySavedProps): React.JSX.Element {
-	const [accent, muted] = useCSSVariable(['--color-accent', '--color-muted']);
+	const {accent} = useThemeColors();
 	const iconScale = useSharedValue(0);
 
 	useEffect(() => {
@@ -51,7 +52,7 @@ export function EntrySaved({onComplete}: EntrySavedProps): React.JSX.Element {
 			className="absolute inset-0 items-center justify-center bg-background"
 		>
 			<Animated.View style={iconStyle}>
-				<Sparkles size={48} color={accent as string}/>
+				<Sparkles size={48} color={accent}/>
 			</Animated.View>
 			<Animated.View entering={SlideInDown.delay(400).duration(400).springify()}>
 				<Text className="text-2xl font-heading text-foreground mt-6 pb-1">

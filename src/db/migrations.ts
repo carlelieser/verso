@@ -1,9 +1,9 @@
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
+import type { Db } from './client';
 import migrations from '../../drizzle/migrations';
 
-export function useRunMigrations(db: ExpoSQLiteDatabase): {
+export function useRunMigrations(db: Db): {
   success: boolean;
   error?: Error | undefined;
 } {

@@ -1,14 +1,12 @@
 import { desc, eq } from 'drizzle-orm';
-import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
+import type { Db } from '@/db/client';
+import { getRawClient } from '@/db/client';
 import { emotionRecords, entries, journals } from '@/db/schema';
-import type { EmotionCategory, EmotionIntensity } from '@/types/common';
+import { isEmotionCategory, isEmotionIntensity } from '@/types/common';
 import type { EmotionRecord } from '@/types/emotion';
-import type { Entry } from '@/types/entry';
+import type { Entry, EntryWithEmotions, EntryWithJournal } from '@/types/entry';
 import { generateId } from '@/utils/id';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Db = ExpoSQLiteDatabase<any>;
 
 interface CreateEntryInput {
   readonly journalId: string;
@@ -18,6 +16,7 @@ interface CreateEntryInput {
 
 interface UpdateEntryInput {
   readonly id: string;
+  readonly journalId?: string;
   readonly contentHtml: string;
   readonly contentText: string;
 }
@@ -27,14 +26,6 @@ interface ListEntriesInput {
   readonly journalId?: string;
   readonly limit?: number;
   readonly offset?: number;
-}
-
-export interface EntryWithJournal extends Entry {
-  readonly journalName: string;
-}
-
-export interface EntryWithEmotions extends Entry {
-  readonly emotions: readonly EmotionRecord[];
 }
 
 function toEntry(row: {
@@ -79,14 +70,17 @@ export async function createEntry(db: Db, input: CreateEntryInput): Promise<Entr
 }
 
 export async function updateEntry(db: Db, input: UpdateEntryInput): Promise<void> {
-  await db
-    .update(entries)
-    .set({
-      contentHtml: input.contentHtml,
-      contentText: input.contentText,
-      updatedAt: new Date(),
-    })
-    .where(eq(entries.id, input.id));
+  const updates: Record<string, unknown> = {
+    contentHtml: input.contentHtml,
+    contentText: input.contentText,
+    updatedAt: new Date(),
+  };
+
+  if (input.journalId !== undefined) {
+    updates.journalId = input.journalId;
+  }
+
+  await db.update(entries).set(updates).where(eq(entries.id, input.id));
 }
 
 export async function deleteEntry(db: Db, id: string): Promise<void> {
@@ -103,15 +97,22 @@ export async function getEntry(db: Db, id: string): Promise<EntryWithEmotions | 
     .from(emotionRecords)
     .where(eq(emotionRecords.entryId, id));
 
+  const validEmotions: EmotionRecord[] = [];
+  for (const e of emotions) {
+    if (isEmotionCategory(e.category) && isEmotionIntensity(e.intensity)) {
+      validEmotions.push({
+        id: e.id,
+        entryId: e.entryId,
+        category: e.category,
+        intensity: e.intensity,
+        createdAt: e.createdAt.getTime(),
+      });
+    }
+  }
+
   return {
     ...toEntry(row),
-    emotions: emotions.map((e) => ({
-      id: e.id,
-      entryId: e.entryId,
-      category: e.category as EmotionCategory,
-      intensity: e.intensity as EmotionIntensity,
-      createdAt: e.createdAt.getTime(),
-    })),
+    emotions: validEmotions,
   };
 }
 
@@ -141,13 +142,28 @@ export async function listEntries(db: Db, input: ListEntriesInput): Promise<Entr
     .offset(offset);
 
   return rows.map((row) => ({
-    ...toEntry(row as unknown as { id: string; journalId: string; contentHtml: string; contentText: string; createdAt: Date; updatedAt: Date }),
+    id: row.id,
+    journalId: row.journalId,
+    contentHtml: row.contentHtml,
+    contentText: row.contentText,
+    createdAt: row.createdAt.getTime(),
+    updatedAt: row.updatedAt.getTime(),
     journalName: row.journalName,
   }));
 }
 
+interface FtsRow {
+  readonly id: string;
+  readonly journal_id: string;
+  readonly content_html: string;
+  readonly content_text: string;
+  readonly created_at: number;
+  readonly updated_at: number;
+  readonly journal_name: string;
+}
+
 export async function searchEntries(db: Db, query: string): Promise<EntryWithJournal[]> {
-  const rawDb = (db as unknown as { $client: { getAllSync: (sql: string, params: unknown[]) => unknown[] } }).$client;
+  const rawDb = getRawClient(db);
 
   const rows = rawDb.getAllSync(
     `SELECT e.id, e.journal_id, e.content_html, e.content_text, e.created_at, e.updated_at, j.name as journal_name
@@ -157,15 +173,7 @@ export async function searchEntries(db: Db, query: string): Promise<EntryWithJou
      WHERE entry_fts MATCH ?
      ORDER BY rank`,
     [query],
-  ) as Array<{
-    id: string;
-    journal_id: string;
-    content_html: string;
-    content_text: string;
-    created_at: number;
-    updated_at: number;
-    journal_name: string;
-  }>;
+  ) as FtsRow[];
 
   return rows.map((row) => ({
     id: row.id,

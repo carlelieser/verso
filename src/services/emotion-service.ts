@@ -1,13 +1,10 @@
 import { eq } from 'drizzle-orm';
-import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
+import type { Db } from '@/db/client';
 import { emotionRecords } from '@/db/schema';
-import type { EmotionCategory, EmotionIntensity } from '@/types/common';
+import { isEmotionCategory, isEmotionIntensity } from '@/types/common';
 import type { EmotionInput, EmotionRecord } from '@/types/emotion';
 import { generateId } from '@/utils/id';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Db = ExpoSQLiteDatabase<any>;
 
 export async function saveEmotions(
   db: Db,
@@ -31,17 +28,23 @@ export async function saveEmotions(
   );
 }
 
-export async function getEmotions(db: Db, entryId: string): Promise<EmotionRecord[]> {
+export async function getEmotions(db: Db, entryId: string): Promise<readonly EmotionRecord[]> {
   const rows = await db
     .select()
     .from(emotionRecords)
     .where(eq(emotionRecords.entryId, entryId));
 
-  return rows.map((row) => ({
-    id: row.id,
-    entryId: row.entryId,
-    category: row.category as EmotionCategory,
-    intensity: row.intensity as EmotionIntensity,
-    createdAt: row.createdAt.getTime(),
-  }));
+  const result: EmotionRecord[] = [];
+  for (const row of rows) {
+    if (isEmotionCategory(row.category) && isEmotionIntensity(row.intensity)) {
+      result.push({
+        id: row.id,
+        entryId: row.entryId,
+        category: row.category,
+        intensity: row.intensity,
+        createdAt: row.createdAt.getTime(),
+      });
+    }
+  }
+  return result;
 }

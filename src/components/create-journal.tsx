@@ -1,10 +1,10 @@
 import React, {useState} from 'react';
 import {Pressable, Text, TextInput, View} from 'react-native';
-import {useCSSVariable} from 'uniwind';
 
 import {Button} from 'heroui-native';
 
 import {JOURNAL_ICONS} from '@/constants/journal-icons';
+import {useThemeColors} from '@/hooks/use-theme-colors';
 
 interface CreateJournalProps {
 	readonly onCreate: (name: string, icon: string) => void;
@@ -13,14 +13,7 @@ interface CreateJournalProps {
 export function CreateJournal({onCreate}: CreateJournalProps): React.JSX.Element {
 	const [name, setName] = useState('');
 	const [selectedIcon, setSelectedIcon] = useState('book-open');
-	const [accent, accentForeground, foreground, muted, surface, border] = useCSSVariable([
-		'--color-accent',
-		'--color-accent-foreground',
-		'--color-foreground',
-		'--color-muted',
-		'--color-surface',
-		'--color-border',
-	]);
+	const {accent, accentForeground, foreground, muted, surface, border} = useThemeColors();
 
 	const isValid = name.trim().length > 0;
 
@@ -43,12 +36,12 @@ export function CreateJournal({onCreate}: CreateJournalProps): React.JSX.Element
 									borderRadius: 12,
 									alignItems: 'center',
 									justifyContent: 'center',
-									backgroundColor: isSelected ? (accent as string) : 'transparent',
+									backgroundColor: isSelected ? accent : 'transparent',
 									borderWidth: 1,
-									borderColor: isSelected ? (accent as string) : (border as string),
+									borderColor: isSelected ? accent : border,
 								}}
 							>
-								<Icon size={20} color={isSelected ? (accentForeground as string) : (muted as string)}/>
+								<Icon size={20} color={isSelected ? accentForeground : muted}/>
 							</Pressable>
 						);
 					})}
@@ -61,17 +54,17 @@ export function CreateJournal({onCreate}: CreateJournalProps): React.JSX.Element
 					value={name}
 					onChangeText={setName}
 					placeholder="e.g. Daily, Work, Ideas..."
-					placeholderTextColor={muted as string}
+					placeholderTextColor={muted}
 					autoFocus
 					style={{
-						backgroundColor: surface as string,
+						backgroundColor: surface,
 						borderRadius: 12,
 						paddingHorizontal: 16,
 						paddingVertical: 14,
 						fontSize: 16,
-						color: foreground as string,
+						color: foreground,
 						borderWidth: 1,
-						borderColor: border as string,
+						borderColor: border,
 					}}
 				/>
 			</View>

@@ -1,9 +1,33 @@
+import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseSync } from 'expo-sqlite';
 import * as SecureStore from 'expo-secure-store';
 
 import * as relations from './relations';
 import * as schema from './schema';
+
+const fullSchema = { ...schema, ...relations };
+type Schema = typeof fullSchema;
+
+export type Db = ExpoSQLiteDatabase<Schema>;
+
+/**
+ * Raw SQLite client interface for operations Drizzle doesn't support
+ * (e.g. FTS5 virtual tables, raw PRAGMA).
+ *
+ * Type assertions are confined here — the rest of the codebase
+ * accesses raw SQLite only through these helpers.
+ */
+interface RawSqliteClient {
+  execSync: (sql: string) => void;
+  getAllSync: (sql: string, params: unknown[]) => unknown[];
+}
+
+export function getRawClient(db: Db): RawSqliteClient {
+  // Drizzle's expo-sqlite driver stores the raw client on $client.
+  // This cast is at a system boundary — Drizzle doesn't expose a typed API for this.
+  return (db as unknown as { $client: RawSqliteClient }).$client;
+}
 
 const ENCRYPTION_KEY_ALIAS = 'verso_db_key';
 const DATABASE_NAME = 'verso.db';
@@ -28,7 +52,7 @@ async function getOrCreateEncryptionKey(): Promise<string> {
   return newKey;
 }
 
-export async function createDatabase(): Promise<ReturnType<typeof drizzle>> {
+export async function createDatabase(): Promise<Db> {
   const encryptionKey = await getOrCreateEncryptionKey();
 
   const sqliteDb = openDatabaseSync(DATABASE_NAME);
@@ -40,7 +64,5 @@ export async function createDatabase(): Promise<ReturnType<typeof drizzle>> {
   sqliteDb.execSync('PRAGMA foreign_keys = ON');
   sqliteDb.execSync('PRAGMA recursive_triggers = ON');
 
-  const db = drizzle(sqliteDb, { schema: { ...schema, ...relations } });
-
-  return db;
+  return drizzle(sqliteDb, { schema: fullSchema });
 }

@@ -1,12 +1,9 @@
 import { asc, count, eq, sql } from 'drizzle-orm';
-import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
+import type { Db } from '@/db/client';
 import { entries, journals } from '@/db/schema';
 import type { Journal } from '@/types/journal';
 import { generateId } from '@/utils/id';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Db = ExpoSQLiteDatabase<any>;
 
 interface CreateJournalInput {
   readonly userId: string;

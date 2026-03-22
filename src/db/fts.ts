@@ -1,7 +1,8 @@
-import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
+import { getRawClient } from './client';
+import type { Db } from './client';
 
-export function setupFts(db: ExpoSQLiteDatabase): void {
-  const rawDb = (db as unknown as { $client: { execSync: (sql: string) => void } }).$client;
+export function setupFts(db: Db): void {
+  const rawDb = getRawClient(db);
 
   rawDb.execSync(`
     CREATE VIRTUAL TABLE IF NOT EXISTS entry_fts

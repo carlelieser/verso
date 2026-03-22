@@ -1,61 +1,26 @@
 import {ChevronLeft, Plus, Search} from 'lucide-react-native';
 import {router, useLocalSearchParams} from 'expo-router';
 import React, {useCallback, useState} from 'react';
-import {FlatList, Pressable, Text, TextInput, View} from 'react-native';
+import {FlatList, Text, TextInput, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useCSSVariable} from 'uniwind';
 
-import {Button, Card} from 'heroui-native';
+import {Button} from 'heroui-native';
 
+import {EntryCard} from '@/components/entry-card';
 import {getJournalIcon} from '@/constants/journal-icons';
 import {useEntries} from '@/hooks/use-entries';
 import {useJournals} from '@/hooks/use-journals';
-import type {EntryWithJournal} from '@/services/entry-service';
-import {formatRelativeDate} from '@/utils/date';
-
-function EntryCard({
-	entry,
-	onPress,
-}: {
-	readonly entry: EntryWithJournal;
-	readonly onPress: () => void;
-}): React.JSX.Element {
-	const preview = entry.contentText.slice(0, 120).trim();
-
-	return (
-		<Pressable onPress={onPress}>
-			<Card>
-				<Card.Body>
-					<View>
-						<Card.Description className="font-editor text-sm" numberOfLines={2}>
-							{preview || 'Empty entry'}
-						</Card.Description>
-						<View className="flex-row items-center justify-end mt-1">
-							<Card.Description className="text-xs opacity-50">
-								{formatRelativeDate(entry.createdAt)}
-							</Card.Description>
-						</View>
-					</View>
-				</Card.Body>
-			</Card>
-		</Pressable>
-	);
-}
+import {useThemeColors} from '@/hooks/use-theme-colors';
+import type {Entry} from '@/types/entry';
 
 export default function JournalDetailScreen(): React.JSX.Element {
 	const {id} = useLocalSearchParams<{ id: string }>();
 	const insets = useSafeAreaInsets();
-	const [muted, surface, foreground, border, accentForeground] = useCSSVariable([
-		'--color-muted',
-		'--color-surface',
-		'--color-foreground',
-		'--color-border',
-		'--color-accent-foreground',
-	]);
+	const {muted, surface, foreground, border, accentForeground} = useThemeColors();
 
 	const {journals} = useJournals();
 	const journal = journals.find((j) => j.id === id);
-	const {entries, searchEntries} = useEntries(id);
+	const {entries, searchEntries, createEntry} = useEntries(id);
 	const [searchQuery, setSearchQuery] = useState('');
 
 	const handleSearch = useCallback(
@@ -66,16 +31,22 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		[searchEntries],
 	);
 
+	const handleNewEntry = useCallback(async () => {
+		if (!id) return;
+		const entry = await createEntry(id, '', '');
+		router.push(`/entry/${entry.id}/edit`);
+	}, [id, createEntry]);
+
 	const Icon = journal ? getJournalIcon(journal.icon) : null;
 
 	return (
 		<View className="flex-1 bg-background" style={{paddingTop: insets.top}}>
 			<View className="p-3 gap-1">
 				<Button variant="ghost" size="sm" isIconOnly onPress={() => router.back()}>
-					<ChevronLeft size={20} color={muted as string}/>
+					<ChevronLeft size={20} color={muted}/>
 				</Button>
 				<View className="flex-row items-center gap-3 ml-2 pb-2">
-					{Icon ? <Icon size={28} color={muted as string}/> : null}
+					{Icon ? <Icon size={28} color={muted}/> : null}
 					<Text className="text-5xl font-heading text-foreground">
 						{journal?.name ?? 'Journal'}
 					</Text>
@@ -91,20 +62,20 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					marginBottom: 8,
 					paddingHorizontal: 12,
 					paddingVertical: 10,
-					backgroundColor: surface as string,
+					backgroundColor: surface,
 					borderRadius: 12,
 					borderWidth: 1,
-					borderColor: border as string,
+					borderColor: border,
 					gap: 8,
 				}}
 			>
-				<Search size={16} color={muted as string}/>
+				<Search size={16} color={muted}/>
 				<TextInput
 					value={searchQuery}
 					onChangeText={handleSearch}
 					placeholder="Search entries..."
-					placeholderTextColor={muted as string}
-					style={{flex: 1, fontSize: 15, color: foreground as string, padding: 0}}
+					placeholderTextColor={muted}
+					style={{flex: 1, fontSize: 15, color: foreground, padding: 0}}
 				/>
 			</View>
 
@@ -134,11 +105,11 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				variant="primary"
 				size="lg"
 				isIconOnly
-				onPress={() => router.push({pathname: '/', params: {journalId: id}})}
+				onPress={handleNewEntry}
 				className="absolute bottom-8 right-5 w-14 h-14 rounded-full shadow-2xl"
 				style={{bottom: insets.bottom + 16}}
 			>
-				<Plus size={24} color={accentForeground as string}/>
+				<Plus size={24} color={accentForeground}/>
 			</Button>
 		</View>
 	);

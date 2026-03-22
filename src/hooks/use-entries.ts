@@ -5,21 +5,19 @@ import { useDatabaseContext } from '@/providers/database-provider';
 import {
   createEntry as createEntryService,
   deleteEntry as deleteEntryService,
-  type EntryWithEmotions,
-  type EntryWithJournal,
   getEntry,
   listEntries as listEntriesService,
   searchEntries as searchEntriesService,
   updateEntry as updateEntryService,
 } from '@/services/entry-service';
-import type { Entry } from '@/types/entry';
+import type { Entry, EntryWithEmotions, EntryWithJournal } from '@/types/entry';
 
 interface UseEntriesResult {
   readonly entries: readonly EntryWithJournal[];
   readonly isLoading: boolean;
   readonly refresh: (journalId?: string) => Promise<void>;
   readonly createEntry: (journalId: string, html: string, text: string) => Promise<Entry>;
-  readonly updateEntry: (id: string, html: string, text: string) => Promise<void>;
+  readonly updateEntry: (id: string, html: string, text: string, journalId?: string) => Promise<void>;
   readonly deleteEntry: (id: string) => Promise<void>;
   readonly loadEntry: (id: string) => Promise<EntryWithEmotions | null>;
   readonly searchEntries: (query: string) => Promise<void>;
@@ -59,8 +57,8 @@ export function useEntries(journalId?: string): UseEntriesResult {
   );
 
   const updateEntry = useCallback(
-    async (id: string, html: string, text: string): Promise<void> => {
-      await updateEntryService(db, { id, contentHtml: html, contentText: text });
+    async (id: string, html: string, text: string, journalId?: string): Promise<void> => {
+      await updateEntryService(db, { id, journalId, contentHtml: html, contentText: text });
     },
     [db],
   );

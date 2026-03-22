@@ -9,7 +9,7 @@ import type { EmotionInput, EmotionRecord } from '@/types/emotion';
 
 interface UseEmotionsResult {
   readonly saveEmotions: (entryId: string, emotions: readonly EmotionInput[]) => Promise<void>;
-  readonly getEmotions: (entryId: string) => Promise<EmotionRecord[]>;
+  readonly getEmotions: (entryId: string) => Promise<readonly EmotionRecord[]>;
 }
 
 export function useEmotions(): UseEmotionsResult {
@@ -23,7 +23,7 @@ export function useEmotions(): UseEmotionsResult {
   );
 
   const getEmotions = useCallback(
-    async (entryId: string): Promise<EmotionRecord[]> => {
+    async (entryId: string): Promise<readonly EmotionRecord[]> => {
       return getEmotionsService(db, entryId);
     },
     [db],
