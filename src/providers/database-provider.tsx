@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import type { Db } from '@/db/client';
 import { createDatabase } from '@/db/client';
@@ -28,8 +28,11 @@ interface DatabaseProviderProps {
 export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX.Element {
   const [db, setDb] = useState<Db | null>(null);
   const [initError, setInitError] = useState<Error | null>(null);
+  const [initAttempt, setInitAttempt] = useState(0);
+  const [innerKey, setInnerKey] = useState(0);
 
   useEffect(() => {
+    setInitError(null);
     createDatabase()
       .then((database) => {
         setDb(database);
@@ -37,13 +40,19 @@ export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX
       .catch((error: unknown) => {
         setInitError(error instanceof Error ? error : new Error(String(error)));
       });
-  }, []);
+  }, [initAttempt]);
 
   if (initError) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <Text className="text-lg font-semibold text-danger">Failed to initialize database</Text>
         <Text className="mt-2 px-8 text-center text-sm text-muted">{initError.message}</Text>
+        <Pressable
+          onPress={() => setInitAttempt((n) => n + 1)}
+          style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8, backgroundColor: '#3b82f6' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Retry</Text>
+        </Pressable>
       </View>
     );
   }
@@ -57,22 +66,26 @@ export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX
     );
   }
 
-  return <DatabaseProviderInner db={db}>{children}</DatabaseProviderInner>;
+  return <DatabaseProviderInner key={innerKey} db={db} onRetry={() => setInnerKey((k) => k + 1)}>{children}</DatabaseProviderInner>;
 }
 
 function DatabaseProviderInner({
   db,
   children,
+  onRetry,
 }: {
   readonly db: Db;
   readonly children: React.ReactNode;
+  readonly onRetry: () => void;
 }): React.JSX.Element {
   const { success, error } = useRunMigrations(db);
   const [isSeeded, setIsSeeded] = useState(false);
   const [seedError, setSeedError] = useState<Error | null>(null);
+  const [seedAttempt, setSeedAttempt] = useState(0);
 
   useEffect(() => {
     if (success) {
+      setSeedError(null);
       setupFts(db);
       ensureGuestUser(db)
         .then(() => {
@@ -82,16 +95,34 @@ function DatabaseProviderInner({
           setSeedError(err instanceof Error ? err : new Error(String(err)));
         });
     }
-  }, [success, db]);
+  }, [success, db, seedAttempt]);
 
-  if (error ?? seedError) {
-    const displayError = error ?? seedError;
+  if (error) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-lg font-semibold text-danger">
-          {error ? 'Migration failed' : 'Database setup failed'}
-        </Text>
-        <Text className="mt-2 px-8 text-center text-sm text-muted">{displayError?.message}</Text>
+        <Text className="text-lg font-semibold text-danger">Migration failed</Text>
+        <Text className="mt-2 px-8 text-center text-sm text-muted">{error.message}</Text>
+        <Pressable
+          onPress={onRetry}
+          style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8, backgroundColor: '#3b82f6' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (seedError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <Text className="text-lg font-semibold text-danger">Database setup failed</Text>
+        <Text className="mt-2 px-8 text-center text-sm text-muted">{seedError.message}</Text>
+        <Pressable
+          onPress={() => setSeedAttempt((n) => n + 1)}
+          style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8, backgroundColor: '#3b82f6' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Retry</Text>
+        </Pressable>
       </View>
     );
   }
