@@ -15,6 +15,7 @@ interface UseJournalsResult {
   readonly journals: readonly Journal[];
   readonly entryCounts: ReadonlyMap<string, number>;
   readonly isLoading: boolean;
+  readonly error: Error | null;
   readonly refresh: () => Promise<void>;
   readonly createJournal: (name: string, icon: string) => Promise<Journal>;
   readonly updateJournal: (id: string, updates: { name?: string; icon?: string }) => Promise<void>;
@@ -26,15 +27,22 @@ export function useJournals(): UseJournalsResult {
   const [journals, setJournals] = useState<readonly Journal[]>([]);
   const [entryCounts, setEntryCounts] = useState<ReadonlyMap<string, number>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const refresh = useCallback(async () => {
-    const [journalList, counts] = await Promise.all([
-      listJournals(db, GUEST_USER_ID),
-      getJournalEntryCounts(db, GUEST_USER_ID),
-    ]);
-    setJournals(journalList);
-    setEntryCounts(counts);
-    setIsLoading(false);
+    try {
+      setError(null);
+      const [journalList, counts] = await Promise.all([
+        listJournals(db, GUEST_USER_ID),
+        getJournalEntryCounts(db, GUEST_USER_ID),
+      ]);
+      setJournals(journalList);
+      setEntryCounts(counts);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
   }, [db]);
 
   useEffect(() => {
@@ -70,5 +78,5 @@ export function useJournals(): UseJournalsResult {
     [db, refresh],
   );
 
-  return { journals, entryCounts, isLoading, refresh, createJournal, updateJournal, deleteJournal };
+  return { journals, entryCounts, isLoading, error, refresh, createJournal, updateJournal, deleteJournal };
 }

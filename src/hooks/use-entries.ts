@@ -15,6 +15,7 @@ import type { Entry, EntryWithEmotions, EntryWithJournal } from '@/types/entry';
 interface UseEntriesResult {
   readonly entries: readonly EntryWithJournal[];
   readonly isLoading: boolean;
+  readonly error: Error | null;
   readonly refresh: (journalId?: string) => Promise<void>;
   readonly createEntry: (journalId: string, html: string, text: string) => Promise<Entry>;
   readonly updateEntry: (id: string, html: string, text: string, journalId?: string) => Promise<void>;
@@ -27,15 +28,22 @@ export function useEntries(journalId?: string): UseEntriesResult {
   const { db } = useDatabaseContext();
   const [entries, setEntries] = useState<readonly EntryWithJournal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const refresh = useCallback(
     async (filterJournalId?: string) => {
-      const list = await listEntriesService(db, {
-        userId: GUEST_USER_ID,
-        journalId: filterJournalId ?? journalId,
-      });
-      setEntries(list);
-      setIsLoading(false);
+      try {
+        setError(null);
+        const list = await listEntriesService(db, {
+          userId: GUEST_USER_ID,
+          journalId: filterJournalId ?? journalId,
+        });
+        setEntries(list);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        setIsLoading(false);
+      }
     },
     [db, journalId],
   );
@@ -93,6 +101,7 @@ export function useEntries(journalId?: string): UseEntriesResult {
   return {
     entries,
     isLoading,
+    error,
     refresh,
     createEntry,
     updateEntry,
