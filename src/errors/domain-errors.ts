@@ -12,20 +12,6 @@ export class EntryNotFoundError extends Error {
   }
 }
 
-export class ExportError extends Error {
-  constructor(message: string, options?: { cause?: unknown }) {
-    super(message, options);
-    this.name = 'ExportError';
-  }
-}
-
-export class TranscriptionError extends Error {
-  constructor(message: string, options?: { cause?: unknown }) {
-    super(message, options);
-    this.name = 'TranscriptionError';
-  }
-}
-
 export class StorageFullError extends Error {
   constructor(options?: { cause?: unknown }) {
     super('Device storage is full. Please free up space to continue.', options);
@@ -33,9 +19,9 @@ export class StorageFullError extends Error {
   }
 }
 
-export class AuthError extends Error {
+export class ValidationError extends Error {
   constructor(message: string, options?: { cause?: unknown }) {
     super(message, options);
-    this.name = 'AuthError';
+    this.name = 'ValidationError';
   }
 }
