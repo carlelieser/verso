@@ -1,6 +1,16 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Button, Menu } from 'heroui-native';
-import { Check, EllipsisVertical, MapPin, MapPinOff, SmilePlus } from 'lucide-react-native';
+import {
+	AudioLines,
+	Check,
+	EllipsisVertical,
+	FileText,
+	Image,
+	MapPin,
+	MapPinOff,
+	Paperclip,
+	SmilePlus,
+} from 'lucide-react-native';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { Keyboard, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -10,6 +20,7 @@ import { CreateJournal } from '@/components/create-journal';
 import { Editor } from '@/components/editor';
 import { EmotionCheckin } from '@/components/emotion-checkin';
 import { JournalSelect } from '@/components/journal-select';
+import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useEntryComposer } from '@/hooks/use-entry-composer';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -68,6 +79,8 @@ export const EntryComposer = forwardRef<EntryComposerHandle, EntryComposerProps>
 			onFinish,
 			isAnimatedCheck,
 		});
+
+		const attachmentPicker = useAttachmentPicker(composer.currentEntryId);
 
 		const emotionSheet = useBottomSheet({
 			maxDynamicContentSize: insets.top > 0 ? undefined : 600,
@@ -178,6 +191,49 @@ export const EntryComposer = forwardRef<EntryComposerHandle, EntryComposerProps>
 												}
 											/>
 										</Button>
+										<Menu presentation="popover">
+											<Menu.Trigger asChild>
+												<Button variant="ghost" size="sm" isIconOnly>
+													<Paperclip
+														size={16}
+														color={
+															attachmentPicker.attachments.length > 0
+																? accent
+																: muted
+														}
+													/>
+												</Button>
+											</Menu.Trigger>
+											<Menu.Portal>
+												<Menu.Overlay />
+												<Menu.Content presentation="popover" width={180}>
+													<Menu.Item
+														id="images"
+														shouldCloseOnSelect
+														onPress={attachmentPicker.pickImages}
+													>
+														<Image size={16} color={muted} />
+														<Menu.ItemTitle>Images</Menu.ItemTitle>
+													</Menu.Item>
+													<Menu.Item
+														id="audio"
+														shouldCloseOnSelect
+														onPress={attachmentPicker.pickAudio}
+													>
+														<AudioLines size={16} color={muted} />
+														<Menu.ItemTitle>Audio</Menu.ItemTitle>
+													</Menu.Item>
+													<Menu.Item
+														id="documents"
+														shouldCloseOnSelect
+														onPress={attachmentPicker.pickDocuments}
+													>
+														<FileText size={16} color={muted} />
+														<Menu.ItemTitle>Documents</Menu.ItemTitle>
+													</Menu.Item>
+												</Menu.Content>
+											</Menu.Portal>
+										</Menu>
 										{headerRight}
 										{overflowMenuItems && overflowMenuItems.length > 0 ? (
 											<Menu presentation="popover">

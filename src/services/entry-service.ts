@@ -4,6 +4,7 @@ import type { Db } from '@/db/client';
 import { getRawClient } from '@/db/client';
 import { emotionRecords, entries, journals } from '@/db/schema';
 import { EntryNotFoundError } from '@/errors/domain-errors';
+import { deleteAttachmentFiles, listAttachments } from '@/services/attachment-service';
 import { getLocation } from '@/services/location-service';
 import { getWeather } from '@/services/weather-service';
 import { isEmotionCategory, isEmotionIntensity } from '@/types/common';
@@ -92,6 +93,7 @@ export async function deleteEntry(db: Db, id: string): Promise<void> {
 		.where(eq(entries.id, id))
 		.limit(1);
 	if (!existing) throw new EntryNotFoundError(id);
+	deleteAttachmentFiles(id);
 	await db.delete(entries).where(eq(entries.id, id));
 }
 
@@ -100,8 +102,9 @@ export async function getEntry(db: Db, id: string): Promise<EntryDetail> {
 
 	if (!row) throw new EntryNotFoundError(id);
 
-	const [emotions, location, weather] = await Promise.all([
+	const [emotions, entryAttachments, location, weather] = await Promise.all([
 		db.select().from(emotionRecords).where(eq(emotionRecords.entryId, id)),
+		listAttachments(db, id),
 		getLocation(db, id),
 		getWeather(db, id),
 	]);
@@ -122,6 +125,7 @@ export async function getEntry(db: Db, id: string): Promise<EntryDetail> {
 	return {
 		...toEntry(row),
 		emotions: validEmotions,
+		attachments: entryAttachments,
 		location,
 		weather,
 	};

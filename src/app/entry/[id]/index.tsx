@@ -4,6 +4,7 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AttachmentList } from '@/components/attachment-list';
 import { EntryMetaCard } from '@/components/entry-meta-card';
 import { Fab } from '@/components/fab';
 import { ScreenLayout } from '@/components/screen-layout';
@@ -60,6 +61,15 @@ export default function EntryViewScreen(): React.JSX.Element {
 						contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
 					>
 						<EntryMetaCard entry={entry} />
+
+						<AttachmentList
+							attachments={entry.attachments}
+							onDelete={() => {
+								if (id) {
+									loadEntry(id).then(setEntry).catch(() => {});
+								}
+							}}
+						/>
 
 						<Text
 							className="font-editor text-foreground"
