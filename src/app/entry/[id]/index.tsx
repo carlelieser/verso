@@ -1,118 +1,82 @@
-import { Pencil } from 'lucide-react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Pencil } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { EntryMetaCard } from '@/components/entry-meta-card';
 import { Fab } from '@/components/fab';
 import { ScreenLayout } from '@/components/screen-layout';
-import { EMOTION_LABELS } from '@/constants/emotions';
 import { useEntries } from '@/hooks/use-entries';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-import type { EntryWithEmotions } from '@/types/entry';
-import { formatRelativeDate } from '@/utils/date';
+import type { EntryDetail } from '@/types/entry';
 
 export default function EntryViewScreen(): React.JSX.Element {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const insets = useSafeAreaInsets();
-  const { muted, accentForeground, accent } = useThemeColors();
-  const { loadEntry } = useEntries();
-  const [entry, setEntry] = useState<EntryWithEmotions | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+	const { id } = useLocalSearchParams<{ id: string }>();
+	const insets = useSafeAreaInsets();
+	const { accentForeground } = useThemeColors();
+	const { loadEntry } = useEntries();
+	const [entry, setEntry] = useState<EntryDetail | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
-      let isActive = true;
+	useFocusEffect(
+		useCallback(() => {
+			let isActive = true;
 
-      if (id) {
-        loadEntry(id)
-          .then((result) => {
-            if (isActive) {
-              setEntry(result);
-              setIsLoading(false);
-            }
-          })
-          .catch(() => {
-            if (isActive) {
-              setEntry(null);
-              setIsLoading(false);
-            }
-          });
-      }
+			if (id) {
+				loadEntry(id)
+					.then((result) => {
+						if (isActive) {
+							setEntry(result);
+							setIsLoading(false);
+						}
+					})
+					.catch(() => {
+						if (isActive) {
+							setEntry(null);
+							setIsLoading(false);
+						}
+					});
+			}
 
-      return () => {
-        isActive = false;
-      };
-    }, [id, loadEntry]),
-  );
+			return () => {
+				isActive = false;
+			};
+		}, [id, loadEntry]),
+	);
 
-  return (
-    <ScreenLayout>
-      {isLoading || !entry ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-muted">
-            {isLoading ? 'Loading...' : 'Entry not found'}
-          </Text>
-        </View>
-      ) : (
-        <>
-          <ScrollView
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingBottom: insets.bottom + 80,
-            }}
-          >
-            <Text className="text-xs text-muted mb-4">
-              {formatRelativeDate(entry.createdAt)}
-            </Text>
+	return (
+		<ScreenLayout>
+			{isLoading || !entry ? (
+				<View className="flex-1 items-center justify-center">
+					<Text className="text-muted">
+						{isLoading ? 'Loading...' : 'Entry not found'}
+					</Text>
+				</View>
+			) : (
+				<>
+					<ScrollView
+						contentContainerStyle={{
+							paddingHorizontal: 20,
+							paddingBottom: insets.bottom + 80,
+						}}
+					>
+						<EntryMetaCard entry={entry} />
 
-            <Text
-              className="font-editor text-foreground"
-              style={{ fontSize: 17, lineHeight: 28 }}
-            >
-              {entry.contentText}
-            </Text>
+						<Text
+							className="font-editor text-foreground"
+							style={{ fontSize: 17, lineHeight: 28 }}
+						>
+							{entry.contentText}
+						</Text>
+					</ScrollView>
 
-            {entry.emotions.length > 0 ? (
-              <View style={{ marginTop: 24, gap: 8 }}>
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: '500',
-                    letterSpacing: 3,
-                    color: muted,
-                  }}
-                >
-                  EMOTIONS
-                </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {entry.emotions.map((emotion) => (
-                    <View
-                      key={emotion.id}
-                      style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 20,
-                        borderWidth: 1,
-                        borderColor: accent,
-                      }}
-                    >
-                      <Text style={{ fontSize: 13, color: accent }}>
-                        {EMOTION_LABELS[emotion.category]} · {emotion.intensity}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            ) : null}
-          </ScrollView>
-
-          <Fab
-            icon={<Pencil size={20} color={accentForeground} />}
-            onPress={() => router.push(`/entry/${id}/edit`)}
-          />
-        </>
-      )}
-    </ScreenLayout>
-  );
+					<Fab
+						icon={<Pencil size={20} color={accentForeground} />}
+						onPress={() => router.push(`/entry/${id}/edit`)}
+					/>
+				</>
+			)}
+		</ScreenLayout>
+	);
 }
