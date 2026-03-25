@@ -1,21 +1,16 @@
-import { ArrowUpRight, BookOpen, ChevronDown, Plus } from 'lucide-react-native';
+import { Button, Menu, Separator } from 'heroui-native';
+import { BookOpen, ChevronDown, Plus } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { Button, Menu, Separator } from 'heroui-native';
-
-import type { Journal } from '@/types/journal';
-import { getJournalIcon } from '@/constants/journal-icons';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-
-const MAX_VISIBLE = 3;
+import type { Journal } from '@/types/journal';
 
 interface JournalSelectProps {
 	readonly journals: readonly Journal[];
 	readonly selectedId: string | null;
 	readonly onSelect: (id: string) => void;
 	readonly onCreate: () => void;
-	readonly onViewAll?: () => void;
 }
 
 export function JournalSelect({
@@ -23,12 +18,10 @@ export function JournalSelect({
 	selectedId,
 	onSelect,
 	onCreate,
-	onViewAll,
 }: JournalSelectProps): React.JSX.Element {
 	const { accent, muted } = useThemeColors();
 	const selected = journals.find((j) => j.id === selectedId);
 	const label = selected?.name ?? 'Select journal';
-	const visibleJournals = journals.slice(0, MAX_VISIBLE);
 
 	return (
 		<Menu presentation="popover">
@@ -40,7 +33,7 @@ export function JournalSelect({
 				</Button>
 			</Menu.Trigger>
 			<Menu.Portal>
-				<Menu.Overlay className="bg-black/50" />
+				<Menu.Overlay />
 				<Menu.Content presentation="popover" width={250}>
 					{journals.length > 0 ? (
 						<Menu.Group
@@ -54,12 +47,10 @@ export function JournalSelect({
 							}}
 						>
 							<Menu.Label>Journals</Menu.Label>
-							{visibleJournals.map((journal) => {
-								const JournalIcon = getJournalIcon(journal.icon);
+							{journals.map((journal) => {
 								return (
 									<Menu.Item key={journal.id} id={journal.id}>
 										<Menu.ItemIndicator variant="dot" />
-										<JournalIcon size={16} color={muted} />
 										<Menu.ItemTitle>{journal.name}</Menu.ItemTitle>
 									</Menu.Item>
 								);
@@ -71,19 +62,7 @@ export function JournalSelect({
 						</View>
 					)}
 					<Separator className="mx-2 my-2 opacity-75" />
-					<Menu.Item
-						id="__view_all__"
-						shouldCloseOnSelect
-						onPress={() => onViewAll?.()}
-					>
-						<ArrowUpRight size={16} color={muted} />
-						<Menu.ItemTitle>View all</Menu.ItemTitle>
-					</Menu.Item>
-					<Menu.Item
-						id="__create__"
-						shouldCloseOnSelect
-						onPress={() => onCreate()}
-					>
+					<Menu.Item id="__create__" shouldCloseOnSelect onPress={() => onCreate()}>
 						<Plus size={16} color={accent} />
 						<Menu.ItemTitle style={{ color: accent }}>New Journal</Menu.ItemTitle>
 					</Menu.Item>
