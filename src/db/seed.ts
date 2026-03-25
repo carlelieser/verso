@@ -1,33 +1,22 @@
-import { eq } from 'drizzle-orm';
-
-import { GUEST_USER_ID } from '@/constants/user';
 import type { Db } from '@/db/client';
-import { users } from '@/db/schema';
+import { getRawClient } from '@/db/client';
+import { generateId } from '@/utils/id';
 
 /**
- * Ensures the guest user row exists in the database.
- *
- * The journal and entry tables have FK constraints that reference
- * users.id, so a guest user row must be present before any data
- * can be inserted for unauthenticated users.
+ * Ensures a default "Daily" journal exists.
+ * Uses raw SQL with a conditional insert to stay idempotent.
  */
-export async function ensureGuestUser(db: Db): Promise<void> {
-  const existing = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, GUEST_USER_ID))
-    .limit(1);
+export function ensureDefaultJournal(db: Db): void {
+	const raw = getRawClient(db);
+	const now = Date.now();
 
-  if (existing.length > 0) {
-    return;
-  }
+	const existing = raw.getAllSync(`SELECT id FROM journal WHERE name = ? LIMIT 1`, ['Daily']);
 
-  const now = new Date();
+	if (existing.length > 0) return;
 
-  await db.insert(users).values({
-    id: GUEST_USER_ID,
-    isGuest: true,
-    createdAt: now,
-    updatedAt: now,
-  });
+	raw.runSync(
+		`INSERT INTO journal (id, name, icon, display_order, created_at, updated_at)
+     VALUES (?, 'Daily', 'book-open', 0, ?, ?)`,
+		[generateId(), now, now],
+	);
 }
