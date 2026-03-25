@@ -1,194 +1,206 @@
-import {
-	AlertCircle,
-	AlertTriangle,
-	Flame,
-	Frown,
-	Heart,
-	Moon,
-	Smile,
-	Sun,
-	Wind,
-	Zap,
-} from 'lucide-react-native';
-import React, {useCallback, useState} from 'react';
-import {Pressable, Text, View} from 'react-native';
+import { Button, Slider } from 'heroui-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 
-import {Button, Slider} from 'heroui-native';
-
+import { EMOTION_LABELS, EMOTIONS } from '@/constants/emotions';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import type { EmotionCategory, EmotionIntensity } from '@/types/common';
 import { isEmotionIntensity } from '@/types/common';
-import type {EmotionCategory, EmotionIntensity} from '@/types/common';
-import {EMOTION_LABELS} from '@/constants/emotions';
-import {useThemeColors} from '@/hooks/use-theme-colors';
+import type { EmotionSelection } from '@/types/emotion';
 
-const EMOTION_ICONS: Record<EmotionCategory, React.ComponentType<{ size?: number; color?: string }>> = {
-	happy: Smile,
-	sad: Frown,
-	anxious: AlertCircle,
-	calm: Wind,
-	frustrated: AlertTriangle,
-	excited: Zap,
-	grateful: Heart,
-	angry: Flame,
-	hopeful: Sun,
-	tired: Moon,
-};
-
-const GRID_ROW_1: readonly EmotionCategory[] = ['happy', 'sad', 'anxious', 'calm', 'frustrated'];
-const GRID_ROW_2: readonly EmotionCategory[] = ['excited', 'grateful', 'angry', 'hopeful', 'tired'];
-
-interface EmotionSelection {
-	readonly emotion: EmotionCategory;
-	readonly intensity: EmotionIntensity;
-}
+const DEFAULT_INTENSITY: EmotionIntensity = 3;
 
 interface EmotionCheckinProps {
 	readonly onSave: (selections: readonly EmotionSelection[]) => void;
+	/** Called on every selection/intensity change so the parent can persist state across unmounts. */
+	readonly onChange?: (selections: readonly EmotionSelection[]) => void;
 	readonly defaultSelections?: readonly EmotionSelection[];
 }
 
-export function EmotionCheckin({onSave, defaultSelections}: EmotionCheckinProps): React.JSX.Element {
+export function EmotionCheckin({
+	onSave,
+	onChange,
+	defaultSelections,
+}: EmotionCheckinProps): React.JSX.Element {
 	const [selected, setSelected] = useState<Map<EmotionCategory, EmotionIntensity>>(() => {
 		if (!defaultSelections || defaultSelections.length === 0) return new Map();
 		return new Map(defaultSelections.map((s) => [s.emotion, s.intensity]));
 	});
-	const {accent, accentForeground, foreground, muted, border} = useThemeColors();
+	const { accent, accentForeground, foreground, muted, border } = useThemeColors();
 
-	const toggleEmotion = useCallback((emotion: EmotionCategory) => {
-		setSelected((prev) => {
-			const next = new Map(prev);
-			if (next.has(emotion)) {
-				next.delete(emotion);
-			} else {
-				next.set(emotion, 3);
-			}
-			return next;
-		});
-	}, []);
+	const emitChange = useCallback(
+		(map: Map<EmotionCategory, EmotionIntensity>) => {
+			if (!onChange) return;
+			const selections = [...map.entries()].map(([emotion, intensity]) => ({
+				emotion,
+				intensity,
+			}));
+			onChange(selections);
+		},
+		[onChange],
+	);
 
-	const updateIntensity = useCallback((emotion: EmotionCategory, intensity: EmotionIntensity) => {
-		setSelected((prev) => {
-			const next = new Map(prev);
-			next.set(emotion, intensity);
-			return next;
-		});
-	}, []);
+	const toggleEmotion = useCallback(
+		(emotion: EmotionCategory) => {
+			setSelected((prev) => {
+				const next = new Map(prev);
+				if (next.has(emotion)) {
+					next.delete(emotion);
+				} else {
+					next.set(emotion, DEFAULT_INTENSITY);
+				}
+				emitChange(next);
+				return next;
+			});
+		},
+		[emitChange],
+	);
 
-	const renderChip = (emotion: EmotionCategory): React.JSX.Element => {
-		const isSelected = selected.has(emotion);
-		const Icon = EMOTION_ICONS[emotion];
-
-		return (
-			<Pressable
-				key={emotion}
-				onPress={() => toggleEmotion(emotion)}
-				style={{
-					width: 64,
-					height: 72,
-					borderRadius: 16,
-					alignItems: 'center',
-					justifyContent: 'center',
-					gap: 4,
-					backgroundColor: isSelected ? accent : 'transparent',
-					borderWidth: 1,
-					borderColor: isSelected ? accent : border,
-				}}
-			>
-				<Icon size={24} color={isSelected ? accentForeground : muted}/>
-				<Text style={{
-					fontSize: 9,
-					fontWeight: isSelected ? '600' : '500',
-					color: isSelected ? accentForeground : muted,
-				}}>
-					{EMOTION_LABELS[emotion]}
-				</Text>
-			</Pressable>
-		);
-	};
+	const updateIntensity = useCallback(
+		(emotion: EmotionCategory, intensity: EmotionIntensity) => {
+			setSelected((prev) => {
+				const next = new Map(prev);
+				next.set(emotion, intensity);
+				emitChange(next);
+				return next;
+			});
+		},
+		[emitChange],
+	);
 
 	const selectedEmotions = [...selected.entries()];
 
+	const NUM_ROWS = 4;
+	const rows = useMemo(() => {
+		const result: (typeof EMOTIONS)[number][][] = Array.from({ length: NUM_ROWS }, () => []);
+		for (let i = 0; i < EMOTIONS.length; i++) {
+			result[i % NUM_ROWS]!.push(EMOTIONS[i]!);
+		}
+		return result;
+	}, []);
+
 	return (
-		<View style={{padding: 28, paddingBottom: 48, gap: 24}}>
-			<View style={{gap: 8}}>
-				<Text className="text-3xl font-heading text-foreground pb-1">How are you feeling?</Text>
+		<View style={{ paddingTop: 28, paddingBottom: 48, gap: 24 }}>
+			<View style={{ gap: 8, paddingHorizontal: 28 }}>
+				<Text className="text-3xl font-heading text-foreground pb-1">
+					How are you feeling?
+				</Text>
 				<Text className="text-xs text-muted leading-5">
 					Select all that apply. You can adjust the intensity for each.
 				</Text>
 			</View>
 
-			<View style={{gap: 10}}>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-					{GRID_ROW_1.map(renderChip)}
+			<ScrollView
+				horizontal
+				showsHorizontalScrollIndicator={false}
+				contentContainerStyle={{ paddingHorizontal: 28 }}
+			>
+				<View style={{ gap: 8 }}>
+					{rows.map((row, rowIdx) => (
+						<View key={rowIdx} style={{ flexDirection: 'row', gap: 8 }}>
+							{row.map((emotion) => {
+								const isSelected = selected.has(emotion.key);
+								return (
+									<Pressable
+										key={emotion.key}
+										onPress={() => toggleEmotion(emotion.key)}
+										style={{
+											paddingHorizontal: 14,
+											paddingVertical: 8,
+											borderRadius: 20,
+											backgroundColor: isSelected ? accent : 'transparent',
+											borderWidth: 1,
+											borderColor: isSelected ? accent : border,
+										}}
+									>
+										<Text
+											style={{
+												fontSize: 13,
+												fontWeight: isSelected ? '600' : '400',
+												color: isSelected ? accentForeground : foreground,
+											}}
+										>
+											{emotion.label}
+										</Text>
+									</Pressable>
+								);
+							})}
+						</View>
+					))}
 				</View>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-					{GRID_ROW_2.map(renderChip)}
-				</View>
-			</View>
+			</ScrollView>
 
 			{selectedEmotions.length > 0 ? (
-				<View style={{gap: 20}}>
-					<Text style={{
-						fontSize: 11,
-						fontWeight: '500',
-						letterSpacing: 3,
-						color: muted,
-					}}>
+				<View style={{ gap: 20, paddingHorizontal: 28 }}>
+					<Text
+						style={{
+							fontSize: 11,
+							fontWeight: '500',
+							letterSpacing: 3,
+							color: muted,
+						}}
+					>
 						INTENSITY
 					</Text>
-					{selectedEmotions.map(([emotion, intensity]) => {
-						const Icon = EMOTION_ICONS[emotion];
-						return (
-							<View key={emotion} style={{gap: 10}}>
-								<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-									<View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-										<Icon size={16} color={foreground}/>
-										<Text className="text-sm font-medium text-foreground">
-											{EMOTION_LABELS[emotion]}
-										</Text>
-									</View>
-									<Text style={{fontSize: 14, fontWeight: '600', color: accent}}>
-										{intensity}
-									</Text>
-								</View>
-								<Slider
-									value={intensity}
-									minValue={1}
-									maxValue={5}
-									step={1}
-									onChange={(val) => {
-									const rounded = Math.round(Array.isArray(val) ? val[0] ?? 3 : val);
+					{selectedEmotions.map(([emotion, intensity]) => (
+						<View key={emotion} style={{ gap: 10 }}>
+							<View
+								style={{
+									flexDirection: 'row',
+									justifyContent: 'space-between',
+									alignItems: 'center',
+								}}
+							>
+								<Text className="text-sm font-medium text-foreground">
+									{EMOTION_LABELS[emotion]}
+								</Text>
+								<Text style={{ fontSize: 14, fontWeight: '600', color: accent }}>
+									{intensity}
+								</Text>
+							</View>
+							<Slider
+								value={intensity}
+								minValue={1}
+								maxValue={5}
+								step={1}
+								onChange={(val) => {
+									const rounded = Math.round(
+										Array.isArray(val) ? (val[0] ?? DEFAULT_INTENSITY) : val,
+									);
 									if (isEmotionIntensity(rounded)) {
 										updateIntensity(emotion, rounded);
 									}
 								}}
-								>
-									<Slider.Track>
-										<Slider.Fill/>
-										<Slider.Thumb/>
-									</Slider.Track>
-								</Slider>
-							</View>
-						);
-					})}
+							>
+								<Slider.Track>
+									<Slider.Fill />
+									<Slider.Thumb />
+								</Slider.Track>
+							</Slider>
+						</View>
+					))}
 				</View>
 			) : null}
 
 			{selected.size > 0 ? (
-				<Button
-					variant="primary"
-					size="lg"
-					onPress={() => {
-						const selections = [...selected.entries()].map(([emotion, intensity]) => ({
-							emotion,
-							intensity,
-						}));
-						onSave(selections);
-					}}
-				>
-					<Button.Label>Done</Button.Label>
-				</Button>
+				<View className="px-6 flex-row justify-end">
+					<Button
+						variant="secondary"
+						onPress={() => {
+							const selections = [...selected.entries()].map(
+								([emotion, intensity]) => ({
+									emotion,
+									intensity,
+								}),
+							);
+							onSave(selections);
+						}}
+					>
+						<Button.Label>Done</Button.Label>
+					</Button>
+				</View>
 			) : null}
-
 		</View>
 	);
 }
