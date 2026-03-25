@@ -242,6 +242,20 @@ Refer to documentation @docs/coding.
 
 ---
 
+## Design Consistency
+
+Refer to @docs/coding/DESIGN.md for the full design system.
+
+- **MUST** use Tailwind's 4pt grid for all spacing. No fractional values (`gap-1.5`, `px-2.5`).
+- **MUST** use Tailwind theme classes for color (`bg-surface`, `text-muted`, `border-border`). Reserve `useThemeColors()` for icon `color` props only.
+- **MUST** use Tailwind classes over inline `style={{}}` for any static layout property. Inline styles are for dynamic values only (safe area insets, animations).
+- **MUST** keep layout concerns (positioning, margins) in the consumer, not baked into reusable components.
+- **MUST** use the `Overline` component for uppercase section labels.
+- **NEVER** hardcode hex color values. Add missing colors to `global.css`.
+- **NEVER** introduce spacing, radius, or font size values outside the defined scales without documented justification.
+
+---
+
 ## Active Technologies
 - TypeScript 5.x, React Native 0.84+, Expo SDK 54+ + heroui-native, react-native-enriched, whisper.rn, drizzle-orm, expo-sqlite (SQLCipher), @supabase/supabase-js, @powersync/react-native, react-native-calendars, react-native-gifted-charts, expo-notifications, expo-prin (001-daily-journal-app)
 - SQLite (local, encrypted via SQLCipher) + Supabase Postgres (cloud sync for authenticated users) (001-daily-journal-app)
