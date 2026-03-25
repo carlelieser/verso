@@ -1,4 +1,8 @@
+import * as ExpoLocation from 'expo-location';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert } from 'react-native';
+import type { ViewStyle } from 'react-native';
+import type { AnimatedStyle } from 'react-native-reanimated';
 import { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import type { EditorHandle } from '@/components/editor';
@@ -6,13 +10,11 @@ import { useAutoSave } from '@/hooks/use-auto-save';
 import { useEmotions } from '@/hooks/use-emotions';
 import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
-import type { EmotionCategory, EmotionIntensity } from '@/types/common';
+import { useSettings } from '@/hooks/use-settings';
+import { useDatabaseContext } from '@/providers/database-provider';
+import { captureLocationAndWeather } from '@/services/location-weather-service';
+import type { EmotionSelection } from '@/types/emotion';
 import type { Journal } from '@/types/journal';
-
-interface EmotionSelection {
-	readonly emotion: EmotionCategory;
-	readonly intensity: EmotionIntensity;
-}
 
 interface UseEntryComposerOptions {
 	/** Existing entry ID when editing. Null for new entries. */
@@ -35,20 +37,17 @@ interface UseEntryComposerResult {
 	readonly defaultEmotions: readonly EmotionSelection[];
 	readonly editorRef: React.RefObject<EditorHandle | null>;
 	readonly htmlRef: React.MutableRefObject<string>;
-	readonly checkButtonStyle: {
-		readonly width: number;
-		readonly opacity: number;
-		readonly paddingRight: number;
-		readonly overflow: 'hidden';
-	};
+	readonly checkButtonStyle: AnimatedStyle<ViewStyle>;
 	readonly journals: readonly Journal[];
 	readonly isEditMode: boolean;
 	readonly handleTextChange: (text: string, html: string) => Promise<void>;
 	readonly handleHtmlChange: (html: string) => void;
 	readonly handleEmotionSave: (selections: readonly EmotionSelection[]) => void;
-	readonly handleFinish: () => Promise<void>;
+	readonly handleFinish: () => void;
 	readonly handleCreateJournal: (name: string, icon: string) => Promise<void>;
 	readonly handleClear: () => void;
+	readonly isLocationEnabled: boolean;
+	readonly toggleLocation: () => void;
 }
 
 export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryComposerResult {
@@ -57,6 +56,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const onFinish = options?.onFinish;
 	const isAnimatedCheck = options?.isAnimatedCheck ?? false;
 
+	const { db } = useDatabaseContext();
 	const { createEntry, deleteEntry, updateEntry, loadEntry } = useEntries();
 	const { saveEmotions, getEmotions } = useEmotions();
 	const { journals, createJournal } = useJournals();
@@ -70,6 +70,12 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const [defaultHtml, setDefaultHtml] = useState('');
 	const [defaultEmotions, setDefaultEmotions] = useState<readonly EmotionSelection[]>([]);
 	const [autoSaveContent, setAutoSaveContent] = useState({ html: '', text: '' });
+	const { isAutoLocation } = useSettings();
+	const [isLocationEnabled, setIsLocationEnabled] = useState(false);
+
+	useEffect(() => {
+		setIsLocationEnabled(isAutoLocation);
+	}, [isAutoLocation]);
 
 	const editorRef = useRef<EditorHandle>(null);
 	const emotionSelectionsRef = useRef<EmotionSelection[]>([]);
@@ -77,14 +83,11 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const textRef = useRef('');
 	const isCreatingRef = useRef(false);
 
-	const checkWidth = useSharedValue(isEditMode ? 48 : 0);
-	const checkOpacity = useSharedValue(isEditMode ? 1 : 0);
+	const checkProgress = useSharedValue(isEditMode ? 1 : 0);
 
 	const checkButtonStyle = useAnimatedStyle(() => ({
-		width: checkWidth.value,
-		opacity: checkOpacity.value,
-		paddingRight: 12,
-		overflow: 'hidden' as const,
+		opacity: checkProgress.value,
+		transform: [{ translateX: (1 - checkProgress.value) * -8 }],
 	}));
 
 	// Default to first journal in create mode
@@ -158,11 +161,18 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 
 			setHasContent(hasText);
 			if (isAnimatedCheck) {
-				checkWidth.value = withSpring(hasText ? 48 : 0);
-				checkOpacity.value = withSpring(hasText ? 1 : 0);
+				checkProgress.value = withSpring(hasText ? 1 : 0);
 			}
 		},
-		[isEditMode, isAnimatedCheck, currentEntryId, selectedJournalId, createEntry, deleteEntry, checkWidth, checkOpacity],
+		[
+			isEditMode,
+			isAnimatedCheck,
+			currentEntryId,
+			selectedJournalId,
+			createEntry,
+			deleteEntry,
+			checkProgress,
+		],
 	);
 
 	const handleHtmlChange = useCallback(
@@ -175,32 +185,65 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		[currentEntryId],
 	);
 
-	const handleEmotionSave = useCallback(
-		(selections: readonly EmotionSelection[]) => {
-			emotionSelectionsRef.current = [...selections];
-			setDefaultEmotions([...selections]);
-		},
-		[],
-	);
+	const handleEmotionSave = useCallback((selections: readonly EmotionSelection[]) => {
+		emotionSelectionsRef.current = [...selections];
+		setDefaultEmotions([...selections]);
+	}, []);
 
-	const handleFinish = useCallback(async () => {
+	const toggleLocation = useCallback(async () => {
+		if (isLocationEnabled) {
+			setIsLocationEnabled(false);
+			return;
+		}
+
+		const { status } = await ExpoLocation.requestForegroundPermissionsAsync().catch(() => ({
+			status: 'denied' as const,
+		}));
+
+		if (status === 'granted') {
+			setIsLocationEnabled(true);
+		}
+	}, [isLocationEnabled]);
+
+	const handleFinish = useCallback(() => {
 		const entryId = currentEntryId;
 		if (!entryId) return;
 
-		await updateEntry(entryId, htmlRef.current, textRef.current, selectedJournalId ?? undefined);
+		const saves: Promise<void>[] = [
+			updateEntry(entryId, htmlRef.current, textRef.current, selectedJournalId ?? undefined),
+		];
 
 		if (emotionSelectionsRef.current.length > 0) {
-			await saveEmotions(
-				entryId,
-				emotionSelectionsRef.current.map((s) => ({
-					category: s.emotion,
-					intensity: s.intensity,
-				})),
+			saves.push(
+				saveEmotions(
+					entryId,
+					emotionSelectionsRef.current.map((s) => ({
+						category: s.emotion,
+						intensity: s.intensity,
+					})),
+				),
 			);
 		}
 
+		if (isLocationEnabled) {
+			saves.push(captureLocationAndWeather(db, entryId));
+		}
+
+		Promise.all(saves).catch((err: unknown) => {
+			const message = err instanceof Error ? err.message : 'Failed to save entry';
+			Alert.alert('Save Error', message);
+		});
+
 		onFinish?.(entryId);
-	}, [currentEntryId, selectedJournalId, updateEntry, saveEmotions, onFinish]);
+	}, [
+		currentEntryId,
+		selectedJournalId,
+		isLocationEnabled,
+		db,
+		updateEntry,
+		saveEmotions,
+		onFinish,
+	]);
 
 	const handleCreateJournal = useCallback(
 		async (name: string, icon: string) => {
@@ -219,9 +262,8 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		textRef.current = '';
 		emotionSelectionsRef.current = [];
 		setDefaultEmotions([]);
-		checkWidth.value = withSpring(0);
-		checkOpacity.value = withSpring(0);
-	}, [checkWidth, checkOpacity]);
+		checkProgress.value = withSpring(0);
+	}, [checkProgress]);
 
 	return {
 		selectedJournalId,
@@ -242,5 +284,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		handleFinish,
 		handleCreateJournal,
 		handleClear,
+		isLocationEnabled,
+		toggleLocation,
 	};
 }

@@ -6,8 +6,8 @@ import { updateEntry } from '@/services/entry-service';
 const DEBOUNCE_MS = 500;
 
 interface AutoSaveContent {
-  readonly html: string;
-  readonly text: string;
+	readonly html: string;
+	readonly text: string;
 }
 
 /**
@@ -16,27 +16,31 @@ interface AutoSaveContent {
  * The caller should track html/text in refs and pass current values.
  */
 export function useAutoSave(entryId: string | null, content: AutoSaveContent): void {
-  const { db } = useDatabaseContext();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latestRef = useRef(content);
-  latestRef.current = content;
+	const { db } = useDatabaseContext();
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const latestRef = useRef(content);
+	latestRef.current = content;
 
-  useEffect(() => {
-    if (!entryId) return;
+	useEffect(() => {
+		if (!entryId) return;
 
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
+		if (timerRef.current) {
+			clearTimeout(timerRef.current);
+		}
 
-    timerRef.current = setTimeout(() => {
-      const { html, text } = latestRef.current;
-      updateEntry(db, { id: entryId, contentHtml: html, contentText: text });
-    }, DEBOUNCE_MS);
+		timerRef.current = setTimeout(() => {
+			const { html, text } = latestRef.current;
+			updateEntry(db, { id: entryId, contentHtml: html, contentText: text }).catch(
+				(err: unknown) => {
+					console.error('Auto-save failed:', err instanceof Error ? err.message : err);
+				},
+			);
+		}, DEBOUNCE_MS);
 
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, [db, entryId, content.html, content.text]);
+		return () => {
+			if (timerRef.current) {
+				clearTimeout(timerRef.current);
+			}
+		};
+	}, [db, entryId, content.html, content.text]);
 }
