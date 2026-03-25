@@ -28,7 +28,7 @@ export function Collapsible({
 	defaultExpanded = false,
 	children,
 }: CollapsibleProps): React.JSX.Element {
-	const { foreground, muted } = useThemeColors();
+	const { muted } = useThemeColors();
 	const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 	const contentHeight = useSharedValue(defaultExpanded ? 1 : 0);
 	const chevronRotation = useSharedValue(defaultExpanded ? 90 : 0);
@@ -76,21 +76,13 @@ export function Collapsible({
 		<View>
 			<Pressable
 				onPress={toggle}
-				style={{
-					flexDirection: 'row',
-					alignItems: 'center',
-					justifyContent: 'space-between',
-					paddingVertical: 10,
-					paddingHorizontal: 4,
-				}}
+				className="flex-row items-center justify-between py-2 px-1"
 			>
-				<View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+				<View className="flex-row items-center gap-2">
 					<Animated.View style={chevronStyle}>
 						<ChevronRight size={16} color={muted} />
 					</Animated.View>
-					<Text style={{ fontSize: 15, fontWeight: '600', color: foreground }}>
-						{title}
-					</Text>
+					<Text className="text-sm font-semibold text-foreground">{title}</Text>
 				</View>
 				{badge ?? null}
 			</Pressable>
@@ -98,7 +90,7 @@ export function Collapsible({
 			<Animated.View style={containerStyle}>
 				<View
 					onLayout={onLayout}
-					style={{ position: hasMeasured ? 'relative' : 'absolute', width: '100%' }}
+					className={`w-full ${hasMeasured ? 'relative' : 'absolute'}`}
 				>
 					{children}
 				</View>

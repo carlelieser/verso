@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { JOURNAL_ICONS } from '@/constants/journal-icons';
+import { Overline } from '@/components/overline';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
 interface CreateJournalProps {
@@ -13,35 +14,28 @@ interface CreateJournalProps {
 export function CreateJournal({ onCreate }: CreateJournalProps): React.JSX.Element {
 	const [name, setName] = useState('');
 	const [selectedIcon, setSelectedIcon] = useState('book-open');
-	const { accent, accentForeground, foreground, muted, surface, border } = useThemeColors();
+	const { accentForeground, foreground, muted } = useThemeColors();
 
 	const isValid = name.trim().length > 0;
 
 	return (
-		<View style={{ padding: 28, gap: 28 }}>
+		<View className="p-6 gap-6">
 			<Text className="text-3xl font-heading text-foreground pb-1">New Journal</Text>
 
-			<View style={{ gap: 8 }}>
-				<Text className="text-xs text-muted" style={{ letterSpacing: 2 }}>
-					ICON
-				</Text>
-				<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+			<View className="gap-2">
+				<Overline>ICON</Overline>
+				<View className="flex-row flex-wrap gap-2">
 					{JOURNAL_ICONS.map(({ key, Icon }) => {
 						const isSelected = selectedIcon === key;
 						return (
 							<Pressable
 								key={key}
 								onPress={() => setSelectedIcon(key)}
-								style={{
-									width: 44,
-									height: 44,
-									borderRadius: 12,
-									alignItems: 'center',
-									justifyContent: 'center',
-									backgroundColor: isSelected ? accent : 'transparent',
-									borderWidth: 1,
-									borderColor: isSelected ? accent : border,
-								}}
+								className={`w-11 h-11 rounded-xl items-center justify-center border ${
+									isSelected
+										? 'bg-accent border-accent'
+										: 'bg-transparent border-border'
+								}`}
 							>
 								<Icon size={20} color={isSelected ? accentForeground : muted} />
 							</Pressable>
@@ -50,30 +44,20 @@ export function CreateJournal({ onCreate }: CreateJournalProps): React.JSX.Eleme
 				</View>
 			</View>
 
-			<View style={{ gap: 8 }}>
-				<Text className="text-xs text-muted" style={{ letterSpacing: 2 }}>
-					NAME
-				</Text>
+			<View className="gap-2">
+				<Overline>NAME</Overline>
 				<BottomSheetTextInput
 					value={name}
 					onChangeText={setName}
 					placeholder="e.g. Daily, Work, Ideas..."
 					placeholderTextColor={muted}
 					autoFocus={true}
-					style={{
-						backgroundColor: surface,
-						borderRadius: 12,
-						paddingHorizontal: 16,
-						paddingVertical: 14,
-						fontSize: 16,
-						color: foreground,
-						borderWidth: 1,
-						borderColor: border,
-					}}
+					className="bg-surface rounded-xl px-4 py-3 text-base border border-border"
+					style={{ color: foreground }}
 				/>
 			</View>
 
-			<View className={'flex-row items-center justify-end'}>
+			<View className="flex-row items-center justify-end">
 				<Button
 					variant="primary"
 					isDisabled={!isValid}

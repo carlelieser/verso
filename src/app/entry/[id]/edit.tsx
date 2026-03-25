@@ -17,7 +17,6 @@ export default function EntryEditScreen(): React.JSX.Element {
 	return (
 		<EntryComposer
 			entryId={id}
-			placeholder="Start writing..."
 			onFinish={handleFinish}
 			headerLeft={
 				<Button variant="ghost" size="sm" isIconOnly onPress={() => router.back()}>

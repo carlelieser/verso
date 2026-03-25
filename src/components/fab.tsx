@@ -1,23 +1,23 @@
 import { Button } from 'heroui-native';
 import React from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { StyleProp, ViewStyle } from 'react-native';
 
 interface FabProps {
 	readonly icon: React.ReactNode;
 	readonly onPress: () => void;
+	readonly className?: string;
+	readonly style?: StyleProp<ViewStyle>;
 }
 
-export function Fab({ icon, onPress }: FabProps): React.JSX.Element {
-	const insets = useSafeAreaInsets();
-
+export function Fab({ icon, onPress, className, style }: FabProps): React.JSX.Element {
 	return (
 		<Button
 			variant="primary"
 			size="lg"
 			isIconOnly
 			onPress={onPress}
-			className="absolute bottom-8 right-5 w-14 h-14 rounded-full shadow-2xl"
-			style={{ bottom: insets.bottom + 16 }}
+			className={`size-18 rounded-full shadow-2xl ${className ?? ''}`}
+			style={style}
 		>
 			{icon}
 		</Button>

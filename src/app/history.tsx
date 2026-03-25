@@ -43,12 +43,8 @@ export default function HistoryScreen(): React.JSX.Element {
 						onPress={() => router.push(`/entry/${item.id}`)}
 					/>
 				)}
-				contentContainerStyle={{
-					paddingTop: 8,
-					paddingBottom: insets.bottom + 16,
-					paddingHorizontal: 16,
-					gap: 12,
-				}}
+				contentContainerClassName="pt-2 px-4 gap-3"
+				contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
 				ListEmptyComponent={
 					searchQuery.length > 0 ? (
 						<EmptyState

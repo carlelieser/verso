@@ -4,6 +4,7 @@ import { ControlField, Description, Label } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Linking, Platform, ScrollView, Text, View } from 'react-native';
 
+import { Overline } from '@/components/overline';
 import { ScreenLayout } from '@/components/screen-layout';
 import { SETTINGS_AUTO_LOCATION_KEY, SETTINGS_TRANSCRIPTION_KEY } from '@/constants/settings';
 import { useSettings } from '@/hooks/use-settings';
@@ -72,18 +73,9 @@ export default function SettingsScreen(): React.JSX.Element {
 
 	return (
 		<ScreenLayout title="Settings">
-			<ScrollView contentContainerStyle={{ paddingHorizontal: 24, gap: 24 }}>
+			<ScrollView contentContainerClassName="px-6 gap-6">
 				<View className="gap-3">
-					<Text
-						className="text-muted"
-						style={{
-							fontSize: 11,
-							fontWeight: '500',
-							letterSpacing: 3,
-						}}
-					>
-						GENERAL
-					</Text>
+					<Overline>GENERAL</Overline>
 
 					<ControlField
 						isSelected={isAutoLocation}
@@ -112,16 +104,7 @@ export default function SettingsScreen(): React.JSX.Element {
 					</ControlField>
 				</View>
 				<View className="gap-3">
-					<Text
-						className="text-muted"
-						style={{
-							fontSize: 11,
-							fontWeight: '500',
-							letterSpacing: 3,
-						}}
-					>
-						PERMISSIONS
-					</Text>
+					<Overline>PERMISSIONS</Overline>
 
 					<ControlField
 						isSelected={locationStatus === 'granted'}

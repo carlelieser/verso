@@ -54,12 +54,8 @@ export default function JournalsScreen(): React.JSX.Element {
 						onPress={() => router.push(`/journal/${item.id}`)}
 					/>
 				)}
-				contentContainerStyle={{
-					paddingTop: 8,
-					paddingBottom: insets.bottom + 80,
-					paddingHorizontal: 16,
-					gap: 12,
-				}}
+				contentContainerClassName="pt-2 px-4 gap-3"
+				contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
 				ListEmptyComponent={
 					searchQuery.length > 0 ? (
 						<EmptyState
@@ -77,7 +73,12 @@ export default function JournalsScreen(): React.JSX.Element {
 				}
 			/>
 
-			<Fab icon={<Plus size={24} color={accentForeground} />} onPress={sheet.open} />
+			<Fab
+				icon={<Plus size={24} color={accentForeground} />}
+				onPress={sheet.open}
+				className="absolute right-4"
+				style={{ bottom: insets.bottom + 16 }}
+			/>
 
 			{sheet.isOpen ? (
 				<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>

@@ -15,31 +15,18 @@ export function SearchInput({
 	onChangeText,
 	placeholder = 'Search...',
 }: SearchInputProps): React.JSX.Element {
-	const { muted, surface, foreground, border } = useThemeColors();
+	const { muted, foreground } = useThemeColors();
 
 	return (
-		<View
-			style={{
-				flexDirection: 'row',
-				alignItems: 'center',
-				marginHorizontal: 16,
-				marginBottom: 8,
-				paddingHorizontal: 12,
-				paddingVertical: 10,
-				backgroundColor: surface,
-				borderRadius: 12,
-				borderWidth: 1,
-				borderColor: border,
-				gap: 8,
-			}}
-		>
+		<View className="flex-row items-center mx-4 mb-2 px-3 py-2 bg-surface rounded-xl border border-border gap-2">
 			<Search size={16} color={muted} />
 			<TextInput
 				value={value}
 				onChangeText={onChangeText}
 				placeholder={placeholder}
 				placeholderTextColor={muted}
-				style={{ flex: 1, fontSize: 15, color: foreground, padding: 0 }}
+				className="flex-1 text-sm p-0"
+				style={{ color: foreground }}
 			/>
 		</View>
 	);

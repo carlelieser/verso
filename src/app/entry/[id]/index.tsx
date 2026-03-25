@@ -56,10 +56,8 @@ export default function EntryViewScreen(): React.JSX.Element {
 			) : (
 				<>
 					<ScrollView
-						contentContainerStyle={{
-							paddingHorizontal: 20,
-							paddingBottom: insets.bottom + 80,
-						}}
+						contentContainerClassName="px-5"
+						contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
 					>
 						<EntryMetaCard entry={entry} />
 
@@ -74,6 +72,8 @@ export default function EntryViewScreen(): React.JSX.Element {
 					<Fab
 						icon={<Pencil size={20} color={accentForeground} />}
 						onPress={() => router.push(`/entry/${id}/edit`)}
+						className="absolute right-4"
+						style={{ bottom: insets.bottom + 16 }}
 					/>
 				</>
 			)}

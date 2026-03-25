@@ -53,15 +53,9 @@ export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX
 				<Text className="mt-2 px-8 text-center text-sm text-muted">{error.message}</Text>
 				<Pressable
 					onPress={() => setAttempt((n) => n + 1)}
-					style={{
-						marginTop: 16,
-						paddingHorizontal: 24,
-						paddingVertical: 10,
-						borderRadius: 8,
-						backgroundColor: '#3b82f6',
-					}}
+					className="mt-4 px-6 py-2 rounded-lg bg-accent"
 				>
-					<Text style={{ color: '#fff', fontWeight: '600' }}>Retry</Text>
+					<Text className="text-accent-foreground font-semibold">Retry</Text>
 				</Pressable>
 			</View>
 		);

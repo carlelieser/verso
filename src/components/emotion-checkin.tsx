@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import { EMOTION_LABELS, EMOTIONS } from '@/constants/emotions';
-import { useThemeColors } from '@/hooks/use-theme-colors';
+import { Overline } from '@/components/overline';
 import type { EmotionCategory, EmotionIntensity } from '@/types/common';
 import { isEmotionIntensity } from '@/types/common';
 import type { EmotionSelection } from '@/types/emotion';
@@ -27,8 +27,6 @@ export function EmotionCheckin({
 		if (!defaultSelections || defaultSelections.length === 0) return new Map();
 		return new Map(defaultSelections.map((s) => [s.emotion, s.intensity]));
 	});
-	const { accent, accentForeground, foreground, muted, border } = useThemeColors();
-
 	const emitChange = useCallback(
 		(map: Map<EmotionCategory, EmotionIntensity>) => {
 			if (!onChange) return;
@@ -81,8 +79,8 @@ export function EmotionCheckin({
 	}, []);
 
 	return (
-		<View style={{ paddingTop: 28, paddingBottom: 48, gap: 24 }}>
-			<View style={{ gap: 8, paddingHorizontal: 28 }}>
+		<View className="pt-6 pb-12 gap-6">
+			<View className="gap-2 px-6">
 				<Text className="text-3xl font-heading text-foreground pb-1">
 					How are you feeling?
 				</Text>
@@ -94,32 +92,29 @@ export function EmotionCheckin({
 			<ScrollView
 				horizontal
 				showsHorizontalScrollIndicator={false}
-				contentContainerStyle={{ paddingHorizontal: 28 }}
+				contentContainerStyle={{ paddingHorizontal: 24 }}
 			>
-				<View style={{ gap: 8 }}>
+				<View className="gap-2">
 					{rows.map((row, rowIdx) => (
-						<View key={rowIdx} style={{ flexDirection: 'row', gap: 8 }}>
+						<View key={rowIdx} className="flex-row gap-2">
 							{row.map((emotion) => {
 								const isSelected = selected.has(emotion.key);
 								return (
 									<Pressable
 										key={emotion.key}
 										onPress={() => toggleEmotion(emotion.key)}
-										style={{
-											paddingHorizontal: 14,
-											paddingVertical: 8,
-											borderRadius: 20,
-											backgroundColor: isSelected ? accent : 'transparent',
-											borderWidth: 1,
-											borderColor: isSelected ? accent : border,
-										}}
+										className={`px-4 py-2 rounded-full border ${
+											isSelected
+												? 'bg-accent border-accent'
+												: 'bg-transparent border-border'
+										}`}
 									>
 										<Text
-											style={{
-												fontSize: 13,
-												fontWeight: isSelected ? '600' : '400',
-												color: isSelected ? accentForeground : foreground,
-											}}
+											className={`text-sm ${
+												isSelected
+													? 'font-semibold text-accent-foreground'
+													: 'font-normal text-foreground'
+											}`}
 										>
 											{emotion.label}
 										</Text>
@@ -132,30 +127,15 @@ export function EmotionCheckin({
 			</ScrollView>
 
 			{selectedEmotions.length > 0 ? (
-				<View style={{ gap: 20, paddingHorizontal: 28 }}>
-					<Text
-						style={{
-							fontSize: 11,
-							fontWeight: '500',
-							letterSpacing: 3,
-							color: muted,
-						}}
-					>
-						INTENSITY
-					</Text>
+				<View className="gap-5 px-6">
+					<Overline>INTENSITY</Overline>
 					{selectedEmotions.map(([emotion, intensity]) => (
-						<View key={emotion} style={{ gap: 10 }}>
-							<View
-								style={{
-									flexDirection: 'row',
-									justifyContent: 'space-between',
-									alignItems: 'center',
-								}}
-							>
+						<View key={emotion} className="gap-2">
+							<View className="flex-row justify-between items-center">
 								<Text className="text-sm font-medium text-foreground">
 									{EMOTION_LABELS[emotion]}
 								</Text>
-								<Text style={{ fontSize: 14, fontWeight: '600', color: accent }}>
+								<Text className="text-sm font-semibold text-accent">
 									{intensity}
 								</Text>
 							</View>

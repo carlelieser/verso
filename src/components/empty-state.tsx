@@ -1,8 +1,6 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { useThemeColors } from '@/hooks/use-theme-colors';
-
 interface EmptyStateProps {
 	readonly icon: React.ReactNode;
 	readonly title: string;
@@ -16,20 +14,16 @@ export function EmptyState({
 	description,
 	action,
 }: EmptyStateProps): React.JSX.Element {
-	const { muted } = useThemeColors();
-
 	return (
 		<View className="flex-1 items-center justify-center px-8 py-16">
-			<View className="p-4 rounded-full bg-foreground/5 flex items-center justify-center">
+			<View className="p-8 rounded-full bg-foreground/5 flex items-center justify-center">
 				{icon}
 			</View>
-			<Text className="text-lg text-foreground text-center mt-2">{title}</Text>
+			<Text className="text-3xl font-heading text-foreground text-center mt-4">{title}</Text>
 			{description !== undefined ? (
-				<Text className="text-center mt-1" style={{ color: muted }}>
-					{description}
-				</Text>
+				<Text className="text-center text-muted mt-2">{description}</Text>
 			) : null}
-			{action !== undefined ? <View className="mt-2">{action}</View> : null}
+			{action !== undefined ? <View className="mt-4">{action}</View> : null}
 		</View>
 	);
 }
