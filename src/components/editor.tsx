@@ -1,26 +1,37 @@
+import { Button } from 'heroui-native';
 import {
 	Bold,
+	ChevronDown,
 	Code,
 	Heading1,
 	Heading2,
 	Italic,
 	List,
 	ListOrdered,
+	Mic,
 	Quote,
 	Strikethrough,
 	Underline,
 } from 'lucide-react-native';
-import React, {forwardRef, useImperativeHandle, useRef, useState} from 'react';
-import type {NativeSyntheticEvent} from 'react-native';
-import {Pressable, View} from 'react-native';
-
+import React, {
+	forwardRef,
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from 'react';
+import type { NativeSyntheticEvent } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 import {
 	EnrichedTextInput,
 	type EnrichedTextInputInstance,
 	type OnChangeStateEvent,
 } from 'react-native-enriched';
 
-import {useThemeColors} from '@/hooks/use-theme-colors';
+import { useSettings } from '@/hooks/use-settings';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useWhisperTranscription } from '@/hooks/use-whisper-transcription';
 
 interface FormatAction {
 	readonly key: string;
@@ -30,21 +41,33 @@ interface FormatAction {
 }
 
 const FORMAT_ACTIONS: readonly FormatAction[] = [
-	{key: 'bold', icon: Bold, stateKey: 'bold', toggle: (r) => r.toggleBold()},
-	{key: 'italic', icon: Italic, stateKey: 'italic', toggle: (r) => r.toggleItalic()},
-	{key: 'underline', icon: Underline, stateKey: 'underline', toggle: (r) => r.toggleUnderline()},
-	{key: 'strikethrough', icon: Strikethrough, stateKey: 'strikeThrough', toggle: (r) => r.toggleStrikeThrough()},
-	{key: 'h1', icon: Heading1, stateKey: 'h1', toggle: (r) => r.toggleH1()},
-	{key: 'h2', icon: Heading2, stateKey: 'h2', toggle: (r) => r.toggleH2()},
-	{key: 'ul', icon: List, stateKey: 'unorderedList', toggle: (r) => r.toggleUnorderedList()},
-	{key: 'ol', icon: ListOrdered, stateKey: 'orderedList', toggle: (r) => r.toggleOrderedList()},
-	{key: 'quote', icon: Quote, stateKey: 'blockQuote', toggle: (r) => r.toggleBlockQuote()},
-	{key: 'code', icon: Code, stateKey: 'inlineCode', toggle: (r) => r.toggleInlineCode()},
+	{ key: 'bold', icon: Bold, stateKey: 'bold', toggle: (r) => r.toggleBold() },
+	{ key: 'italic', icon: Italic, stateKey: 'italic', toggle: (r) => r.toggleItalic() },
+	{
+		key: 'underline',
+		icon: Underline,
+		stateKey: 'underline',
+		toggle: (r) => r.toggleUnderline(),
+	},
+	{
+		key: 'strikethrough',
+		icon: Strikethrough,
+		stateKey: 'strikeThrough',
+		toggle: (r) => r.toggleStrikeThrough(),
+	},
+	{ key: 'h1', icon: Heading1, stateKey: 'h1', toggle: (r) => r.toggleH1() },
+	{ key: 'h2', icon: Heading2, stateKey: 'h2', toggle: (r) => r.toggleH2() },
+	{ key: 'ul', icon: List, stateKey: 'unorderedList', toggle: (r) => r.toggleUnorderedList() },
+	{ key: 'ol', icon: ListOrdered, stateKey: 'orderedList', toggle: (r) => r.toggleOrderedList() },
+	{ key: 'quote', icon: Quote, stateKey: 'blockQuote', toggle: (r) => r.toggleBlockQuote() },
+	{ key: 'code', icon: Code, stateKey: 'inlineCode', toggle: (r) => r.toggleInlineCode() },
 ];
 
 export interface EditorHandle {
 	clear: () => void;
 	focus: () => void;
+	blur: () => void;
+	appendText: (text: string) => Promise<void>;
 }
 
 interface EditorProps {
@@ -55,17 +78,39 @@ interface EditorProps {
 }
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-	{defaultValue, placeholder, onChangeHtml, onChangeText},
+	{ defaultValue, placeholder, onChangeHtml, onChangeText },
 	forwardedRef,
 ) {
 	const ref = useRef<EnrichedTextInputInstance>(null);
 	const [styleState, setStyleState] = useState<OnChangeStateEvent | null>(null);
+	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+	const { isTranscriptionEnabled } = useSettings();
 
-	const {foreground, accent, muted, surface, border, editorFont} = useThemeColors();
+	const { foreground, accent, muted, surface, border, editorFont } = useThemeColors();
+
+	const handleTranscriptionFinish = useCallback(async (text: string) => {
+		if (!ref.current) return;
+		const html = await ref.current.getHTML();
+		const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		ref.current.setValue(html.replace(/<\/html>\s*$/, `<p>${escaped}</p>\n</html>`));
+	}, []);
+
+	const transcription = useWhisperTranscription(handleTranscriptionFinish);
+
+	useEffect(() => {
+		const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
+		const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
+		return () => {
+			showSub.remove();
+			hideSub.remove();
+		};
+	}, []);
 
 	useImperativeHandle(forwardedRef, () => ({
 		clear: () => ref.current?.setValue(''),
 		focus: () => ref.current?.focus(),
+		blur: () => ref.current?.blur(),
+		appendText: handleTranscriptionFinish,
 	}));
 
 	const handleStateChange = (e: NativeSyntheticEvent<OnChangeStateEvent>): void => {
@@ -73,7 +118,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 	};
 
 	return (
-		<View className="flex-1">
+		<KeyboardAvoidingView className="flex-1" behavior={'padding'}>
 			<EnrichedTextInput
 				ref={ref}
 				defaultValue={defaultValue}
@@ -88,15 +133,13 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 					flex: 1,
 					fontFamily: editorFont,
 					color: foreground,
-					fontSize: 17,
 					lineHeight: 28,
-					paddingHorizontal: 20,
-					paddingTop: 12,
-					paddingBottom: 12,
+					padding: 24,
+					paddingTop: 0,
 				}}
 				htmlStyle={{
-					h1: {fontSize: 28, bold: true},
-					h2: {fontSize: 22, bold: true},
+					h1: { fontSize: 28, bold: true },
+					h2: { fontSize: 22, bold: true },
 					blockquote: {
 						borderColor: accent,
 						borderWidth: 3,
@@ -128,46 +171,77 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 				}}
 			/>
 
-			<View
-				style={{
-					flexDirection: 'row',
-					alignItems: 'center',
-					borderTopWidth: 1,
-					borderTopColor: border,
-					paddingHorizontal: 8,
-					paddingVertical: 6,
-					gap: 2,
-				}}
-			>
-				{FORMAT_ACTIONS.map((action) => {
-					const isActive = styleState?.[action.stateKey]?.isActive ?? false;
-					const IconComponent = action.icon;
+			{isTranscriptionEnabled &&
+			transcription.liveText.length > 0 &&
+			transcription.isRecording ? (
+				<View
+					className={'bg-background'}
+					style={{ paddingHorizontal: 24, paddingVertical: 8 }}
+				>
+					<Text style={{ color: muted, fontStyle: 'italic', fontSize: 14 }}>
+						{transcription.liveText}
+					</Text>
+				</View>
+			) : null}
 
-					return (
-						<Pressable
-							key={action.key}
-							onPress={() => {
-								if (ref.current) {
-									action.toggle(ref.current);
-								}
-							}}
-							style={{
-								width: 36,
-								height: 36,
-								alignItems: 'center',
-								justifyContent: 'center',
-								borderRadius: 8,
-								backgroundColor: isActive ? surface : 'transparent',
-							}}
-						>
-							<IconComponent
-								size={18}
-								color={isActive ? accent : muted}
-							/>
-						</Pressable>
-					);
-				})}
-			</View>
-		</View>
+			{isKeyboardVisible ? (
+				<View
+					style={{
+						flexDirection: 'row',
+						alignItems: 'center',
+						borderTopWidth: 1,
+						borderTopColor: border,
+					}}
+				>
+					<ScrollView
+						horizontal
+						showsHorizontalScrollIndicator={false}
+						keyboardShouldPersistTaps="always"
+						contentContainerStyle={{
+							paddingHorizontal: 8,
+							paddingVertical: 6,
+							gap: 2,
+						}}
+						style={{ flex: 1 }}
+					>
+						{FORMAT_ACTIONS.map((action) => {
+							const isActive = styleState?.[action.stateKey]?.isActive ?? false;
+							const IconComponent = action.icon;
+
+							return (
+								<Button
+									key={action.key}
+									variant="ghost"
+									isIconOnly
+									onPress={() => {
+										if (ref.current) {
+											action.toggle(ref.current);
+										}
+									}}
+									style={isActive ? { backgroundColor: surface } : undefined}
+								>
+									<IconComponent size={18} color={isActive ? accent : muted} />
+								</Button>
+							);
+						})}
+					</ScrollView>
+					<View className={'flex-row items-center border-l border-border bg-background'}>
+						{isTranscriptionEnabled ? (
+							<Button
+								variant="ghost"
+								isIconOnly
+								isDisabled={transcription.status === 'loading'}
+								onPress={transcription.toggle}
+							>
+								<Mic size={18} color={transcription.isRecording ? accent : muted} />
+							</Button>
+						) : null}
+						<Button variant="ghost" isIconOnly onPress={() => ref.current?.blur()}>
+							<ChevronDown size={18} color={muted} />
+						</Button>
+					</View>
+				</View>
+			) : null}
+		</KeyboardAvoidingView>
 	);
 });

@@ -1,11 +1,12 @@
-import { Plus } from 'lucide-react-native';
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
+import { BookOpen, Plus, Search } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 
 import { CreateJournal } from '@/components/create-journal';
+import { EmptyState } from '@/components/empty-state';
 import { Fab } from '@/components/fab';
 import { JournalCard } from '@/components/journal-card';
 import { ScreenLayout } from '@/components/screen-layout';
@@ -15,57 +16,76 @@ import { useJournals } from '@/hooks/use-journals';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
 export default function JournalsScreen(): React.JSX.Element {
-  const insets = useSafeAreaInsets();
-  const { accentForeground } = useThemeColors();
-  const [searchQuery, setSearchQuery] = useState('');
-  const { journals, entryCounts, createJournal } = useJournals();
-  const sheet = useBottomSheet();
+	const insets = useSafeAreaInsets();
+	const { muted, accentForeground } = useThemeColors();
+	const [searchQuery, setSearchQuery] = useState('');
+	const { journals, entryCounts, createJournal } = useJournals();
+	const sheet = useBottomSheet();
 
-  const filteredJournals = useMemo(() => {
-    if (searchQuery.trim().length === 0) return journals;
-    const query = searchQuery.toLowerCase();
-    return journals.filter((j) => j.name.toLowerCase().includes(query));
-  }, [journals, searchQuery]);
+	const filteredJournals = useMemo(() => {
+		if (searchQuery.trim().length === 0) return journals;
+		const query = searchQuery.toLowerCase();
+		return journals.filter((j) => j.name.toLowerCase().includes(query));
+	}, [journals, searchQuery]);
 
-  const handleCreate = useCallback(
-    async (name: string, icon: string) => {
-      await createJournal(name, icon);
-      sheet.close();
-    },
-    [createJournal, sheet],
-  );
+	const handleCreate = useCallback(
+		async (name: string, icon: string) => {
+			await createJournal(name, icon);
+			sheet.close();
+		},
+		[createJournal, sheet],
+	);
 
-  return (
-    <ScreenLayout title="Journals">
-      <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Search journals..." />
+	return (
+		<ScreenLayout title="Journals">
+			<SearchInput
+				value={searchQuery}
+				onChangeText={setSearchQuery}
+				placeholder="Search journals..."
+			/>
 
-      <FlatList
-        data={filteredJournals}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <JournalCard
-            journal={item}
-            entryCount={entryCounts.get(item.id) ?? 0}
-            onPress={() => router.push(`/journal/${item.id}`)}
-          />
-        )}
-        contentContainerStyle={{
-          paddingTop: 8,
-          paddingBottom: insets.bottom + 80,
-          paddingHorizontal: 16,
-          gap: 12,
-        }}
-      />
+			<FlatList
+				data={filteredJournals}
+				keyExtractor={(item) => item.id}
+				renderItem={({ item }) => (
+					<JournalCard
+						journal={item}
+						entryCount={entryCounts.get(item.id) ?? 0}
+						onPress={() => router.push(`/journal/${item.id}`)}
+					/>
+				)}
+				contentContainerStyle={{
+					paddingTop: 8,
+					paddingBottom: insets.bottom + 80,
+					paddingHorizontal: 16,
+					gap: 12,
+				}}
+				ListEmptyComponent={
+					searchQuery.length > 0 ? (
+						<EmptyState
+							icon={<Search size={48} color={muted} />}
+							title="No results"
+							description="Try a different search term."
+						/>
+					) : (
+						<EmptyState
+							icon={<BookOpen size={48} color={muted} />}
+							title="No journals yet"
+							description="Tap + to create your first journal."
+						/>
+					)
+				}
+			/>
 
-      <Fab icon={<Plus size={24} color={accentForeground} />} onPress={sheet.open} />
+			<Fab icon={<Plus size={24} color={accentForeground} />} onPress={sheet.open} />
 
-      {sheet.isOpen ? (
-        <BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
-          <BottomSheetView>
-            <CreateJournal onCreate={handleCreate} />
-          </BottomSheetView>
-        </BottomSheet>
-      ) : null}
-    </ScreenLayout>
-  );
+			{sheet.isOpen ? (
+				<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
+					<BottomSheetScrollView keyboardShouldPersistTaps="handled">
+						<CreateJournal onCreate={handleCreate} />
+					</BottomSheetScrollView>
+				</BottomSheet>
+			) : null}
+		</ScreenLayout>
+	);
 }

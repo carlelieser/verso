@@ -1,17 +1,16 @@
 import '../global.css';
 
-import {useFonts as useDMSerif} from '@expo-google-fonts/dm-serif-display';
-import {useFonts as useGoogleSans} from '@expo-google-fonts/google-sans-flex';
-import {useFonts as useLibreBaskerville} from '@expo-google-fonts/libre-baskerville';
-import {Stack} from 'expo-router';
+import { useFonts as useDMSerif } from '@expo-google-fonts/dm-serif-display';
+import { useFonts as useGoogleSans } from '@expo-google-fonts/google-sans-flex';
+import { useFonts as useLibreBaskerville } from '@expo-google-fonts/libre-baskerville';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import {StatusBar} from 'expo-status-bar';
-import React, {useEffect} from 'react';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import { StatusBar } from 'expo-status-bar';
+import { HeroUINativeProvider } from 'heroui-native';
+import React, { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import {HeroUINativeProvider} from 'heroui-native';
-
-import {DatabaseProvider} from '@/providers/database-provider';
+import { DatabaseProvider } from '@/providers/database-provider';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,11 +48,13 @@ export default function RootLayout(): React.JSX.Element {
 		<GestureHandlerRootView className="flex-1 bg-background">
 			<HeroUINativeProvider>
 				<DatabaseProvider>
-					<Stack screenOptions={{
-						headerShown: false,
-					}}/>
+					<Stack
+						screenOptions={{
+							headerShown: false,
+						}}
+					/>
 				</DatabaseProvider>
-				<StatusBar style="auto"/>
+				<StatusBar style="auto" />
 			</HeroUINativeProvider>
 		</GestureHandlerRootView>
 	);

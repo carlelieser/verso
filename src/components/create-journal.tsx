@@ -1,30 +1,32 @@
-import React, {useState} from 'react';
-import {Pressable, Text, TextInput, View} from 'react-native';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { Button } from 'heroui-native';
+import React, { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 
-import {Button} from 'heroui-native';
-
-import {JOURNAL_ICONS} from '@/constants/journal-icons';
-import {useThemeColors} from '@/hooks/use-theme-colors';
+import { JOURNAL_ICONS } from '@/constants/journal-icons';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 interface CreateJournalProps {
 	readonly onCreate: (name: string, icon: string) => void;
 }
 
-export function CreateJournal({onCreate}: CreateJournalProps): React.JSX.Element {
+export function CreateJournal({ onCreate }: CreateJournalProps): React.JSX.Element {
 	const [name, setName] = useState('');
 	const [selectedIcon, setSelectedIcon] = useState('book-open');
-	const {accent, accentForeground, foreground, muted, surface, border} = useThemeColors();
+	const { accent, accentForeground, foreground, muted, surface, border } = useThemeColors();
 
 	const isValid = name.trim().length > 0;
 
 	return (
-		<View style={{padding: 28, gap: 28}}>
+		<View style={{ padding: 28, gap: 28 }}>
 			<Text className="text-3xl font-heading text-foreground pb-1">New Journal</Text>
 
-			<View style={{gap: 8}}>
-				<Text className="text-xs text-muted" style={{letterSpacing: 2}}>ICON</Text>
-				<View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
-					{JOURNAL_ICONS.map(({key, Icon}) => {
+			<View style={{ gap: 8 }}>
+				<Text className="text-xs text-muted" style={{ letterSpacing: 2 }}>
+					ICON
+				</Text>
+				<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+					{JOURNAL_ICONS.map(({ key, Icon }) => {
 						const isSelected = selectedIcon === key;
 						return (
 							<Pressable
@@ -41,21 +43,23 @@ export function CreateJournal({onCreate}: CreateJournalProps): React.JSX.Element
 									borderColor: isSelected ? accent : border,
 								}}
 							>
-								<Icon size={20} color={isSelected ? accentForeground : muted}/>
+								<Icon size={20} color={isSelected ? accentForeground : muted} />
 							</Pressable>
 						);
 					})}
 				</View>
 			</View>
 
-			<View style={{gap: 8}}>
-				<Text className="text-xs text-muted" style={{letterSpacing: 2}}>NAME</Text>
-				<TextInput
+			<View style={{ gap: 8 }}>
+				<Text className="text-xs text-muted" style={{ letterSpacing: 2 }}>
+					NAME
+				</Text>
+				<BottomSheetTextInput
 					value={name}
 					onChangeText={setName}
 					placeholder="e.g. Daily, Work, Ideas..."
 					placeholderTextColor={muted}
-					autoFocus
+					autoFocus={true}
 					style={{
 						backgroundColor: surface,
 						borderRadius: 12,
@@ -69,14 +73,15 @@ export function CreateJournal({onCreate}: CreateJournalProps): React.JSX.Element
 				/>
 			</View>
 
-			<Button
-				variant="primary"
-				size="lg"
-				isDisabled={!isValid}
-				onPress={() => onCreate(name.trim(), selectedIcon)}
-			>
-				<Button.Label>Create</Button.Label>
-			</Button>
+			<View className={'flex-row items-center justify-end'}>
+				<Button
+					variant="primary"
+					isDisabled={!isValid}
+					onPress={() => onCreate(name.trim(), selectedIcon)}
+				>
+					<Button.Label>Create</Button.Label>
+				</Button>
+			</View>
 		</View>
 	);
 }
