@@ -6,7 +6,11 @@ import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useEntryContext } from '@/providers/entry-provider';
 
-export function AttachmentButton(): React.JSX.Element {
+interface AttachmentButtonProps {
+	readonly placement?: 'top' | 'bottom' | 'left' | 'right';
+}
+
+export function AttachmentButton({ placement }: AttachmentButtonProps): React.JSX.Element {
 	const { entryId } = useEntryContext();
 	const { accent, muted } = useThemeColors();
 	const { attachments, pickImages, pickAudio, pickDocuments } = useAttachmentPicker(entryId);
@@ -20,7 +24,7 @@ export function AttachmentButton(): React.JSX.Element {
 			</Menu.Trigger>
 			<Menu.Portal>
 				<Menu.Overlay />
-				<Menu.Content presentation="popover" width={180}>
+				<Menu.Content presentation="popover" width={180} placement={placement}>
 					<Menu.Item id="images" shouldCloseOnSelect onPress={pickImages}>
 						<Image size={16} color={muted} />
 						<Menu.ItemTitle>Images</Menu.ItemTitle>

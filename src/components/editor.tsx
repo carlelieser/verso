@@ -217,7 +217,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 						})}
 					</ScrollView>
 					<View className={'flex-row items-center border-l border-border bg-background'}>
-						<AttachmentButton />
+						<AttachmentButton placement="top" />
 						{isTranscriptionEnabled ? (
 							<Button
 								variant="ghost"
