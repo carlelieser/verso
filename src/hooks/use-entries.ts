@@ -16,7 +16,7 @@ interface UseEntriesResult {
 	readonly isLoading: boolean;
 	readonly error: Error | null;
 	readonly refresh: (journalId?: string) => Promise<void>;
-	readonly createEntry: (journalId: string, html: string, text: string) => Promise<Entry>;
+	readonly createEntry: (journalId: string, html?: string, text?: string) => Promise<Entry>;
 	readonly updateEntry: (
 		id: string,
 		html: string,
@@ -56,11 +56,11 @@ export function useEntries(journalId?: string): UseEntriesResult {
 	}, [refresh]);
 
 	const createEntry = useCallback(
-		async (entryJournalId: string, html: string, text: string): Promise<Entry> => {
+		async (entryJournalId: string, html?: string, text?: string): Promise<Entry> => {
 			const entry = await createEntryService(db, {
 				journalId: entryJournalId,
-				contentHtml: html,
-				contentText: text,
+				contentHtml: html ?? '',
+				contentText: text ?? '',
 			});
 			return entry;
 		},
