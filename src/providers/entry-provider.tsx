@@ -2,6 +2,8 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 
 import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
+import { useDatabaseContext } from '@/providers/database-provider';
+import { getEntry } from '@/services/entry-service';
 
 interface EntryContextValue {
 	readonly entryId: string;
@@ -34,6 +36,7 @@ export function EntryProvider({
 	children,
 }: EntryProviderProps): React.JSX.Element | null {
 	const isEditMode = existingEntryId !== null && existingEntryId !== undefined;
+	const { db } = useDatabaseContext();
 	const { createEntry, deleteEntry } = useEntries();
 	const { journals } = useJournals();
 
@@ -62,38 +65,42 @@ export function EntryProvider({
 			});
 	}, [isEditMode, currentEntryId, resolveJournalId, createEntry]);
 
-	// Cleanup on unmount: delete empty entries
+	// Cleanup on unmount: delete entry only if it has no meaningful content
 	const currentEntryIdRef = useRef(currentEntryId);
 	currentEntryIdRef.current = currentEntryId;
+	const dbRef = useRef(db);
+	dbRef.current = db;
 
 	useEffect(() => {
 		if (isEditMode) return;
 
 		return () => {
 			const id = currentEntryIdRef.current;
-			if (id) {
-				// Fire-and-forget cleanup — if the entry has content, the
-				// listEntries query already filters out empty entries.
-				// This just cleans up the DB row.
-				deleteEntry(id).catch(() => {});
-			}
+			if (!id) return;
+
+			getEntry(dbRef.current, id)
+				.then((entry) => {
+					const hasContent = entry.contentText.trim().length > 0;
+					const hasAttachments = entry.attachments.length > 0;
+					const hasEmotions = entry.emotions.length > 0;
+
+					if (!hasContent && !hasAttachments && !hasEmotions) {
+						deleteEntry(id).catch(() => {});
+					}
+				})
+				.catch(() => {});
 		};
 	}, [isEditMode, deleteEntry]);
 
 	const cycle = useCallback(async () => {
-		const oldId = currentEntryId;
 		setCurrentEntryId(null);
-
-		if (oldId) {
-			await deleteEntry(oldId).catch(() => {});
-		}
 
 		const journalId = resolveJournalId();
 		if (!journalId) return;
 
 		const entry = await createEntry(journalId, '', '');
 		setCurrentEntryId(entry.id);
-	}, [currentEntryId, resolveJournalId, createEntry, deleteEntry]);
+	}, [resolveJournalId, createEntry]);
 
 	if (!currentEntryId) return null;
 
