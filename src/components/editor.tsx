@@ -29,6 +29,7 @@ import {
 	type OnChangeStateEvent,
 } from 'react-native-enriched';
 
+import {AttachmentButton} from '@/components/attachment-button';
 import {useSettings} from '@/hooks/use-settings';
 import {useThemeColors} from '@/hooks/use-theme-colors';
 import {useWhisperTranscription} from '@/hooks/use-whisper-transcription';
@@ -75,10 +76,11 @@ interface EditorProps {
 	readonly placeholder?: string;
 	readonly onChangeHtml?: (html: string) => void;
 	readonly onChangeText?: (text: string) => void;
+	readonly entryId?: string | null;
 }
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-	{defaultValue, placeholder, onChangeHtml, onChangeText},
+	{defaultValue, placeholder, onChangeHtml, onChangeText, entryId},
 	forwardedRef,
 ) {
 	const ref = useRef<EnrichedTextInputInstance>(null);
@@ -216,6 +218,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 						})}
 					</ScrollView>
 					<View className={'flex-row items-center border-l border-border bg-background'}>
+						{entryId ? <AttachmentButton entryId={entryId} /> : null}
 						{isTranscriptionEnabled ? (
 							<Button
 								variant="ghost"
