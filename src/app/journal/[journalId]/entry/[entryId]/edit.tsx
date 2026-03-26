@@ -7,7 +7,7 @@ import { EntryComposer } from '@/components/entry-composer';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
 export default function EntryEditScreen(): React.JSX.Element {
-	const { id } = useLocalSearchParams<{ id: string }>();
+	const { entryId } = useLocalSearchParams<{ journalId: string; entryId: string }>();
 	const { muted } = useThemeColors();
 
 	const handleFinish = useCallback(() => {
@@ -16,7 +16,7 @@ export default function EntryEditScreen(): React.JSX.Element {
 
 	return (
 		<EntryComposer
-			entryId={id}
+			entryId={entryId}
 			onFinish={handleFinish}
 			headerLeft={
 				<Button variant="ghost" size="sm" isIconOnly onPress={() => router.back()}>

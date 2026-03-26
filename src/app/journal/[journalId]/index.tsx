@@ -15,12 +15,12 @@ import {useJournals} from '@/hooks/use-journals';
 import {useThemeColors} from '@/hooks/use-theme-colors';
 
 export default function JournalDetailScreen(): React.JSX.Element {
-	const {id} = useLocalSearchParams<{ id: string }>();
+	const {journalId} = useLocalSearchParams<{ journalId: string }>();
 	const insets = useSafeAreaInsets();
 	const {muted, accentForeground} = useThemeColors();
 	const {journals} = useJournals();
-	const journal = journals.find((j) => j.id === id);
-	const {entries, refresh, searchEntries, createEntry} = useEntries(id);
+	const journal = journals.find((j) => j.id === journalId);
+	const {entries, refresh, searchEntries, createEntry} = useEntries(journalId);
 	const [searchQuery, setSearchQuery] = useState('');
 
 	useFocusEffect(
@@ -38,15 +38,15 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	);
 
 	const handleNewEntry = useCallback(async () => {
-		if (!id) return;
-		const entry = await createEntry(id, '', '');
-		router.push(`/entry/${entry.id}/edit`);
-	}, [id, createEntry]);
+		if (!journalId) return;
+		const entry = await createEntry(journalId);
+		router.push(`/journal/${journalId}/entry/${entry.id}/edit`);
+	}, [journalId, createEntry]);
 
 	const Icon = journal ? getJournalIcon(journal.icon) : null;
 
 	const titleContent = (
-		<View className="flex-row items-center gap-3">
+		<View className="flex-row items-center gap-4">
 			{Icon ? <Icon size={28} color={muted}/> : null}
 			<Text className="text-5xl font-heading text-foreground pb-2">
 				{journal?.name ?? 'Journal'}
@@ -66,7 +66,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				data={entries}
 				keyExtractor={(item) => item.id}
 				renderItem={({item}) => (
-					<EntryCard entry={item} onPress={() => router.push(`/entry/${item.id}`)}/>
+					<EntryCard entry={item} onPress={() => router.push(`/journal/${journalId}/entry/${item.id}`)}/>
 				)}
 				contentContainerClassName="pt-2 px-4 gap-3"
 				contentContainerStyle={{paddingBottom: insets.bottom + 16}}

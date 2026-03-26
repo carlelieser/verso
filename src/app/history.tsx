@@ -40,7 +40,7 @@ export default function HistoryScreen(): React.JSX.Element {
 					<EntryCard
 						entry={item}
 						showJournalName
-						onPress={() => router.push(`/entry/${item.id}`)}
+						onPress={() => router.push(`/journal/${item.journalId}/entry/${item.id}`)}
 					/>
 				)}
 				contentContainerClassName="pt-2 px-4 gap-3"
