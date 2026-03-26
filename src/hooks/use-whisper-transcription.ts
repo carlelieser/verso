@@ -81,8 +81,12 @@ export function useWhisperTranscription(
 						if (event.type !== 'transcribe') return;
 
 						// When a new slice starts, commit the previous slice's text
-						if (event.sliceIndex !== lastSliceIndexRef.current && lastSliceIndexRef.current >= 0) {
-							completedSlicesRef.current = completedSlicesRef.current + ' ' + currentSliceText;
+						if (
+							event.sliceIndex !== lastSliceIndexRef.current &&
+							lastSliceIndexRef.current >= 0
+						) {
+							completedSlicesRef.current =
+								completedSlicesRef.current + ' ' + currentSliceText;
 						}
 						lastSliceIndexRef.current = event.sliceIndex;
 
@@ -93,7 +97,11 @@ export function useWhisperTranscription(
 							.join('')
 							.trim();
 
-						const fullText = (completedSlicesRef.current + ' ' + currentSliceText).trim();
+						const fullText = (
+							completedSlicesRef.current +
+							' ' +
+							currentSliceText
+						).trim();
 						fullTextRef.current = fullText;
 						setLiveText(fullText);
 					},

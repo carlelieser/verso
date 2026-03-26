@@ -11,7 +11,10 @@ interface FabProps {
 	readonly style?: StyleProp<ViewStyle>;
 }
 
-export const Fab = forwardRef<View, FabProps>(function Fab({ icon, variant = 'primary', onPress, className, style }, ref) {
+export const Fab = forwardRef<View, FabProps>(function Fab(
+	{ icon, variant = 'primary', onPress, className, style },
+	ref,
+) {
 	return (
 		<Button
 			ref={ref}

@@ -43,15 +43,18 @@ export default function EntryViewScreen(): React.JSX.Element {
 		router.back();
 	}, [entryId, deleteEntry, dialog]);
 
-	const menuItems: readonly FabMenuItem[] = useMemo(() => [
-		{
-			id: 'delete',
-			label: 'Delete',
-			icon: <Trash2 size={16} color={danger} />,
-			variant: 'danger',
-			onPress: handleDelete,
-		},
-	], [danger, handleDelete]);
+	const menuItems: readonly FabMenuItem[] = useMemo(
+		() => [
+			{
+				id: 'delete',
+				label: 'Delete',
+				icon: <Trash2 size={16} color={danger} />,
+				variant: 'danger',
+				onPress: handleDelete,
+			},
+		],
+		[danger, handleDelete],
+	);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -91,7 +94,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 				<>
 					<ScrollView
 						contentContainerClassName="px-5"
-						contentContainerStyle={{paddingBottom: insets.bottom + 80}}
+						contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
 					>
 						<Text className="text-4xl font-heading text-foreground mb-4 pb-2">
 							{formatRelativeDate(entry.createdAt)}
@@ -121,7 +124,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 
 						<Text
 							className="font-editor text-foreground"
-							style={{fontSize: 17, lineHeight: 28}}
+							style={{ fontSize: 17, lineHeight: 28 }}
 						>
 							{entry.contentText}
 						</Text>

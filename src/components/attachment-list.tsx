@@ -1,4 +1,5 @@
-import {Button, Menu} from 'heroui-native';
+import * as Sharing from 'expo-sharing';
+import { Button, Menu } from 'heroui-native';
 import {
 	AudioLines,
 	EllipsisVertical,
@@ -11,11 +12,9 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
-import * as Sharing from 'expo-sharing';
 
 import { AppDialog } from '@/components/app-dialog';
 import { EmptyState } from '@/components/empty-state';
-import { Overline } from '@/components/overline';
 import { useDialog } from '@/hooks/use-dialog';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
@@ -33,7 +32,14 @@ const FILE_TYPE_ICONS = {
 	document: FileText,
 } as const;
 
-function FileCard({attachment, muted, danger, onShare, onDelete, isDeleting}: {
+function FileCard({
+	attachment,
+	muted,
+	danger,
+	onShare,
+	onDelete,
+	isDeleting,
+}: {
 	readonly attachment: FileAttachment;
 	readonly muted: string;
 	readonly danger: string;
@@ -46,9 +52,9 @@ function FileCard({attachment, muted, danger, onShare, onDelete, isDeleting}: {
 	return (
 		<View
 			className="flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border"
-			style={isDeleting ? {opacity: 0.5} : undefined}
+			style={isDeleting ? { opacity: 0.5 } : undefined}
 		>
-			<Icon size={20} color={muted}/>
+			<Icon size={20} color={muted} />
 			<View className="flex-1">
 				<Text className="text-sm text-foreground" numberOfLines={1}>
 					{attachment.data.fileName ?? 'Untitled'}
@@ -60,18 +66,23 @@ function FileCard({attachment, muted, danger, onShare, onDelete, isDeleting}: {
 			<Menu presentation="popover">
 				<Menu.Trigger asChild>
 					<Button variant="ghost" size="sm" isIconOnly>
-						<EllipsisVertical size={16} color={muted}/>
+						<EllipsisVertical size={16} color={muted} />
 					</Button>
 				</Menu.Trigger>
 				<Menu.Portal>
-					<Menu.Overlay/>
+					<Menu.Overlay />
 					<Menu.Content presentation="popover" width={180}>
 						<Menu.Item id="share" shouldCloseOnSelect onPress={onShare}>
-							<Share2 size={16} color={muted}/>
+							<Share2 size={16} color={muted} />
 							<Menu.ItemTitle>Share</Menu.ItemTitle>
 						</Menu.Item>
-						<Menu.Item variant="danger" id="delete" shouldCloseOnSelect onPress={onDelete}>
-							<Trash2 size={16} color={danger}/>
+						<Menu.Item
+							variant="danger"
+							id="delete"
+							shouldCloseOnSelect
+							onPress={onDelete}
+						>
+							<Trash2 size={16} color={danger} />
 							<Menu.ItemTitle>Delete</Menu.ItemTitle>
 						</Menu.Item>
 					</Menu.Content>
@@ -81,7 +92,13 @@ function FileCard({attachment, muted, danger, onShare, onDelete, isDeleting}: {
 	);
 }
 
-function LocationCard({attachment, muted, danger, onDelete, isDeleting}: {
+function LocationCard({
+	attachment,
+	muted,
+	danger,
+	onDelete,
+	isDeleting,
+}: {
 	readonly attachment: LocationAttachment;
 	readonly muted: string;
 	readonly danger: string;
@@ -91,30 +108,36 @@ function LocationCard({attachment, muted, danger, onDelete, isDeleting}: {
 	return (
 		<View
 			className="flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border"
-			style={isDeleting ? {opacity: 0.5} : undefined}
+			style={isDeleting ? { opacity: 0.5 } : undefined}
 		>
-			<MapPin size={20} color={muted}/>
+			<MapPin size={20} color={muted} />
 			<View className="flex-1">
 				<Text className="text-sm text-foreground" numberOfLines={1}>
 					{attachment.data.name}
 				</Text>
 				{attachment.data.latitude !== null && attachment.data.longitude !== null ? (
 					<Text className="text-xs text-muted">
-						{attachment.data.latitude.toFixed(4)}, {attachment.data.longitude.toFixed(4)}
+						{attachment.data.latitude.toFixed(4)},{' '}
+						{attachment.data.longitude.toFixed(4)}
 					</Text>
 				) : null}
 			</View>
 			<Menu presentation="popover">
 				<Menu.Trigger asChild>
 					<Button variant="ghost" size="sm" isIconOnly>
-						<EllipsisVertical size={16} color={muted}/>
+						<EllipsisVertical size={16} color={muted} />
 					</Button>
 				</Menu.Trigger>
 				<Menu.Portal>
-					<Menu.Overlay/>
+					<Menu.Overlay />
 					<Menu.Content presentation="popover" width={180}>
-						<Menu.Item variant="danger" id="delete" shouldCloseOnSelect onPress={onDelete}>
-							<Trash2 size={16} color={danger}/>
+						<Menu.Item
+							variant="danger"
+							id="delete"
+							shouldCloseOnSelect
+							onPress={onDelete}
+						>
+							<Trash2 size={16} color={danger} />
 							<Menu.ItemTitle>Delete</Menu.ItemTitle>
 						</Menu.Item>
 					</Menu.Content>
@@ -124,28 +147,30 @@ function LocationCard({attachment, muted, danger, onDelete, isDeleting}: {
 	);
 }
 
-export function AttachmentList({
-	attachments,
-}: AttachmentListProps): React.JSX.Element {
+export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.Element {
 	const { db } = useDatabaseContext();
 	const { muted, danger } = useThemeColors();
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const dialog = useDialog();
 
-	const handleShare = useCallback(async (uri: string) => {
-		try {
-			await Sharing.shareAsync(uri);
-		} catch (err: unknown) {
-			const message = err instanceof Error ? err.message : 'Failed to share file';
-			await dialog.alert({ title: 'Share Error', description: message });
-		}
-	}, [dialog]);
+	const handleShare = useCallback(
+		async (uri: string) => {
+			try {
+				await Sharing.shareAsync(uri);
+			} catch (err: unknown) {
+				const message = err instanceof Error ? err.message : 'Failed to share file';
+				await dialog.alert({ title: 'Share Error', description: message });
+			}
+		},
+		[dialog],
+	);
 
 	const handleDelete = useCallback(
 		async (attachment: Attachment) => {
-			const label = attachment.type === 'location'
-				? attachment.data.name
-				: attachment.data.fileName ?? 'this file';
+			const label =
+				attachment.type === 'location'
+					? attachment.data.name
+					: (attachment.data.fileName ?? 'this file');
 
 			const confirmed = await dialog.confirm({
 				title: 'Delete Attachment',
@@ -160,8 +185,7 @@ export function AttachmentList({
 			try {
 				await deleteAttachment(db, attachment.id);
 			} catch (err: unknown) {
-				const message =
-					err instanceof Error ? err.message : 'Failed to delete attachment';
+				const message = err instanceof Error ? err.message : 'Failed to delete attachment';
 				await dialog.alert({ title: 'Delete Error', description: message });
 			} finally {
 				setDeletingId(null);
@@ -174,7 +198,7 @@ export function AttachmentList({
 		<View>
 			{attachments.length === 0 ? (
 				<EmptyState
-					icon={<Paperclip size={48} color={muted}/>}
+					icon={<Paperclip size={48} color={muted} />}
 					title="No attachments"
 					description="Tap + to add files, images, or audio."
 				/>

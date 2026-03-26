@@ -20,7 +20,10 @@ const FILE_TYPE_ICONS = {
 	location: MapPin,
 } as const;
 
-function AttachmentSummary({ attachment, muted }: {
+function AttachmentSummary({
+	attachment,
+	muted,
+}: {
 	readonly attachment: Attachment;
 	readonly muted: string;
 }): React.JSX.Element {
@@ -76,7 +79,8 @@ export function AttachmentPreview({
 				<View className="flex-row items-center gap-2">
 					<Paperclip size={14} color={muted} />
 					<Text className="text-xs text-muted">
-						View {attachments.length} {attachments.length === 1 ? 'attachment' : 'attachments'}
+						View {attachments.length}{' '}
+						{attachments.length === 1 ? 'attachment' : 'attachments'}
 					</Text>
 				</View>
 				<ChevronRight size={14} color={muted} />

@@ -1,12 +1,6 @@
 import { relations } from 'drizzle-orm';
 
-import {
-	attachments,
-	emotionRecords,
-	entries,
-	journals,
-	weatherRecords,
-} from './schema';
+import { attachments, emotionRecords, entries, journals, weatherRecords } from './schema';
 
 export const journalsRelations = relations(journals, ({ many }) => ({
 	entries: many(entries),

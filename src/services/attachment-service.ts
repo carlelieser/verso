@@ -78,7 +78,10 @@ async function getNextOrder(db: Db, entryId: string): Promise<number> {
 	return (maxRow?.maxOrder ?? -1) + 1;
 }
 
-export async function addFileAttachment(db: Db, input: AddFileAttachmentInput): Promise<Attachment> {
+export async function addFileAttachment(
+	db: Db,
+	input: AddFileAttachmentInput,
+): Promise<Attachment> {
 	const id = generateId();
 	const ext = getExtension(input.fileName, input.mimeType);
 	const dir = getAttachmentDir(input.entryId);
@@ -132,7 +135,10 @@ export async function addFileAttachment(db: Db, input: AddFileAttachmentInput): 
 	};
 }
 
-export async function addLocationAttachment(db: Db, input: AddLocationAttachmentInput): Promise<Attachment> {
+export async function addLocationAttachment(
+	db: Db,
+	input: AddLocationAttachmentInput,
+): Promise<Attachment> {
 	const id = generateId();
 	const now = new Date();
 	const nextOrder = await getNextOrder(db, input.entryId);

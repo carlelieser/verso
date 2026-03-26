@@ -2,7 +2,7 @@ import * as ExpoLocation from 'expo-location';
 import { useFocusEffect } from 'expo-router';
 import { ControlField, Description, Label } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
-import { Linking, Platform, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, ScrollView, View } from 'react-native';
 
 import { Overline } from '@/components/overline';
 import { ScreenLayout } from '@/components/screen-layout';
@@ -85,9 +85,7 @@ export default function SettingsScreen(): React.JSX.Element {
 					>
 						<View className="flex-1">
 							<Label>Use system colors</Label>
-							<Description>
-								Match your device's light or dark setting
-							</Description>
+							<Description>Match your device's light or dark setting</Description>
 						</View>
 						<ControlField.Indicator />
 					</ControlField>

@@ -65,23 +65,28 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		router.back();
 	}, [journalId, journal?.name, deleteJournal, dialog]);
 
-	const menuItems = useMemo(() => [
-		...(!isDefault ? [
-			{
-				id: 'set-default',
-				label: 'Set as default',
-				icon: <Star size={16} color={muted} />,
-				onPress: handleSetDefault,
-			},
-			{
-				id: 'delete',
-				label: 'Delete',
-				icon: <Trash2 size={16} color={danger} />,
-				variant: 'danger' as const,
-				onPress: handleDelete,
-			},
-		] : []),
-	], [muted, danger, isDefault, handleSetDefault, handleDelete]);
+	const menuItems = useMemo(
+		() => [
+			...(!isDefault
+				? [
+						{
+							id: 'set-default',
+							label: 'Set as default',
+							icon: <Star size={16} color={muted} />,
+							onPress: handleSetDefault,
+						},
+						{
+							id: 'delete',
+							label: 'Delete',
+							icon: <Trash2 size={16} color={danger} />,
+							variant: 'danger' as const,
+							onPress: handleDelete,
+						},
+					]
+				: []),
+		],
+		[muted, danger, isDefault, handleSetDefault, handleDelete],
+	);
 
 	const Icon = journal ? getJournalIcon(journal.icon) : null;
 

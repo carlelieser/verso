@@ -1,4 +1,4 @@
-import {Button} from 'heroui-native';
+import { Button } from 'heroui-native';
 import {
 	Bold,
 	ChevronDown,
@@ -12,15 +12,9 @@ import {
 	Strikethrough,
 	Underline,
 } from 'lucide-react-native';
-import React, {
-	forwardRef,
-	useEffect,
-	useImperativeHandle,
-	useRef,
-	useState,
-} from 'react';
-import type {NativeSyntheticEvent} from 'react-native';
-import {Keyboard, KeyboardAvoidingView, ScrollView, View} from 'react-native';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import type { NativeSyntheticEvent } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import {
 	EnrichedTextInput,
 	type EnrichedTextInputInstance,
@@ -32,7 +26,7 @@ import {
 	TranscriptionLiveText,
 	useEditorTranscription,
 } from '@/components/transcription-button';
-import {useThemeColors} from '@/hooks/use-theme-colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 interface FormatAction {
 	readonly key: string;
@@ -42,8 +36,8 @@ interface FormatAction {
 }
 
 const FORMAT_ACTIONS: readonly FormatAction[] = [
-	{key: 'bold', icon: Bold, stateKey: 'bold', toggle: (r) => r.toggleBold()},
-	{key: 'italic', icon: Italic, stateKey: 'italic', toggle: (r) => r.toggleItalic()},
+	{ key: 'bold', icon: Bold, stateKey: 'bold', toggle: (r) => r.toggleBold() },
+	{ key: 'italic', icon: Italic, stateKey: 'italic', toggle: (r) => r.toggleItalic() },
 	{
 		key: 'underline',
 		icon: Underline,
@@ -56,12 +50,12 @@ const FORMAT_ACTIONS: readonly FormatAction[] = [
 		stateKey: 'strikeThrough',
 		toggle: (r) => r.toggleStrikeThrough(),
 	},
-	{key: 'h1', icon: Heading1, stateKey: 'h1', toggle: (r) => r.toggleH1()},
-	{key: 'h2', icon: Heading2, stateKey: 'h2', toggle: (r) => r.toggleH2()},
-	{key: 'ul', icon: List, stateKey: 'unorderedList', toggle: (r) => r.toggleUnorderedList()},
-	{key: 'ol', icon: ListOrdered, stateKey: 'orderedList', toggle: (r) => r.toggleOrderedList()},
-	{key: 'quote', icon: Quote, stateKey: 'blockQuote', toggle: (r) => r.toggleBlockQuote()},
-	{key: 'code', icon: Code, stateKey: 'inlineCode', toggle: (r) => r.toggleInlineCode()},
+	{ key: 'h1', icon: Heading1, stateKey: 'h1', toggle: (r) => r.toggleH1() },
+	{ key: 'h2', icon: Heading2, stateKey: 'h2', toggle: (r) => r.toggleH2() },
+	{ key: 'ul', icon: List, stateKey: 'unorderedList', toggle: (r) => r.toggleUnorderedList() },
+	{ key: 'ol', icon: ListOrdered, stateKey: 'orderedList', toggle: (r) => r.toggleOrderedList() },
+	{ key: 'quote', icon: Quote, stateKey: 'blockQuote', toggle: (r) => r.toggleBlockQuote() },
+	{ key: 'code', icon: Code, stateKey: 'inlineCode', toggle: (r) => r.toggleInlineCode() },
 ];
 
 export interface EditorHandle {
@@ -79,15 +73,15 @@ interface EditorProps {
 }
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-	{defaultValue, placeholder, onChangeHtml, onChangeText},
+	{ defaultValue, placeholder, onChangeHtml, onChangeText },
 	forwardedRef,
 ) {
 	const ref = useRef<EnrichedTextInputInstance>(null);
 	const [styleState, setStyleState] = useState<OnChangeStateEvent | null>(null);
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
-	const {foreground, accent, muted, surface, editorFont} = useThemeColors();
-	const transcription = useEditorTranscription({editorRef: ref});
+	const { foreground, accent, muted, surface, editorFont } = useThemeColors();
+	const transcription = useEditorTranscription({ editorRef: ref });
 
 	useEffect(() => {
 		const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
@@ -135,8 +129,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 					paddingTop: 0,
 				}}
 				htmlStyle={{
-					h1: {fontSize: 28, bold: true},
-					h2: {fontSize: 22, bold: true},
+					h1: { fontSize: 28, bold: true },
+					h2: { fontSize: 22, bold: true },
 					blockquote: {
 						borderColor: accent,
 						borderWidth: 3,
@@ -197,9 +191,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 											action.toggle(ref.current);
 										}
 									}}
-									style={isActive ? {backgroundColor: surface} : undefined}
+									style={isActive ? { backgroundColor: surface } : undefined}
 								>
-									<IconComponent size={18} color={isActive ? accent : muted}/>
+									<IconComponent size={18} color={isActive ? accent : muted} />
 								</Button>
 							);
 						})}
@@ -207,7 +201,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 					<View className={'flex-row items-center border-l border-border bg-background'}>
 						<TranscriptionButton transcription={transcription} />
 						<Button variant="ghost" isIconOnly onPress={() => ref.current?.blur()}>
-							<ChevronDown size={18} color={muted}/>
+							<ChevronDown size={18} color={muted} />
 						</Button>
 					</View>
 				</View>

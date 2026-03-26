@@ -96,7 +96,7 @@ export function useAttachmentPicker(
 	}, [addFiles]);
 
 	const pickAudio = useCallback(async () => {
-		const result = await DocumentPicker.getDocumentAsync({type: 'audio/*'});
+		const result = await DocumentPicker.getDocumentAsync({ type: 'audio/*' });
 
 		if (result.canceled) return;
 
@@ -112,7 +112,7 @@ export function useAttachmentPicker(
 	}, [addFiles]);
 
 	const pickDocuments = useCallback(async () => {
-		const result = await DocumentPicker.getDocumentAsync({type: '*/*'});
+		const result = await DocumentPicker.getDocumentAsync({ type: '*/*' });
 
 		if (result.canceled) return;
 
@@ -127,5 +127,5 @@ export function useAttachmentPicker(
 		await addFiles(files);
 	}, [addFiles]);
 
-	return {attachments: attachmentList, pickImages, pickAudio, pickDocuments, refresh};
+	return { attachments: attachmentList, pickImages, pickAudio, pickDocuments, refresh };
 }

@@ -140,15 +140,18 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		setAutoSaveContent((prev) => ({ ...prev, html }));
 	}, []);
 
-	const handleEmotionSave = useCallback((selections: readonly EmotionSelection[]) => {
-		emotionSelectionsRef.current = [...selections];
-		setDefaultEmotions([...selections]);
+	const handleEmotionSave = useCallback(
+		(selections: readonly EmotionSelection[]) => {
+			emotionSelectionsRef.current = [...selections];
+			setDefaultEmotions([...selections]);
 
-		// Lock to the current journal when emotions are set
-		if (selections.length > 0 && explicitJournalId === null) {
-			setExplicitJournalId(defaultJournalId);
-		}
-	}, [explicitJournalId, defaultJournalId]);
+			// Lock to the current journal when emotions are set
+			if (selections.length > 0 && explicitJournalId === null) {
+				setExplicitJournalId(defaultJournalId);
+			}
+		},
+		[explicitJournalId, defaultJournalId],
+	);
 
 	const handleFinish = useCallback(() => {
 		const saves: Promise<void>[] = [

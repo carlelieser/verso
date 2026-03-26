@@ -43,10 +43,7 @@ interface EntryComposerProps {
 }
 
 export const EntryComposer = forwardRef<EntryComposerHandle, EntryComposerProps>(
-	function EntryComposer(
-		{ entryId, initialJournalId, ...rest },
-		forwardedRef,
-	) {
+	function EntryComposer({ entryId, initialJournalId, ...rest }, forwardedRef) {
 		return (
 			<EntryProvider entryId={entryId} journalId={initialJournalId}>
 				<EntryComposerInner ref={forwardedRef} {...rest} />
@@ -133,7 +130,9 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 											onPress={() => {
 												const journalId = composer.selectedJournalId;
 												if (journalId) {
-													router.push(`/journal/${journalId}/entry/${composer.entryId}/attachments`);
+													router.push(
+														`/journal/${journalId}/entry/${composer.entryId}/attachments`,
+													);
 												}
 											}}
 										>

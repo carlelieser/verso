@@ -26,7 +26,12 @@ export function AppDialog({
 	onCancel,
 }: AppDialogProps): React.JSX.Element {
 	return (
-		<Dialog isOpen={isOpen} onOpenChange={(open) => { if (!open) onCancel(); }}>
+		<Dialog
+			isOpen={isOpen}
+			onOpenChange={(open) => {
+				if (!open) onCancel();
+			}}
+		>
 			<Dialog.Portal>
 				<Dialog.Overlay />
 				<Dialog.Content>

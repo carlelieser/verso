@@ -44,7 +44,8 @@ export function useEntries(journalId?: string): UseEntriesResult {
 	const [searchResults, setSearchResults] = useState<readonly EntryWithJournal[] | null>(null);
 
 	const { data: rows } = useLiveQuery(
-		db.select(ENTRY_COLUMNS)
+		db
+			.select(ENTRY_COLUMNS)
 			.from(entries)
 			.innerJoin(journals, eq(entries.journalId, journals.id))
 			.where(journalId ? and(NON_EMPTY, eq(entries.journalId, journalId)) : NON_EMPTY)
@@ -54,15 +55,16 @@ export function useEntries(journalId?: string): UseEntriesResult {
 	);
 
 	const liveEntries: readonly EntryWithJournal[] = useMemo(
-		() => rows.map((row) => ({
-			id: row.id,
-			journalId: row.journalId,
-			contentHtml: row.contentHtml,
-			contentText: row.contentText,
-			createdAt: row.createdAt.getTime(),
-			updatedAt: row.updatedAt.getTime(),
-			journalName: row.journalName,
-		})),
+		() =>
+			rows.map((row) => ({
+				id: row.id,
+				journalId: row.journalId,
+				contentHtml: row.contentHtml,
+				contentText: row.contentText,
+				createdAt: row.createdAt.getTime(),
+				updatedAt: row.updatedAt.getTime(),
+				journalName: row.journalName,
+			})),
 		[rows],
 	);
 
@@ -79,7 +81,12 @@ export function useEntries(journalId?: string): UseEntriesResult {
 
 	const updateEntry = useCallback(
 		async (id: string, html: string, text: string, entryJournalId?: string): Promise<void> => {
-			await updateEntryService(db, { id, journalId: entryJournalId, contentHtml: html, contentText: text });
+			await updateEntryService(db, {
+				id,
+				journalId: entryJournalId,
+				contentHtml: html,
+				contentText: text,
+			});
 		},
 		[db],
 	);

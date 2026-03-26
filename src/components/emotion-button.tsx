@@ -57,10 +57,7 @@ export function EmotionButton({
 	return (
 		<>
 			<Button variant="ghost" size="sm" isIconOnly onPress={handlePress}>
-				<SmilePlus
-					size={16}
-					color={selections.length > 0 ? accent : muted}
-				/>
+				<SmilePlus size={16} color={selections.length > 0 ? accent : muted} />
 			</Button>
 
 			{sheet.isOpen ? (
@@ -71,9 +68,7 @@ export function EmotionButton({
 								key={entryId}
 								onSave={handleSave}
 								onChange={handleChange}
-								defaultSelections={
-									selections.length > 0 ? selections : undefined
-								}
+								defaultSelections={selections.length > 0 ? selections : undefined}
 							/>
 						</BottomSheetScrollView>
 					</BottomSheet>

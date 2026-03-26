@@ -32,24 +32,26 @@ export function useJournals(): UseJournalsResult {
 	);
 
 	const { data: countRows } = useLiveQuery(
-		db.select({
-			journalId: entries.journalId,
-			count: count(),
-		})
+		db
+			.select({
+				journalId: entries.journalId,
+				count: count(),
+			})
 			.from(entries)
 			.where(ne(entries.contentText, ''))
 			.groupBy(entries.journalId),
 	);
 
 	const mappedJournals: readonly Journal[] = useMemo(
-		() => journalRows.map((row) => ({
-			id: row.id,
-			name: row.name,
-			icon: row.icon,
-			displayOrder: row.displayOrder,
-			createdAt: row.createdAt.getTime(),
-			updatedAt: row.updatedAt.getTime(),
-		})),
+		() =>
+			journalRows.map((row) => ({
+				id: row.id,
+				name: row.name,
+				icon: row.icon,
+				displayOrder: row.displayOrder,
+				createdAt: row.createdAt.getTime(),
+				updatedAt: row.updatedAt.getTime(),
+			})),
 		[journalRows],
 	);
 

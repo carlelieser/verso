@@ -74,10 +74,7 @@ export function Collapsible({
 
 	return (
 		<View>
-			<Pressable
-				onPress={toggle}
-				className="flex-row items-center justify-between py-2 px-1"
-			>
+			<Pressable onPress={toggle} className="flex-row items-center justify-between py-2 px-1">
 				<View className="flex-row items-center gap-2">
 					<Animated.View style={chevronStyle}>
 						<ChevronRight size={16} color={muted} />

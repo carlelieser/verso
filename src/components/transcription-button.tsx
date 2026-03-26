@@ -29,13 +29,8 @@ export function useEditorTranscription({
 		async (text: string) => {
 			if (!editorRef.current) return;
 			const html = await editorRef.current.getHTML();
-			const escaped = text
-				.replace(/&/g, '&amp;')
-				.replace(/</g, '&lt;')
-				.replace(/>/g, '&gt;');
-			editorRef.current.setValue(
-				html.replace(/<\/html>\s*$/, `<p>${escaped}</p>\n</html>`),
-			);
+			const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			editorRef.current.setValue(html.replace(/<\/html>\s*$/, `<p>${escaped}</p>\n</html>`));
 		},
 		[editorRef],
 	);
@@ -58,7 +53,11 @@ interface TranscriptionLiveTextProps {
 export function TranscriptionLiveText({
 	transcription,
 }: TranscriptionLiveTextProps): React.JSX.Element | null {
-	if (!transcription.isEnabled || transcription.liveText.length === 0 || !transcription.isRecording) {
+	if (
+		!transcription.isEnabled ||
+		transcription.liveText.length === 0 ||
+		!transcription.isRecording
+	) {
 		return null;
 	}
 

@@ -34,12 +34,7 @@ export function FabMenu({
 	return (
 		<Menu presentation="popover">
 			<Menu.Trigger asChild>
-				<Fab
-					variant={fabVariant}
-					icon={icon}
-					className={className}
-					style={style}
-				/>
+				<Fab variant={fabVariant} icon={icon} className={className} style={style} />
 			</Menu.Trigger>
 			<Menu.Portal>
 				<Menu.Overlay />

@@ -1,6 +1,6 @@
-import { getRandomBytes } from 'expo-crypto';
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
+import { getRandomBytes } from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import { openDatabaseSync } from 'expo-sqlite';
 

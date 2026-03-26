@@ -4,9 +4,7 @@ export function formatJournalMeta(entryCount: number, isDefault: boolean): strin
 	if (isDefault) parts.push('Default');
 
 	parts.push(
-		entryCount === 0
-			? 'No entries'
-			: `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'}`,
+		entryCount === 0 ? 'No entries' : `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'}`,
 	);
 
 	return parts.join(' \u00B7 ');

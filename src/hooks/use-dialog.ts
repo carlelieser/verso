@@ -52,35 +52,50 @@ export function useDialog(): UseDialogResult {
 	const [state, setState] = useState<DialogState>(CLOSED_STATE);
 	const resolveRef = useRef<((value: boolean) => void) | null>(null);
 
-	const open = useCallback((mode: DialogMode, options: DialogOptions & {
-		confirmLabel?: string;
-		cancelLabel?: string;
-	}): Promise<boolean> => {
-		return new Promise<boolean>((resolve) => {
-			resolveRef.current = resolve;
-			setState({
-				isOpen: true,
-				mode,
-				title: options.title,
-				description: options.description,
-				variant: options.variant ?? 'default',
-				confirmLabel: options.confirmLabel ?? 'OK',
-				cancelLabel: options.cancelLabel ?? 'Cancel',
+	const open = useCallback(
+		(
+			mode: DialogMode,
+			options: DialogOptions & {
+				confirmLabel?: string;
+				cancelLabel?: string;
+			},
+		): Promise<boolean> => {
+			return new Promise<boolean>((resolve) => {
+				resolveRef.current = resolve;
+				setState({
+					isOpen: true,
+					mode,
+					title: options.title,
+					description: options.description,
+					variant: options.variant ?? 'default',
+					confirmLabel: options.confirmLabel ?? 'OK',
+					cancelLabel: options.cancelLabel ?? 'Cancel',
+				});
 			});
-		});
-	}, []);
+		},
+		[],
+	);
 
-	const alert = useCallback(async (options: AlertOptions): Promise<void> => {
-		await open('alert', { ...options, confirmLabel: options.dismissLabel });
-	}, [open]);
+	const alert = useCallback(
+		async (options: AlertOptions): Promise<void> => {
+			await open('alert', { ...options, confirmLabel: options.dismissLabel });
+		},
+		[open],
+	);
 
-	const confirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
-		return open('confirm', options);
-	}, [open]);
+	const confirm = useCallback(
+		(options: ConfirmOptions): Promise<boolean> => {
+			return open('confirm', options);
+		},
+		[open],
+	);
 
-	const showError = useCallback((title: string, description: string): void => {
-		open('alert', { title, description });
-	}, [open]);
+	const showError = useCallback(
+		(title: string, description: string): void => {
+			open('alert', { title, description });
+		},
+		[open],
+	);
 
 	const handleConfirm = useCallback(() => {
 		resolveRef.current?.(true);

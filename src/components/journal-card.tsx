@@ -14,7 +14,12 @@ interface JournalCardProps {
 	readonly onPress: () => void;
 }
 
-export function JournalCard({ journal, entryCount, isDefault, onPress }: JournalCardProps): React.JSX.Element {
+export function JournalCard({
+	journal,
+	entryCount,
+	isDefault,
+	onPress,
+}: JournalCardProps): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const Icon = getJournalIcon(journal.icon);
 

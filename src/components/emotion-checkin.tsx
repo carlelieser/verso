@@ -3,8 +3,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
-import { EMOTION_LABELS, EMOTIONS } from '@/constants/emotions';
 import { Overline } from '@/components/overline';
+import { EMOTION_LABELS, EMOTIONS } from '@/constants/emotions';
 import type { EmotionCategory, EmotionIntensity } from '@/types/common';
 import { isEmotionIntensity } from '@/types/common';
 import type { EmotionSelection } from '@/types/emotion';
