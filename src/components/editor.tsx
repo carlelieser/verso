@@ -8,21 +8,19 @@ import {
 	Italic,
 	List,
 	ListOrdered,
-	Mic,
 	Quote,
 	Strikethrough,
 	Underline,
 } from 'lucide-react-native';
 import React, {
 	forwardRef,
-	useCallback,
 	useEffect,
 	useImperativeHandle,
 	useRef,
 	useState,
 } from 'react';
 import type {NativeSyntheticEvent} from 'react-native';
-import {Keyboard, KeyboardAvoidingView, ScrollView, Text, View} from 'react-native';
+import {Keyboard, KeyboardAvoidingView, ScrollView, View} from 'react-native';
 import {
 	EnrichedTextInput,
 	type EnrichedTextInputInstance,
@@ -30,9 +28,12 @@ import {
 } from 'react-native-enriched';
 
 import {AttachmentButton} from '@/components/attachment-button';
-import {useSettings} from '@/hooks/use-settings';
+import {
+	TranscriptionButton,
+	TranscriptionLiveText,
+	useEditorTranscription,
+} from '@/components/transcription-button';
 import {useThemeColors} from '@/hooks/use-theme-colors';
-import {useWhisperTranscription} from '@/hooks/use-whisper-transcription';
 
 interface FormatAction {
 	readonly key: string;
@@ -85,18 +86,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 	const ref = useRef<EnrichedTextInputInstance>(null);
 	const [styleState, setStyleState] = useState<OnChangeStateEvent | null>(null);
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-	const {isTranscriptionEnabled} = useSettings();
 
 	const {foreground, accent, muted, surface, editorFont} = useThemeColors();
-
-	const handleTranscriptionFinish = useCallback(async (text: string) => {
-		if (!ref.current) return;
-		const html = await ref.current.getHTML();
-		const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-		ref.current.setValue(html.replace(/<\/html>\s*$/, `<p>${escaped}</p>\n</html>`));
-	}, []);
-
-	const transcription = useWhisperTranscription(handleTranscriptionFinish);
+	const transcription = useEditorTranscription({editorRef: ref});
 
 	useEffect(() => {
 		const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
@@ -111,7 +103,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 		clear: () => ref.current?.setValue(''),
 		focus: () => ref.current?.focus(),
 		blur: () => ref.current?.blur(),
-		appendText: handleTranscriptionFinish,
+		appendText: async (text: string) => {
+			if (!ref.current) return;
+			const html = await ref.current.getHTML();
+			const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			ref.current.setValue(html.replace(/<\/html>\s*$/, `<p>${escaped}</p>\n</html>`));
+		},
 	}));
 
 	const handleStateChange = (e: NativeSyntheticEvent<OnChangeStateEvent>): void => {
@@ -172,15 +169,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 				}}
 			/>
 
-			{isTranscriptionEnabled &&
-			transcription.liveText.length > 0 &&
-			transcription.isRecording ? (
-				<View className="bg-background px-6 py-2">
-					<Text className="text-sm text-muted italic">
-						{transcription.liveText}
-					</Text>
-				</View>
-			) : null}
+			<TranscriptionLiveText transcription={transcription} />
 
 			{isKeyboardVisible ? (
 				<View className="flex-row items-center border-t border-border">
@@ -217,17 +206,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 						})}
 					</ScrollView>
 					<View className={'flex-row items-center border-l border-border bg-background'}>
-						<AttachmentButton placement="top" />
-						{isTranscriptionEnabled ? (
-							<Button
-								variant="ghost"
-								isIconOnly
-								isDisabled={transcription.status === 'loading'}
-								onPress={transcription.toggle}
-							>
-								<Mic size={18} color={transcription.isRecording ? accent : muted}/>
-							</Button>
-						) : null}
+						<AttachmentButton placement="top" offset={0}/>
+						<TranscriptionButton transcription={transcription} />
 						<Button variant="ghost" isIconOnly onPress={() => ref.current?.blur()}>
 							<ChevronDown size={18} color={muted}/>
 						</Button>
