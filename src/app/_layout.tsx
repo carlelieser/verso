@@ -3,6 +3,7 @@ import '../global.css';
 import { useFonts as useDMSerif } from '@expo-google-fonts/dm-serif-display';
 import { useFonts as useGoogleSans } from '@expo-google-fonts/google-sans-flex';
 import { useFonts as useLibreBaskerville } from '@expo-google-fonts/libre-baskerville';
+import { PortalProvider } from '@gorhom/portal';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -47,14 +48,16 @@ export default function RootLayout(): React.JSX.Element {
 	return (
 		<GestureHandlerRootView className="flex-1 bg-background">
 			<HeroUINativeProvider>
-				<DatabaseProvider>
-					<Stack
-						screenOptions={{
-							headerShown: false,
-						}}
-					/>
-				</DatabaseProvider>
-				<StatusBar style="auto" />
+				<PortalProvider>
+					<DatabaseProvider>
+						<Stack
+							screenOptions={{
+								headerShown: false,
+							}}
+						/>
+					</DatabaseProvider>
+					<StatusBar style="auto" />
+				</PortalProvider>
 			</HeroUINativeProvider>
 		</GestureHandlerRootView>
 	);

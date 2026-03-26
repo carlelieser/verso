@@ -1,4 +1,3 @@
-import * as ExpoLocation from 'expo-location';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import type { ViewStyle } from 'react-native';
@@ -10,10 +9,7 @@ import { useAutoSave } from '@/hooks/use-auto-save';
 import { useEmotions } from '@/hooks/use-emotions';
 import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
-import { useSettings } from '@/hooks/use-settings';
-import { useDatabaseContext } from '@/providers/database-provider';
 import { useEntryContext } from '@/providers/entry-provider';
-import { captureLocationAndWeather } from '@/services/location-weather-service';
 import type { EmotionSelection } from '@/types/emotion';
 import type { Journal } from '@/types/journal';
 
@@ -43,15 +39,12 @@ interface UseEntryComposerResult {
 	readonly handleFinish: () => void;
 	readonly handleCreateJournal: (name: string, icon: string) => Promise<void>;
 	readonly handleClear: () => void;
-	readonly isLocationEnabled: boolean;
-	readonly toggleLocation: () => void;
 }
 
 export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryComposerResult {
 	const onFinish = options?.onFinish;
 	const isAnimatedCheck = options?.isAnimatedCheck ?? false;
 
-	const { db } = useDatabaseContext();
 	const { entryId, isEditMode, cycle } = useEntryContext();
 	const { updateEntry, loadEntry } = useEntries();
 	const { saveEmotions, getEmotions } = useEmotions();
@@ -63,12 +56,6 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const [defaultHtml, setDefaultHtml] = useState('');
 	const [defaultEmotions, setDefaultEmotions] = useState<readonly EmotionSelection[]>([]);
 	const [autoSaveContent, setAutoSaveContent] = useState({ html: '', text: '' });
-	const { isAutoLocation } = useSettings();
-	const [isLocationEnabled, setIsLocationEnabled] = useState(false);
-
-	useEffect(() => {
-		setIsLocationEnabled(isAutoLocation);
-	}, [isAutoLocation]);
 
 	const editorRef = useRef<EditorHandle>(null);
 	const emotionSelectionsRef = useRef<EmotionSelection[]>([]);
@@ -154,21 +141,6 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		setDefaultEmotions([...selections]);
 	}, []);
 
-	const toggleLocation = useCallback(async () => {
-		if (isLocationEnabled) {
-			setIsLocationEnabled(false);
-			return;
-		}
-
-		const { status } = await ExpoLocation.requestForegroundPermissionsAsync().catch(() => ({
-			status: 'denied' as const,
-		}));
-
-		if (status === 'granted') {
-			setIsLocationEnabled(true);
-		}
-	}, [isLocationEnabled]);
-
 	const handleFinish = useCallback(() => {
 		const saves: Promise<void>[] = [
 			updateEntry(entryId, htmlRef.current, textRef.current, selectedJournalId ?? undefined),
@@ -186,17 +158,13 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 			);
 		}
 
-		if (isLocationEnabled) {
-			saves.push(captureLocationAndWeather(db, entryId));
-		}
-
 		Promise.all(saves).catch((err: unknown) => {
 			const message = err instanceof Error ? err.message : 'Failed to save entry';
 			Alert.alert('Save Error', message);
 		});
 
 		onFinish?.(entryId);
-	}, [entryId, selectedJournalId, isLocationEnabled, db, updateEntry, saveEmotions, onFinish]);
+	}, [entryId, selectedJournalId, updateEntry, saveEmotions, onFinish]);
 
 	const handleCreateJournal = useCallback(
 		async (name: string, icon: string) => {
@@ -237,7 +205,5 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		handleFinish,
 		handleCreateJournal,
 		handleClear,
-		isLocationEnabled,
-		toggleLocation,
 	};
 }

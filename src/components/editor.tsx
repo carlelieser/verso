@@ -27,7 +27,6 @@ import {
 	type OnChangeStateEvent,
 } from 'react-native-enriched';
 
-import {AttachmentButton} from '@/components/attachment-button';
 import {
 	TranscriptionButton,
 	TranscriptionLiveText,
@@ -206,7 +205,6 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 						})}
 					</ScrollView>
 					<View className={'flex-row items-center border-l border-border bg-background'}>
-						<AttachmentButton placement="top" offset={0}/>
 						<TranscriptionButton transcription={transcription} />
 						<Button variant="ghost" isIconOnly onPress={() => ref.current?.blur()}>
 							<ChevronDown size={18} color={muted}/>

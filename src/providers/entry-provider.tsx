@@ -67,8 +67,9 @@ export function EntryProvider({
 
 	// Cleanup on unmount: delete entry only if it has no meaningful content
 	const currentEntryIdRef = useRef(currentEntryId);
-	currentEntryIdRef.current = currentEntryId;
 	const dbRef = useRef(db);
+
+	currentEntryIdRef.current = currentEntryId;
 	dbRef.current = db;
 
 	useEffect(() => {
