@@ -1,4 +1,5 @@
 import { Button, Menu } from 'heroui-native';
+import type { MenuContentPopoverProps } from 'heroui-native';
 import { AudioLines, FileText, Image, Paperclip } from 'lucide-react-native';
 import React from 'react';
 
@@ -7,7 +8,7 @@ import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useEntryContext } from '@/providers/entry-provider';
 
 interface AttachmentButtonProps {
-	readonly placement?: 'top' | 'bottom' | 'left' | 'right';
+	readonly placement?: MenuContentPopoverProps['placement'];
 }
 
 export function AttachmentButton({ placement }: AttachmentButtonProps): React.JSX.Element {
