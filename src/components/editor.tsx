@@ -76,11 +76,10 @@ interface EditorProps {
 	readonly placeholder?: string;
 	readonly onChangeHtml?: (html: string) => void;
 	readonly onChangeText?: (text: string) => void;
-	readonly entryId?: string | null;
 }
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-	{defaultValue, placeholder, onChangeHtml, onChangeText, entryId},
+	{defaultValue, placeholder, onChangeHtml, onChangeText},
 	forwardedRef,
 ) {
 	const ref = useRef<EnrichedTextInputInstance>(null);
@@ -218,7 +217,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 						})}
 					</ScrollView>
 					<View className={'flex-row items-center border-l border-border bg-background'}>
-						{entryId ? <AttachmentButton entryId={entryId} /> : null}
+						<AttachmentButton />
 						{isTranscriptionEnabled ? (
 							<Button
 								variant="ghost"

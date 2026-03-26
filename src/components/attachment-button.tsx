@@ -4,12 +4,10 @@ import React from 'react';
 
 import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useEntryContext } from '@/providers/entry-provider';
 
-interface AttachmentButtonProps {
-	readonly entryId: string | null;
-}
-
-export function AttachmentButton({ entryId }: AttachmentButtonProps): React.JSX.Element {
+export function AttachmentButton(): React.JSX.Element {
+	const { entryId } = useEntryContext();
 	const { accent, muted } = useThemeColors();
 	const { attachments, pickImages, pickAudio, pickDocuments } = useAttachmentPicker(entryId);
 

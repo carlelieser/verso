@@ -12,15 +12,12 @@ import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
 import { useSettings } from '@/hooks/use-settings';
 import { useDatabaseContext } from '@/providers/database-provider';
+import { useEntryContext } from '@/providers/entry-provider';
 import { captureLocationAndWeather } from '@/services/location-weather-service';
 import type { EmotionSelection } from '@/types/emotion';
 import type { Journal } from '@/types/journal';
 
 interface UseEntryComposerOptions {
-	/** Existing entry ID when editing. Null for new entries. */
-	readonly entryId?: string | null;
-	/** Pre-select a journal by ID in create mode. */
-	readonly initialJournalId?: string | null;
 	/** Called after the entry is successfully saved. */
 	readonly onFinish?: (entryId: string) => void;
 	/** Whether the check button animates in/out with content (default: false). */
@@ -30,7 +27,7 @@ interface UseEntryComposerOptions {
 interface UseEntryComposerResult {
 	readonly selectedJournalId: string | null;
 	readonly setSelectedJournalId: (id: string | null) => void;
-	readonly currentEntryId: string | null;
+	readonly entryId: string;
 	readonly hasContent: boolean;
 	readonly isLoading: boolean;
 	readonly defaultHtml: string;
@@ -40,7 +37,7 @@ interface UseEntryComposerResult {
 	readonly checkButtonStyle: AnimatedStyle<ViewStyle>;
 	readonly journals: readonly Journal[];
 	readonly isEditMode: boolean;
-	readonly handleTextChange: (text: string, html: string) => Promise<void>;
+	readonly handleTextChange: (text: string, html: string) => void;
 	readonly handleHtmlChange: (html: string) => void;
 	readonly handleEmotionSave: (selections: readonly EmotionSelection[]) => void;
 	readonly handleFinish: () => void;
@@ -51,20 +48,16 @@ interface UseEntryComposerResult {
 }
 
 export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryComposerResult {
-	const initialEntryId = options?.entryId ?? null;
-	const initialJournalId = options?.initialJournalId ?? null;
 	const onFinish = options?.onFinish;
 	const isAnimatedCheck = options?.isAnimatedCheck ?? false;
 
 	const { db } = useDatabaseContext();
-	const { createEntry, deleteEntry, updateEntry, loadEntry } = useEntries();
+	const { entryId, isEditMode, cycle } = useEntryContext();
+	const { updateEntry, loadEntry } = useEntries();
 	const { saveEmotions, getEmotions } = useEmotions();
 	const { journals, createJournal } = useJournals();
 
-	const isEditMode = initialEntryId !== null;
-
-	const [selectedJournalId, setSelectedJournalId] = useState<string | null>(initialJournalId);
-	const [currentEntryId, setCurrentEntryId] = useState<string | null>(initialEntryId);
+	const [selectedJournalId, setSelectedJournalId] = useState<string | null>(null);
 	const [hasContent, setHasContent] = useState(isEditMode);
 	const [isLoading, setIsLoading] = useState(isEditMode);
 	const [defaultHtml, setDefaultHtml] = useState('');
@@ -81,7 +74,6 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const emotionSelectionsRef = useRef<EmotionSelection[]>([]);
 	const htmlRef = useRef('');
 	const textRef = useRef('');
-	const isCreatingRef = useRef(false);
 
 	const checkProgress = useSharedValue(isEditMode ? 1 : 0);
 
@@ -99,11 +91,11 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 
 	// Load existing entry + emotions in edit mode
 	useEffect(() => {
-		if (!initialEntryId) return;
+		if (!isEditMode) return;
 
 		let isActive = true;
 
-		Promise.all([loadEntry(initialEntryId), getEmotions(initialEntryId)])
+		Promise.all([loadEntry(entryId), getEmotions(entryId)])
 			.then(([entry, emotions]) => {
 				if (!isActive) return;
 
@@ -133,57 +125,29 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		return () => {
 			isActive = false;
 		};
-	}, [initialEntryId, loadEntry, getEmotions]);
+	}, [isEditMode, entryId, loadEntry, getEmotions]);
 
-	useAutoSave(currentEntryId, autoSaveContent);
+	useAutoSave(entryId, autoSaveContent);
 
 	const handleTextChange = useCallback(
-		async (text: string, html: string) => {
+		(text: string, html: string) => {
 			const hasText = text.trim().length > 0;
 			htmlRef.current = html;
 			textRef.current = text;
-
-			if (!isEditMode) {
-				if (hasText && !currentEntryId && selectedJournalId && !isCreatingRef.current) {
-					isCreatingRef.current = true;
-					const entry = await createEntry(selectedJournalId, html, text);
-					setCurrentEntryId(entry.id);
-					isCreatingRef.current = false;
-				} else if (!hasText && currentEntryId) {
-					await deleteEntry(currentEntryId);
-					setCurrentEntryId(null);
-				}
-			}
-
-			if (currentEntryId) {
-				setAutoSaveContent({ html, text });
-			}
-
+			setAutoSaveContent({ html, text });
 			setHasContent(hasText);
+
 			if (isAnimatedCheck) {
 				checkProgress.value = withSpring(hasText ? 1 : 0);
 			}
 		},
-		[
-			isEditMode,
-			isAnimatedCheck,
-			currentEntryId,
-			selectedJournalId,
-			createEntry,
-			deleteEntry,
-			checkProgress,
-		],
+		[isAnimatedCheck, checkProgress],
 	);
 
-	const handleHtmlChange = useCallback(
-		(html: string) => {
-			htmlRef.current = html;
-			if (currentEntryId) {
-				setAutoSaveContent({ html, text: textRef.current });
-			}
-		},
-		[currentEntryId],
-	);
+	const handleHtmlChange = useCallback((html: string) => {
+		htmlRef.current = html;
+		setAutoSaveContent((prev) => ({ ...prev, html }));
+	}, []);
 
 	const handleEmotionSave = useCallback((selections: readonly EmotionSelection[]) => {
 		emotionSelectionsRef.current = [...selections];
@@ -206,9 +170,6 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	}, [isLocationEnabled]);
 
 	const handleFinish = useCallback(() => {
-		const entryId = currentEntryId;
-		if (!entryId) return;
-
 		const saves: Promise<void>[] = [
 			updateEntry(entryId, htmlRef.current, textRef.current, selectedJournalId ?? undefined),
 		];
@@ -235,15 +196,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		});
 
 		onFinish?.(entryId);
-	}, [
-		currentEntryId,
-		selectedJournalId,
-		isLocationEnabled,
-		db,
-		updateEntry,
-		saveEmotions,
-		onFinish,
-	]);
+	}, [entryId, selectedJournalId, isLocationEnabled, db, updateEntry, saveEmotions, onFinish]);
 
 	const handleCreateJournal = useCallback(
 		async (name: string, icon: string) => {
@@ -253,9 +206,8 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		[createJournal],
 	);
 
-	const handleClear = useCallback(() => {
+	const handleClear = useCallback(async () => {
 		editorRef.current?.clear();
-		setCurrentEntryId(null);
 		setHasContent(false);
 		setAutoSaveContent({ html: '', text: '' });
 		htmlRef.current = '';
@@ -263,12 +215,13 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		emotionSelectionsRef.current = [];
 		setDefaultEmotions([]);
 		checkProgress.value = withSpring(0);
-	}, [checkProgress]);
+		await cycle();
+	}, [checkProgress, cycle]);
 
 	return {
 		selectedJournalId,
 		setSelectedJournalId,
-		currentEntryId,
+		entryId,
 		hasContent,
 		isLoading,
 		defaultHtml,

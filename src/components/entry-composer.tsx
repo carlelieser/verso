@@ -19,6 +19,7 @@ import { JournalSelect } from '@/components/journal-select';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useEntryComposer } from '@/hooks/use-entry-composer';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { EntryProvider } from '@/providers/entry-provider';
 import type { EmotionSelection } from '@/types/emotion';
 
 export interface EntryComposerHandle {
@@ -53,9 +54,22 @@ interface EntryComposerProps {
 
 export const EntryComposer = forwardRef<EntryComposerHandle, EntryComposerProps>(
 	function EntryComposer(
+		{ entryId, initialJournalId, ...rest },
+		forwardedRef,
+	) {
+		return (
+			<EntryProvider entryId={entryId} journalId={initialJournalId}>
+				<EntryComposerInner ref={forwardedRef} {...rest} />
+			</EntryProvider>
+		);
+	},
+);
+
+type EntryComposerInnerProps = Omit<EntryComposerProps, 'entryId' | 'initialJournalId'>;
+
+const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerProps>(
+	function EntryComposerInner(
 		{
-			entryId,
-			initialJournalId,
 			headerLeft,
 			headerRight,
 			overflowMenuItems,
@@ -69,8 +83,6 @@ export const EntryComposer = forwardRef<EntryComposerHandle, EntryComposerProps>
 		const { accent, muted, accentForeground } = useThemeColors();
 
 		const composer = useEntryComposer({
-			entryId,
-			initialJournalId,
 			onFinish,
 			isAnimatedCheck,
 		});
@@ -223,7 +235,6 @@ export const EntryComposer = forwardRef<EntryComposerHandle, EntryComposerProps>
 								ref={composer.editorRef}
 								defaultValue={composer.defaultHtml}
 								placeholder={placeholder}
-								entryId={composer.currentEntryId}
 								onChangeText={(text) =>
 									composer.handleTextChange(text, composer.htmlRef.current)
 								}
@@ -237,7 +248,7 @@ export const EntryComposer = forwardRef<EntryComposerHandle, EntryComposerProps>
 					<BottomSheet ref={emotionSheet.ref} {...emotionSheet.sheetProps}>
 						<BottomSheetScrollView>
 							<EmotionCheckin
-								key={composer.currentEntryId ?? 'new'}
+								key={composer.entryId}
 								onSave={handleEmotionSave}
 								onChange={composer.handleEmotionSave}
 								defaultSelections={
