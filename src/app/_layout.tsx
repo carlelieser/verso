@@ -3,6 +3,7 @@ import '../global.css';
 import { useFonts as useDMSerif } from '@expo-google-fonts/dm-serif-display';
 import { useFonts as useGoogleSans } from '@expo-google-fonts/google-sans-flex';
 import { useFonts as useLibreBaskerville } from '@expo-google-fonts/libre-baskerville';
+import * as SecureStore from 'expo-secure-store';
 import { PortalProvider } from '@gorhom/portal';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,7 +11,9 @@ import { StatusBar } from 'expo-status-bar';
 import { HeroUINativeProvider } from 'heroui-native';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Uniwind } from 'uniwind';
 
+import { SETTINGS_THEME_KEY, isValidTheme } from '@/constants/settings';
 import { DatabaseProvider } from '@/providers/database-provider';
 
 SplashScreen.preventAutoHideAsync();
@@ -34,6 +37,12 @@ export default function RootLayout(): React.JSX.Element {
 	});
 
 	const fontsLoaded = dmSerifLoaded && googleSansLoaded && libreBaskervilleLoaded;
+
+	useEffect(() => {
+		SecureStore.getItemAsync(SETTINGS_THEME_KEY).then((raw) => {
+			Uniwind.setTheme(isValidTheme(raw) ? raw : 'system');
+		});
+	}, []);
 
 	useEffect(() => {
 		if (fontsLoaded) {

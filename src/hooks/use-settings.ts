@@ -1,38 +1,55 @@
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
+import { Uniwind } from 'uniwind';
 
-import { SETTINGS_AUTO_LOCATION_KEY, SETTINGS_TRANSCRIPTION_KEY } from '@/constants/settings';
+import {
+	type Theme,
+	SETTINGS_AUTO_LOCATION_KEY,
+	SETTINGS_THEME_KEY,
+	SETTINGS_TRANSCRIPTION_KEY,
+	isValidTheme,
+} from '@/constants/settings';
 
-interface Settings {
+interface UseSettingsResult {
 	readonly isAutoLocation: boolean;
 	readonly isTranscriptionEnabled: boolean;
-}
-
-interface UseSettingsResult extends Settings {
+	readonly theme: Theme;
 	readonly setSetting: (key: string, value: boolean) => void;
+	readonly setTheme: (value: Theme) => void;
 }
 
-const DEFAULTS: Record<string, boolean> = {
+const BOOLEAN_DEFAULTS: Record<string, boolean> = {
 	[SETTINGS_AUTO_LOCATION_KEY]: true,
 	[SETTINGS_TRANSCRIPTION_KEY]: true,
 };
 
-const KEYS = [SETTINGS_AUTO_LOCATION_KEY, SETTINGS_TRANSCRIPTION_KEY] as const;
+const BOOLEAN_KEYS = [SETTINGS_AUTO_LOCATION_KEY, SETTINGS_TRANSCRIPTION_KEY] as const;
+
+const DEFAULT_THEME: Theme = 'system';
 
 export function useSettings(): UseSettingsResult {
-	const [values, setValues] = useState<Record<string, boolean>>(DEFAULTS);
+	const [boolValues, setBoolValues] = useState<Record<string, boolean>>(BOOLEAN_DEFAULTS);
+	const [theme, setThemeState] = useState<Theme>(DEFAULT_THEME);
 
 	const load = useCallback(() => {
-		Promise.all(KEYS.map((key) => SecureStore.getItemAsync(key)))
+		Promise.all([
+			...BOOLEAN_KEYS.map((key) => SecureStore.getItemAsync(key)),
+			SecureStore.getItemAsync(SETTINGS_THEME_KEY),
+		])
 			.then((results) => {
 				const loaded: Record<string, boolean> = {};
-				for (let i = 0; i < KEYS.length; i++) {
-					const key = KEYS[i]!;
+				for (let i = 0; i < BOOLEAN_KEYS.length; i++) {
+					const key = BOOLEAN_KEYS[i]!;
 					const raw = results[i];
-					loaded[key] = raw === null ? DEFAULTS[key]! : raw === 'true';
+					loaded[key] = raw === null ? BOOLEAN_DEFAULTS[key]! : raw === 'true';
 				}
-				setValues(loaded);
+				setBoolValues(loaded);
+
+				const themeRaw = results[BOOLEAN_KEYS.length] ?? null;
+				if (isValidTheme(themeRaw)) {
+					setThemeState(themeRaw);
+				}
 			})
 			.catch((err: unknown) => {
 				console.error('Failed to load settings:', err instanceof Error ? err.message : err);
@@ -48,15 +65,25 @@ export function useSettings(): UseSettingsResult {
 	}, [load]);
 
 	const setSetting = useCallback((key: string, value: boolean) => {
-		setValues((prev) => ({ ...prev, [key]: value }));
+		setBoolValues((prev) => ({ ...prev, [key]: value }));
 		SecureStore.setItemAsync(key, String(value)).catch((err: unknown) => {
 			console.error('Failed to save setting:', err instanceof Error ? err.message : err);
 		});
 	}, []);
 
+	const setTheme = useCallback((value: Theme) => {
+		setThemeState(value);
+		Uniwind.setTheme(value);
+		SecureStore.setItemAsync(SETTINGS_THEME_KEY, value).catch((err: unknown) => {
+			console.error('Failed to save theme:', err instanceof Error ? err.message : err);
+		});
+	}, []);
+
 	return {
-		isAutoLocation: values[SETTINGS_AUTO_LOCATION_KEY] ?? false,
-		isTranscriptionEnabled: values[SETTINGS_TRANSCRIPTION_KEY] ?? true,
+		isAutoLocation: boolValues[SETTINGS_AUTO_LOCATION_KEY] ?? false,
+		isTranscriptionEnabled: boolValues[SETTINGS_TRANSCRIPTION_KEY] ?? true,
+		theme,
 		setSetting,
+		setTheme,
 	};
 }

@@ -1,4 +1,4 @@
-import { Button, Menu } from 'heroui-native';
+import {Button, Menu} from 'heroui-native';
 import {
 	AudioLines,
 	EllipsisVertical,
@@ -9,17 +9,17 @@ import {
 	Share2,
 	Trash2,
 } from 'lucide-react-native';
-import React, { useCallback, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {Alert, Text, View} from 'react-native';
 import * as Sharing from 'expo-sharing';
 
-import { EmptyState } from '@/components/empty-state';
-import { Overline } from '@/components/overline';
-import { useDatabaseContext } from '@/providers/database-provider';
-import { deleteAttachment } from '@/services/attachment-service';
-import type { Attachment, FileAttachment, LocationAttachment } from '@/types/attachment';
-import { formatFileSize } from '@/utils/format-file-size';
-import { useThemeColors } from '@/hooks/use-theme-colors';
+import {EmptyState} from '@/components/empty-state';
+import {Overline} from '@/components/overline';
+import {useDatabaseContext} from '@/providers/database-provider';
+import {deleteAttachment} from '@/services/attachment-service';
+import type {Attachment, FileAttachment, LocationAttachment} from '@/types/attachment';
+import {formatFileSize} from '@/utils/format-file-size';
+import {useThemeColors} from '@/hooks/use-theme-colors';
 
 interface AttachmentListProps {
 	readonly attachments: readonly Attachment[];
@@ -31,7 +31,7 @@ const FILE_TYPE_ICONS = {
 	document: FileText,
 } as const;
 
-function FileCard({ attachment, muted, onShare, onDelete, isDeleting }: {
+function FileCard({attachment, muted, onShare, onDelete, isDeleting}: {
 	readonly attachment: FileAttachment;
 	readonly muted: string;
 	readonly onShare: () => void;
@@ -43,9 +43,9 @@ function FileCard({ attachment, muted, onShare, onDelete, isDeleting }: {
 	return (
 		<View
 			className="flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border"
-			style={isDeleting ? { opacity: 0.5 } : undefined}
+			style={isDeleting ? {opacity: 0.5} : undefined}
 		>
-			<Icon size={20} color={muted} />
+			<Icon size={20} color={muted}/>
 			<View className="flex-1">
 				<Text className="text-sm text-foreground" numberOfLines={1}>
 					{attachment.data.fileName ?? 'Untitled'}
@@ -57,18 +57,18 @@ function FileCard({ attachment, muted, onShare, onDelete, isDeleting }: {
 			<Menu presentation="popover">
 				<Menu.Trigger asChild>
 					<Button variant="ghost" size="sm" isIconOnly>
-						<EllipsisVertical size={16} color={muted} />
+						<EllipsisVertical size={16} color={muted}/>
 					</Button>
 				</Menu.Trigger>
 				<Menu.Portal>
-					<Menu.Overlay />
+					<Menu.Overlay/>
 					<Menu.Content presentation="popover" width={180}>
 						<Menu.Item id="share" shouldCloseOnSelect onPress={onShare}>
-							<Share2 size={16} color={muted} />
+							<Share2 size={16} color={muted}/>
 							<Menu.ItemTitle>Share</Menu.ItemTitle>
 						</Menu.Item>
 						<Menu.Item id="delete" shouldCloseOnSelect onPress={onDelete}>
-							<Trash2 size={16} color={muted} />
+							<Trash2 size={16} color={muted}/>
 							<Menu.ItemTitle>Delete</Menu.ItemTitle>
 						</Menu.Item>
 					</Menu.Content>
@@ -78,7 +78,7 @@ function FileCard({ attachment, muted, onShare, onDelete, isDeleting }: {
 	);
 }
 
-function LocationCard({ attachment, muted, onDelete, isDeleting }: {
+function LocationCard({attachment, muted, onDelete, isDeleting}: {
 	readonly attachment: LocationAttachment;
 	readonly muted: string;
 	readonly onDelete: () => void;
@@ -87,9 +87,9 @@ function LocationCard({ attachment, muted, onDelete, isDeleting }: {
 	return (
 		<View
 			className="flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border"
-			style={isDeleting ? { opacity: 0.5 } : undefined}
+			style={isDeleting ? {opacity: 0.5} : undefined}
 		>
-			<MapPin size={20} color={muted} />
+			<MapPin size={20} color={muted}/>
 			<View className="flex-1">
 				<Text className="text-sm text-foreground" numberOfLines={1}>
 					{attachment.data.name}
@@ -103,14 +103,14 @@ function LocationCard({ attachment, muted, onDelete, isDeleting }: {
 			<Menu presentation="popover">
 				<Menu.Trigger asChild>
 					<Button variant="ghost" size="sm" isIconOnly>
-						<EllipsisVertical size={16} color={muted} />
+						<EllipsisVertical size={16} color={muted}/>
 					</Button>
 				</Menu.Trigger>
 				<Menu.Portal>
-					<Menu.Overlay />
+					<Menu.Overlay/>
 					<Menu.Content presentation="popover" width={180}>
-						<Menu.Item id="delete" shouldCloseOnSelect onPress={onDelete}>
-							<Trash2 size={16} color={muted} />
+						<Menu.Item variant={"danger"} id="delete" shouldCloseOnSelect onPress={onDelete}>
+							<Trash2 size={16} color={muted}/>
 							<Menu.ItemTitle>Delete</Menu.ItemTitle>
 						</Menu.Item>
 					</Menu.Content>
@@ -121,10 +121,10 @@ function LocationCard({ attachment, muted, onDelete, isDeleting }: {
 }
 
 export function AttachmentList({
-	attachments,
-}: AttachmentListProps): React.JSX.Element {
-	const { db } = useDatabaseContext();
-	const { muted } = useThemeColors();
+								   attachments,
+							   }: AttachmentListProps): React.JSX.Element {
+	const {db} = useDatabaseContext();
+	const {muted} = useThemeColors();
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
 	const handleShare = useCallback(async (uri: string) => {
@@ -143,7 +143,7 @@ export function AttachmentList({
 				: attachment.data.fileName ?? 'this file';
 
 			Alert.alert('Delete Attachment', `Remove "${label}"?`, [
-				{ text: 'Cancel', style: 'cancel' },
+				{text: 'Cancel', style: 'cancel'},
 				{
 					text: 'Delete',
 					style: 'destructive',
@@ -169,7 +169,7 @@ export function AttachmentList({
 		<View>
 			{attachments.length === 0 ? (
 				<EmptyState
-					icon={<Paperclip size={48} color={muted} />}
+					icon={<Paperclip size={48} color={muted}/>}
 					title="No attachments"
 					description="Tap + to add files, images, or audio."
 				/>

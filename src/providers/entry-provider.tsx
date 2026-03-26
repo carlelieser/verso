@@ -2,8 +2,10 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 
 import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
+import { useSettings } from '@/hooks/use-settings';
 import { useDatabaseContext } from '@/providers/database-provider';
 import { getEntry } from '@/services/entry-service';
+import { captureLocationAndWeather } from '@/services/location-weather-service';
 
 interface EntryContextValue {
 	readonly entryId: string;
@@ -39,6 +41,7 @@ export function EntryProvider({
 	const { db } = useDatabaseContext();
 	const { createEntry, deleteEntry } = useEntries();
 	const { journals } = useJournals();
+	const { isAutoLocation } = useSettings();
 
 	const [currentEntryId, setCurrentEntryId] = useState<string | null>(existingEntryId ?? null);
 	const isCreatingRef = useRef(false);
@@ -59,11 +62,14 @@ export function EntryProvider({
 		createEntry(journalId, '', '')
 			.then((entry) => {
 				setCurrentEntryId(entry.id);
+				if (isAutoLocation) {
+					captureLocationAndWeather(db, entry.id).catch(() => {});
+				}
 			})
 			.finally(() => {
 				isCreatingRef.current = false;
 			});
-	}, [isEditMode, currentEntryId, resolveJournalId, createEntry]);
+	}, [isEditMode, currentEntryId, resolveJournalId, createEntry, isAutoLocation, db]);
 
 	// Cleanup on unmount: delete entry only if it has no meaningful content
 	const currentEntryIdRef = useRef(currentEntryId);
@@ -101,7 +107,11 @@ export function EntryProvider({
 
 		const entry = await createEntry(journalId, '', '');
 		setCurrentEntryId(entry.id);
-	}, [resolveJournalId, createEntry]);
+
+		if (isAutoLocation) {
+			captureLocationAndWeather(db, entry.id).catch(() => {});
+		}
+	}, [resolveJournalId, createEntry, isAutoLocation, db]);
 
 	if (!currentEntryId) return null;
 

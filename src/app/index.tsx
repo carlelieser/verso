@@ -1,8 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { BookOpen, History, Moon, Settings, Sun } from 'lucide-react-native';
+import { BookOpen, History, Settings } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Uniwind, useUniwind } from 'uniwind';
 
 import {
 	type EntryComposerHandle,
@@ -15,8 +14,6 @@ import { useThemeColors } from '@/hooks/use-theme-colors';
 export default function HomeScreen(): React.JSX.Element {
 	const { journalId } = useLocalSearchParams<{ journalId?: string }>();
 	const { muted } = useThemeColors();
-	const { theme } = useUniwind();
-	const isDark = theme === 'dark';
 	const [showSaved, setShowSaved] = useState(false);
 	const composerRef = useRef<EntryComposerHandle>(null);
 
@@ -44,19 +41,13 @@ export default function HomeScreen(): React.JSX.Element {
 				onPress: () => router.push('/history'),
 			},
 			{
-				id: 'appearance',
-				label: isDark ? 'Light' : 'Dark',
-				icon: isDark ? <Sun size={16} color={muted} /> : <Moon size={16} color={muted} />,
-				onPress: () => Uniwind.setTheme(isDark ? 'light' : 'dark'),
-			},
-			{
 				id: 'settings',
 				label: 'Settings',
 				icon: <Settings size={16} color={muted} />,
 				onPress: () => router.push('/settings'),
 			},
 		],
-		[isDark, muted],
+		[muted],
 	);
 
 	return (

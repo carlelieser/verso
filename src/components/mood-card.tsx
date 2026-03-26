@@ -15,7 +15,7 @@ export function MoodCard({ emotions }: MoodCardProps): React.JSX.Element | null 
 	if (emotions.length === 0) return null;
 
 	return (
-		<View className="p-3 rounded-xl bg-surface border border-border flex-row flex-wrap gap-2">
+		<View className="flex-row flex-wrap gap-2">
 			{emotions.map((emotion) => (
 				<View
 					key={emotion.id}

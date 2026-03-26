@@ -43,7 +43,9 @@ function openAppSettings(): void {
 
 export default function SettingsScreen(): React.JSX.Element {
 	const [locationStatus, setLocationStatus] = useState<PermissionStatus>('undetermined');
-	const { isAutoLocation, isTranscriptionEnabled, setSetting } = useSettings();
+	const { isAutoLocation, isTranscriptionEnabled, theme, setSetting, setTheme } = useSettings();
+	const isSystemTheme = theme === 'system';
+	const isDark = theme === 'dark';
 
 	const checkPermission = useCallback(async () => {
 		const { status } = await ExpoLocation.getForegroundPermissionsAsync();
@@ -74,6 +76,35 @@ export default function SettingsScreen(): React.JSX.Element {
 	return (
 		<ScreenLayout title="Settings">
 			<ScrollView contentContainerClassName="px-6 gap-6">
+				<View className="gap-3">
+					<Overline>APPEARANCE</Overline>
+
+					<ControlField
+						isSelected={isSystemTheme}
+						onSelectedChange={(v) => setTheme(v ? 'system' : 'light')}
+					>
+						<View className="flex-1">
+							<Label>Use system colors</Label>
+							<Description>
+								Match your device's light or dark setting
+							</Description>
+						</View>
+						<ControlField.Indicator />
+					</ControlField>
+
+					<ControlField
+						isDisabled={isSystemTheme}
+						isSelected={isDark}
+						onSelectedChange={(v) => setTheme(v ? 'dark' : 'light')}
+					>
+						<View className="flex-1">
+							<Label>Dark mode</Label>
+							<Description>Use a darker color scheme</Description>
+						</View>
+						<ControlField.Indicator />
+					</ControlField>
+				</View>
+
 				<View className="gap-3">
 					<Overline>GENERAL</Overline>
 
