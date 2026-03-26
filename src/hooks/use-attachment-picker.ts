@@ -1,12 +1,14 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import {useCallback, useEffect, useState} from 'react';
-import {Alert} from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
 
-import {useDatabaseContext} from '@/providers/database-provider';
-import {addFileAttachment, listAttachments} from '@/services/attachment-service';
-import type {Attachment} from '@/types/attachment';
-import type {FileData} from '@/types/attachment';
+import { useDatabaseContext } from '@/providers/database-provider';
+import { addFileAttachment, listAttachments } from '@/services/attachment-service';
+import type { Attachment } from '@/types/attachment';
+
+interface UseAttachmentPickerOptions {
+	readonly onError?: (title: string, message: string) => void;
+}
 
 interface UseAttachmentPickerResult {
 	readonly attachments: readonly Attachment[];
@@ -24,8 +26,12 @@ interface PickedFile {
 	readonly type: 'image' | 'audio' | 'document';
 }
 
-export function useAttachmentPicker(entryId: string | null): UseAttachmentPickerResult {
-	const {db} = useDatabaseContext();
+export function useAttachmentPicker(
+	entryId: string | null,
+	options?: UseAttachmentPickerOptions,
+): UseAttachmentPickerResult {
+	const { db } = useDatabaseContext();
+	const onError = options?.onError;
 	const [attachmentList, setAttachmentList] = useState<readonly Attachment[]>([]);
 
 	const refresh = useCallback(async () => {
@@ -59,7 +65,7 @@ export function useAttachmentPicker(entryId: string | null): UseAttachmentPicker
 					added.push(attachment);
 				} catch (err: unknown) {
 					const message = err instanceof Error ? err.message : 'Failed to add attachment';
-					Alert.alert('Attachment Error', message);
+					onError?.('Attachment Error', message);
 				}
 			}
 
@@ -67,7 +73,7 @@ export function useAttachmentPicker(entryId: string | null): UseAttachmentPicker
 				setAttachmentList((prev) => [...prev, ...added]);
 			}
 		},
-		[db, entryId],
+		[db, entryId, onError],
 	);
 
 	const pickImages = useCallback(async () => {

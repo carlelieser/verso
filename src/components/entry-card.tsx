@@ -1,9 +1,9 @@
-import { Card } from 'heroui-native';
+import {Card} from 'heroui-native';
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import {Pressable, View} from 'react-native';
 
-import type { EntryWithJournal } from '@/types/entry';
-import { formatRelativeDate } from '@/utils/date';
+import type {EntryWithJournal} from '@/types/entry';
+import {formatRelativeDate} from '@/utils/date';
 
 interface EntryCardProps {
 	readonly entry: EntryWithJournal;
@@ -24,10 +24,10 @@ function formatWordCount(count: number): string {
 }
 
 export function EntryCard({
-	entry,
-	onPress,
-	showJournalName = false,
-}: EntryCardProps): React.JSX.Element {
+							  entry,
+							  onPress,
+							  showJournalName = false,
+						  }: EntryCardProps): React.JSX.Element {
 	const preview = entry.contentText.slice(0, 120).trim();
 	const wordCount = countWords(entry.contentText);
 
@@ -44,10 +44,10 @@ export function EntryCard({
 							{preview || 'Empty entry'}
 						</Card.Title>
 						<View className="flex-row items-center justify-between mt-1">
-							<Card.Description className="text-xs opacity-50">
+							<Card.Description className="text-xs">
 								{leftParts.join(' \u00B7 ')}
 							</Card.Description>
-							<Card.Description className="text-xs opacity-50">
+							<Card.Description className="text-xs">
 								{formatWordCount(wordCount)}
 							</Card.Description>
 						</View>

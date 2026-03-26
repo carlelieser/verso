@@ -5,14 +5,16 @@ import { Pressable, View } from 'react-native';
 import { getJournalIcon } from '@/constants/journal-icons';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Journal } from '@/types/journal';
+import { formatJournalMeta } from '@/utils/format-journal-meta';
 
 interface JournalCardProps {
 	readonly journal: Journal;
 	readonly entryCount: number;
+	readonly isDefault?: boolean;
 	readonly onPress: () => void;
 }
 
-export function JournalCard({ journal, entryCount, onPress }: JournalCardProps): React.JSX.Element {
+export function JournalCard({ journal, entryCount, isDefault, onPress }: JournalCardProps): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const Icon = getJournalIcon(journal.icon);
 
@@ -24,10 +26,8 @@ export function JournalCard({ journal, entryCount, onPress }: JournalCardProps):
 						<Icon size={20} color={muted} />
 						<View className="flex-1">
 							<Card.Title>{journal.name}</Card.Title>
-							<Card.Description>
-								{entryCount === 0
-									? 'No entries'
-									: `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'}`}
+							<Card.Description className="text-xs">
+								{formatJournalMeta(entryCount, isDefault ?? false)}
 							</Card.Description>
 						</View>
 					</View>

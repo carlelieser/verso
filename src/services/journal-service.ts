@@ -67,6 +67,18 @@ export async function updateJournal(db: Db, input: UpdateJournalInput): Promise<
 	await db.update(journals).set(updates).where(eq(journals.id, input.id));
 }
 
+export async function setDefaultJournal(db: Db, id: string): Promise<void> {
+	// Move the target journal to displayOrder 0 and shift all others up by 1
+	await db.update(journals).set({
+		displayOrder: sql`${journals.displayOrder} + 1`,
+	}).where(ne(journals.id, id));
+
+	await db.update(journals).set({
+		displayOrder: 0,
+		updatedAt: new Date(),
+	}).where(eq(journals.id, id));
+}
+
 export async function deleteJournal(db: Db, id: string): Promise<void> {
 	const [existing] = await db
 		.select({ id: journals.id })

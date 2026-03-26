@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import type { AnimatedStyle } from 'react-native-reanimated';
 import { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -18,6 +17,8 @@ interface UseEntryComposerOptions {
 	readonly onFinish?: (entryId: string) => void;
 	/** Whether the check button animates in/out with content (default: false). */
 	readonly isAnimatedCheck?: boolean;
+	/** Called when an error occurs during save. */
+	readonly onError?: (title: string, message: string) => void;
 }
 
 interface UseEntryComposerResult {
@@ -44,6 +45,7 @@ interface UseEntryComposerResult {
 export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryComposerResult {
 	const onFinish = options?.onFinish;
 	const isAnimatedCheck = options?.isAnimatedCheck ?? false;
+	const onError = options?.onError;
 
 	const { entryId, isEditMode, cycle } = useEntryContext();
 	const { updateEntry, loadEntry } = useEntries();
@@ -160,7 +162,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 
 		Promise.all(saves).catch((err: unknown) => {
 			const message = err instanceof Error ? err.message : 'Failed to save entry';
-			Alert.alert('Save Error', message);
+			onError?.('Save Error', message);
 		});
 
 		onFinish?.(entryId);

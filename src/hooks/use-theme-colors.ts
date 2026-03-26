@@ -10,6 +10,7 @@ const THEME_VARIABLES = {
 	accentForeground: '--color-accent-foreground',
 	background: '--color-background',
 	border: '--color-border',
+	danger: '--color-danger',
 	foreground: '--color-foreground',
 	muted: '--color-muted',
 	surface: '--color-surface',
@@ -26,6 +27,7 @@ interface ThemeColors {
 	readonly accentForeground: string;
 	readonly background: string;
 	readonly border: string;
+	readonly danger: string;
 	readonly foreground: string;
 	readonly muted: string;
 	readonly surface: string;

@@ -1,27 +1,57 @@
-import {router, useFocusEffect, useLocalSearchParams} from 'expo-router';
-import {Pencil} from 'lucide-react-native';
-import React, {useCallback, useState} from 'react';
-import {ScrollView, Text, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { EllipsisVertical, Pencil, Trash2 } from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {AttachmentPreview} from '@/components/attachment-preview';
-import {Fab} from '@/components/fab';
-import {MoodCard} from '@/components/mood-card';
-import {ScreenLayout} from '@/components/screen-layout';
-import {Section} from '@/components/section';
-import {WeatherCard} from '@/components/weather-card';
-import {useEntries} from '@/hooks/use-entries';
-import {useThemeColors} from '@/hooks/use-theme-colors';
-import type {EntryDetail} from '@/types/entry';
-import {formatRelativeDate} from '@/utils/date';
+import { AppDialog } from '@/components/app-dialog';
+import { AttachmentPreview } from '@/components/attachment-preview';
+import { Fab } from '@/components/fab';
+import { FabMenu, type FabMenuItem } from '@/components/fab-menu';
+import { MoodCard } from '@/components/mood-card';
+import { ScreenLayout } from '@/components/screen-layout';
+import { Section } from '@/components/section';
+import { WeatherCard } from '@/components/weather-card';
+import { useDialog } from '@/hooks/use-dialog';
+import { useEntries } from '@/hooks/use-entries';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import type { EntryDetail } from '@/types/entry';
+import { formatRelativeDate } from '@/utils/date';
 
 export default function EntryViewScreen(): React.JSX.Element {
-	const {journalId, entryId} = useLocalSearchParams<{ journalId: string; entryId: string }>();
+	const { journalId, entryId } = useLocalSearchParams<{ journalId: string; entryId: string }>();
 	const insets = useSafeAreaInsets();
-	const {accentForeground} = useThemeColors();
-	const {loadEntry} = useEntries();
+	const { danger, foreground, accentForeground } = useThemeColors();
+	const { loadEntry, deleteEntry } = useEntries();
+	const dialog = useDialog();
 	const [entry, setEntry] = useState<EntryDetail | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+
+	const handleDelete = useCallback(async () => {
+		if (!entryId) return;
+
+		const confirmed = await dialog.confirm({
+			title: 'Delete Entry',
+			description: 'This entry will be permanently deleted. This cannot be undone.',
+			confirmLabel: 'Delete',
+			variant: 'danger',
+		});
+
+		if (!confirmed) return;
+
+		await deleteEntry(entryId);
+		router.back();
+	}, [entryId, deleteEntry, dialog]);
+
+	const menuItems: readonly FabMenuItem[] = useMemo(() => [
+		{
+			id: 'delete',
+			label: 'Delete',
+			icon: <Trash2 size={16} color={danger} />,
+			variant: 'danger',
+			onPress: handleDelete,
+		},
+	], [danger, handleDelete]);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -98,13 +128,26 @@ export default function EntryViewScreen(): React.JSX.Element {
 					</ScrollView>
 
 					<Fab
-						icon={<Pencil size={20} color={accentForeground}/>}
+						icon={<Pencil size={20} color={accentForeground} />}
 						onPress={() => router.push(`/journal/${journalId}/entry/${entryId}/edit`)}
 						className="absolute right-4"
-						style={{bottom: insets.bottom + 16}}
+						style={{ bottom: insets.bottom + 16 }}
+					/>
+
+					<FabMenu
+						icon={<EllipsisVertical size={24} color={foreground} />}
+						items={menuItems}
+						className="absolute right-4"
+						style={{ bottom: insets.bottom + 98 }}
 					/>
 				</>
 			)}
+
+			<AppDialog
+				{...dialog.state}
+				onConfirm={dialog.handleConfirm}
+				onCancel={dialog.handleCancel}
+			/>
 		</ScreenLayout>
 	);
 }

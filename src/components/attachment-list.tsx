@@ -9,17 +9,19 @@ import {
 	Share2,
 	Trash2,
 } from 'lucide-react-native';
-import React, {useCallback, useState} from 'react';
-import {Alert, Text, View} from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Text, View } from 'react-native';
 import * as Sharing from 'expo-sharing';
 
-import {EmptyState} from '@/components/empty-state';
-import {Overline} from '@/components/overline';
-import {useDatabaseContext} from '@/providers/database-provider';
-import {deleteAttachment} from '@/services/attachment-service';
-import type {Attachment, FileAttachment, LocationAttachment} from '@/types/attachment';
-import {formatFileSize} from '@/utils/format-file-size';
-import {useThemeColors} from '@/hooks/use-theme-colors';
+import { AppDialog } from '@/components/app-dialog';
+import { EmptyState } from '@/components/empty-state';
+import { Overline } from '@/components/overline';
+import { useDialog } from '@/hooks/use-dialog';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useDatabaseContext } from '@/providers/database-provider';
+import { deleteAttachment } from '@/services/attachment-service';
+import type { Attachment, FileAttachment, LocationAttachment } from '@/types/attachment';
+import { formatFileSize } from '@/utils/format-file-size';
 
 interface AttachmentListProps {
 	readonly attachments: readonly Attachment[];
@@ -31,9 +33,10 @@ const FILE_TYPE_ICONS = {
 	document: FileText,
 } as const;
 
-function FileCard({attachment, muted, onShare, onDelete, isDeleting}: {
+function FileCard({attachment, muted, danger, onShare, onDelete, isDeleting}: {
 	readonly attachment: FileAttachment;
 	readonly muted: string;
+	readonly danger: string;
 	readonly onShare: () => void;
 	readonly onDelete: () => void;
 	readonly isDeleting: boolean;
@@ -67,8 +70,8 @@ function FileCard({attachment, muted, onShare, onDelete, isDeleting}: {
 							<Share2 size={16} color={muted}/>
 							<Menu.ItemTitle>Share</Menu.ItemTitle>
 						</Menu.Item>
-						<Menu.Item id="delete" shouldCloseOnSelect onPress={onDelete}>
-							<Trash2 size={16} color={muted}/>
+						<Menu.Item variant="danger" id="delete" shouldCloseOnSelect onPress={onDelete}>
+							<Trash2 size={16} color={danger}/>
 							<Menu.ItemTitle>Delete</Menu.ItemTitle>
 						</Menu.Item>
 					</Menu.Content>
@@ -78,9 +81,10 @@ function FileCard({attachment, muted, onShare, onDelete, isDeleting}: {
 	);
 }
 
-function LocationCard({attachment, muted, onDelete, isDeleting}: {
+function LocationCard({attachment, muted, danger, onDelete, isDeleting}: {
 	readonly attachment: LocationAttachment;
 	readonly muted: string;
+	readonly danger: string;
 	readonly onDelete: () => void;
 	readonly isDeleting: boolean;
 }): React.JSX.Element {
@@ -109,8 +113,8 @@ function LocationCard({attachment, muted, onDelete, isDeleting}: {
 				<Menu.Portal>
 					<Menu.Overlay/>
 					<Menu.Content presentation="popover" width={180}>
-						<Menu.Item variant={"danger"} id="delete" shouldCloseOnSelect onPress={onDelete}>
-							<Trash2 size={16} color={muted}/>
+						<Menu.Item variant="danger" id="delete" shouldCloseOnSelect onPress={onDelete}>
+							<Trash2 size={16} color={danger}/>
 							<Menu.ItemTitle>Delete</Menu.ItemTitle>
 						</Menu.Item>
 					</Menu.Content>
@@ -121,48 +125,49 @@ function LocationCard({attachment, muted, onDelete, isDeleting}: {
 }
 
 export function AttachmentList({
-								   attachments,
-							   }: AttachmentListProps): React.JSX.Element {
-	const {db} = useDatabaseContext();
-	const {muted} = useThemeColors();
+	attachments,
+}: AttachmentListProps): React.JSX.Element {
+	const { db } = useDatabaseContext();
+	const { muted, danger } = useThemeColors();
 	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const dialog = useDialog();
 
 	const handleShare = useCallback(async (uri: string) => {
 		try {
 			await Sharing.shareAsync(uri);
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : 'Failed to share file';
-			Alert.alert('Share Error', message);
+			await dialog.alert({ title: 'Share Error', description: message });
 		}
-	}, []);
+	}, [dialog]);
 
 	const handleDelete = useCallback(
-		(attachment: Attachment) => {
+		async (attachment: Attachment) => {
 			const label = attachment.type === 'location'
 				? attachment.data.name
 				: attachment.data.fileName ?? 'this file';
 
-			Alert.alert('Delete Attachment', `Remove "${label}"?`, [
-				{text: 'Cancel', style: 'cancel'},
-				{
-					text: 'Delete',
-					style: 'destructive',
-					onPress: async () => {
-						setDeletingId(attachment.id);
-						try {
-							await deleteAttachment(db, attachment.id);
-						} catch (err: unknown) {
-							const message =
-								err instanceof Error ? err.message : 'Failed to delete attachment';
-							Alert.alert('Delete Error', message);
-						} finally {
-							setDeletingId(null);
-						}
-					},
-				},
-			]);
+			const confirmed = await dialog.confirm({
+				title: 'Delete Attachment',
+				description: `Remove "${label}"? This cannot be undone.`,
+				confirmLabel: 'Delete',
+				variant: 'danger',
+			});
+
+			if (!confirmed) return;
+
+			setDeletingId(attachment.id);
+			try {
+				await deleteAttachment(db, attachment.id);
+			} catch (err: unknown) {
+				const message =
+					err instanceof Error ? err.message : 'Failed to delete attachment';
+				await dialog.alert({ title: 'Delete Error', description: message });
+			} finally {
+				setDeletingId(null);
+			}
 		},
-		[db],
+		[db, dialog],
 	);
 
 	return (
@@ -184,6 +189,7 @@ export function AttachmentList({
 									key={attachment.id}
 									attachment={attachment}
 									muted={muted}
+									danger={danger}
 									onDelete={() => handleDelete(attachment)}
 									isDeleting={isDeleting}
 								/>
@@ -195,6 +201,7 @@ export function AttachmentList({
 								key={attachment.id}
 								attachment={attachment}
 								muted={muted}
+								danger={danger}
 								onShare={() => handleShare(attachment.data.uri)}
 								onDelete={() => handleDelete(attachment)}
 								isDeleting={isDeleting}
@@ -203,6 +210,12 @@ export function AttachmentList({
 					})}
 				</View>
 			)}
+
+			<AppDialog
+				{...dialog.state}
+				onConfirm={dialog.handleConfirm}
+				onCancel={dialog.handleCancel}
+			/>
 		</View>
 	);
 }

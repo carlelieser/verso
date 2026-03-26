@@ -51,6 +51,7 @@ export default function JournalsScreen(): React.JSX.Element {
 					<JournalCard
 						journal={item}
 						entryCount={entryCounts.get(item.id) ?? 0}
+						isDefault={item.displayOrder === 0}
 						onPress={() => router.push(`/journal/${item.id}`)}
 					/>
 				)}

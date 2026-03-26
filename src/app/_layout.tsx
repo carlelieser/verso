@@ -18,6 +18,22 @@ import { DatabaseProvider } from '@/providers/database-provider';
 
 SplashScreen.preventAutoHideAsync();
 
+function restoreTheme(): void {
+	const raw = SecureStore.getItem(SETTINGS_THEME_KEY);
+	const theme = isValidTheme(raw) ? raw : 'system';
+
+	// Skip if Uniwind is already in the correct mode. Re-calling setTheme('system')
+	// resets Appearance.setColorScheme to 'unspecified', which momentarily resolves
+	// to 'light' before the native side propagates the actual system preference.
+	if (theme === 'system' && Uniwind.hasAdaptiveThemes) return;
+	if (theme !== 'system' && !Uniwind.hasAdaptiveThemes && Uniwind.currentTheme === theme) return;
+
+	Uniwind.setTheme(theme);
+}
+
+// Cold start
+restoreTheme();
+
 export default function RootLayout(): React.JSX.Element {
 	const [dmSerifLoaded] = useDMSerif({
 		DMSerifDisplay_400Regular: require('@expo-google-fonts/dm-serif-display/400Regular/DMSerifDisplay_400Regular.ttf'),
@@ -38,11 +54,9 @@ export default function RootLayout(): React.JSX.Element {
 
 	const fontsLoaded = dmSerifLoaded && googleSansLoaded && libreBaskervilleLoaded;
 
-	useEffect(() => {
-		SecureStore.getItemAsync(SETTINGS_THEME_KEY).then((raw) => {
-			Uniwind.setTheme(isValidTheme(raw) ? raw : 'system');
-		});
-	}, []);
+	// Hot refresh preserves component state but resets Appearance.setColorScheme.
+	// The guard inside restoreTheme prevents redundant calls when already correct.
+	restoreTheme();
 
 	useEffect(() => {
 		if (fontsLoaded) {
