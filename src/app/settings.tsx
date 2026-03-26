@@ -1,13 +1,13 @@
 import * as ExpoLocation from 'expo-location';
-import { useFocusEffect } from 'expo-router';
-import { ControlField, Description, Label } from 'heroui-native';
-import React, { useCallback, useState } from 'react';
-import { Linking, Platform, ScrollView, View } from 'react-native';
+import {useFocusEffect} from 'expo-router';
+import {ControlField, Description, Label} from 'heroui-native';
+import React, {useCallback, useState} from 'react';
+import {Linking, Platform, ScrollView, View} from 'react-native';
 
-import { Overline } from '@/components/overline';
-import { ScreenLayout } from '@/components/screen-layout';
-import { SETTINGS_AUTO_LOCATION_KEY, SETTINGS_TRANSCRIPTION_KEY } from '@/constants/settings';
-import { useSettings } from '@/hooks/use-settings';
+import {Overline} from '@/components/overline';
+import {ScreenLayout} from '@/components/screen-layout';
+import {SETTINGS_AUTO_LOCATION_KEY, SETTINGS_TRANSCRIPTION_KEY} from '@/constants/settings';
+import {useSettings} from '@/hooks/use-settings';
 
 type PermissionStatus = 'undetermined' | 'granted' | 'denied';
 
@@ -25,11 +25,11 @@ function toPermissionStatus(status: ExpoLocation.PermissionStatus): PermissionSt
 function getLocationDescription(status: PermissionStatus): string {
 	switch (status) {
 		case 'granted':
-			return 'Automatically log your location along with journal entries';
+			return 'Location access is enabled';
 		case 'denied':
-			return 'Location access was denied. Tap to open system settings';
+			return 'Access denied — tap to open system settings';
 		default:
-			return 'Allow location access for journal entries';
+			return 'Required for saving location with entries';
 	}
 }
 
@@ -43,12 +43,12 @@ function openAppSettings(): void {
 
 export default function SettingsScreen(): React.JSX.Element {
 	const [locationStatus, setLocationStatus] = useState<PermissionStatus>('undetermined');
-	const { isAutoLocation, isTranscriptionEnabled, theme, setSetting, setTheme } = useSettings();
+	const {isAutoLocation, isTranscriptionEnabled, theme, setSetting, setTheme} = useSettings();
 	const isSystemTheme = theme === 'system';
 	const isDark = theme === 'dark';
 
 	const checkPermission = useCallback(async () => {
-		const { status } = await ExpoLocation.getForegroundPermissionsAsync();
+		const {status} = await ExpoLocation.getForegroundPermissionsAsync();
 		setLocationStatus(toPermissionStatus(status));
 	}, []);
 
@@ -64,7 +64,7 @@ export default function SettingsScreen(): React.JSX.Element {
 			return;
 		}
 
-		ExpoLocation.requestForegroundPermissionsAsync().then(({ status }) => {
+		ExpoLocation.requestForegroundPermissionsAsync().then(({status}) => {
 			const mapped = toPermissionStatus(status);
 			setLocationStatus(mapped);
 			if (mapped === 'granted') {
@@ -75,7 +75,7 @@ export default function SettingsScreen(): React.JSX.Element {
 
 	return (
 		<ScreenLayout title="Settings">
-			<ScrollView contentContainerClassName="px-6 gap-6">
+			<ScrollView className="rounded-t-4xl overflow-hidden" contentContainerClassName="px-6 gap-6">
 				<View className="gap-3">
 					<Overline>APPEARANCE</Overline>
 
@@ -84,10 +84,10 @@ export default function SettingsScreen(): React.JSX.Element {
 						onSelectedChange={(v) => setTheme(v ? 'system' : 'light')}
 					>
 						<View className="flex-1">
-							<Label>Use system colors</Label>
-							<Description>Match your device's light or dark setting</Description>
+							<Label>Follow system theme</Label>
+
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 
 					<ControlField
@@ -97,9 +97,9 @@ export default function SettingsScreen(): React.JSX.Element {
 					>
 						<View className="flex-1">
 							<Label>Dark mode</Label>
-							<Description>Use a darker color scheme</Description>
+							<Description>Switch between light and dark theme</Description>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 				</View>
 
@@ -111,12 +111,12 @@ export default function SettingsScreen(): React.JSX.Element {
 						onSelectedChange={(v) => setSetting(SETTINGS_AUTO_LOCATION_KEY, v)}
 					>
 						<View className="flex-1">
-							<Label>Auto-attach location</Label>
+							<Label>Location tagging</Label>
 							<Description>
-								Automatically tag new entries with your current location
+								Automatically tag entries with your location
 							</Description>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 
 					<ControlField
@@ -124,12 +124,12 @@ export default function SettingsScreen(): React.JSX.Element {
 						onSelectedChange={(v) => setSetting(SETTINGS_TRANSCRIPTION_KEY, v)}
 					>
 						<View className="flex-1">
-							<Label>Voice transcription</Label>
+							<Label>Voice input</Label>
 							<Description>
-								Show a microphone button in the editor for speech-to-text
+								Enable speech-to-text (STT)
 							</Description>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 				</View>
 				<View className="gap-3">
@@ -143,7 +143,7 @@ export default function SettingsScreen(): React.JSX.Element {
 							<Label>Location</Label>
 							<Description>{getLocationDescription(locationStatus)}</Description>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 				</View>
 			</ScrollView>
