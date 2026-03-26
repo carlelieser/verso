@@ -12,6 +12,7 @@ interface JournalCardProps {
 	readonly entryCount: number;
 	readonly isDefault?: boolean;
 	readonly onPress: () => void;
+	readonly onLongPress?: () => void;
 }
 
 export function JournalCard({
@@ -19,12 +20,13 @@ export function JournalCard({
 	entryCount,
 	isDefault,
 	onPress,
+	onLongPress,
 }: JournalCardProps): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const Icon = getJournalIcon(journal.icon);
 
 	return (
-		<Pressable onPress={onPress}>
+		<Pressable onPress={onPress} onLongPress={onLongPress}>
 			<Card>
 				<Card.Body>
 					<View className="flex-row items-center gap-3">

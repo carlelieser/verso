@@ -1,9 +1,11 @@
+import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { EllipsisVertical, Plus, ScrollText, Search, Star, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ActionSheet, type ActionSheetItem } from '@/components/action-sheet';
 import { AppDialog } from '@/components/app-dialog';
 import { EmptyState } from '@/components/empty-state';
 import { EntryCard } from '@/components/entry-card';
@@ -12,10 +14,12 @@ import { FabMenu } from '@/components/fab-menu';
 import { ScreenLayout } from '@/components/screen-layout';
 import { SearchInput } from '@/components/search-input';
 import { getJournalIcon } from '@/constants/journal-icons';
+import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useDialog } from '@/hooks/use-dialog';
 import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import type { EntryWithJournal } from '@/types/entry';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
 
 export default function JournalDetailScreen(): React.JSX.Element {
@@ -26,9 +30,11 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const journal = journals.find((j) => j.id === journalId);
 	const isDefault = journal?.displayOrder === 0;
 	const entryCount = journalId ? (entryCounts.get(journalId) ?? 0) : 0;
-	const { entries, searchEntries, createEntry } = useEntries(journalId);
+	const { entries, searchEntries, createEntry, deleteEntry } = useEntries(journalId);
 	const [searchQuery, setSearchQuery] = useState('');
 	const dialog = useDialog();
+	const entryActionSheet = useBottomSheet();
+	const [selectedEntry, setSelectedEntry] = useState<EntryWithJournal | null>(null);
 
 	const handleSearch = useCallback(
 		async (query: string) => {
@@ -88,6 +94,43 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		[muted, danger, isDefault, handleSetDefault, handleDelete],
 	);
 
+	const handleEntryLongPress = useCallback(
+		(entry: EntryWithJournal) => {
+			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+			setSelectedEntry(entry);
+			entryActionSheet.open();
+		},
+		[entryActionSheet],
+	);
+
+	const handleDeleteEntry = useCallback(async () => {
+		if (!selectedEntry) return;
+
+		const confirmed = await dialog.confirm({
+			title: 'Delete Entry',
+			description: 'This entry will be permanently deleted. This cannot be undone.',
+			confirmLabel: 'Delete',
+			variant: 'danger',
+		});
+
+		if (!confirmed) return;
+
+		await deleteEntry(selectedEntry.id);
+	}, [selectedEntry, deleteEntry, dialog]);
+
+	const entryActionItems: readonly ActionSheetItem[] = useMemo(
+		() => [
+			{
+				id: 'delete',
+				label: 'Delete',
+				icon: Trash2,
+				variant: 'danger' as const,
+				onPress: handleDeleteEntry,
+			},
+		],
+		[handleDeleteEntry],
+	);
+
 	const Icon = journal ? getJournalIcon(journal.icon) : null;
 
 	const subtitle = formatJournalMeta(entryCount, isDefault ?? false);
@@ -120,6 +163,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					<EntryCard
 						entry={item}
 						onPress={() => router.push(`/journal/${journalId}/entry/${item.id}`)}
+						onLongPress={() => handleEntryLongPress(item)}
 					/>
 				)}
 				contentContainerClassName="pt-2 px-4 gap-3"
@@ -153,6 +197,14 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				items={menuItems}
 				className="absolute right-4"
 				style={{ bottom: insets.bottom + 98 }}
+			/>
+
+			<ActionSheet
+				header={
+					selectedEntry ? <EntryCard entry={selectedEntry} onPress={() => {}} /> : null
+				}
+				items={entryActionItems}
+				sheet={entryActionSheet}
 			/>
 
 			<AppDialog

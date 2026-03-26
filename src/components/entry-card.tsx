@@ -8,6 +8,7 @@ import { formatRelativeDate } from '@/utils/date';
 interface EntryCardProps {
 	readonly entry: EntryWithJournal;
 	readonly onPress: () => void;
+	readonly onLongPress?: () => void;
 	readonly showJournalName?: boolean;
 }
 
@@ -26,6 +27,7 @@ function formatWordCount(count: number): string {
 export function EntryCard({
 	entry,
 	onPress,
+	onLongPress,
 	showJournalName = false,
 }: EntryCardProps): React.JSX.Element {
 	const preview = entry.contentText.slice(0, 120).trim();
@@ -36,7 +38,7 @@ export function EntryCard({
 	leftParts.push(formatRelativeDate(entry.createdAt));
 
 	return (
-		<Pressable onPress={onPress}>
+		<Pressable onPress={onPress} onLongPress={onLongPress}>
 			<Card>
 				<Card.Body>
 					<View>
