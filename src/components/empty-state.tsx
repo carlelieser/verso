@@ -19,9 +19,9 @@ export function EmptyState({
 			<View className="p-8 rounded-full bg-foreground/5 flex items-center justify-center">
 				{icon}
 			</View>
-			<Text className="text-3xl font-heading text-foreground text-center mt-4">{title}</Text>
+			<Text className="text-xl font-medium text-foreground text-center mt-4">{title}</Text>
 			{description !== undefined ? (
-				<Text className="text-center text-muted mt-2">{description}</Text>
+				<Text className="text-center text-muted mt-1">{description}</Text>
 			) : null}
 			{action !== undefined ? <View className="mt-4">{action}</View> : null}
 		</View>

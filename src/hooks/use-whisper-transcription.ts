@@ -23,7 +23,9 @@ export function useWhisperTranscription(
 	const [liveText, setLiveText] = useState('');
 	const contextRef = useRef<WhisperContext | null>(null);
 	const transcriberRef = useRef<RealtimeTranscriber | null>(null);
+	const completedSlicesRef = useRef('');
 	const fullTextRef = useRef('');
+	const lastSliceIndexRef = useRef(-1);
 	const onFinishRef = useRef(onFinish);
 	onFinishRef.current = onFinish;
 
@@ -58,11 +60,14 @@ export function useWhisperTranscription(
 				});
 			}
 
+			completedSlicesRef.current = '';
 			fullTextRef.current = '';
+			lastSliceIndexRef.current = -1;
 			setLiveText('');
 
 			const ctx = await ensureContext();
 			const audioStream = new AudioPcmStreamAdapter();
+			let currentSliceText = '';
 
 			const transcriber = new RealtimeTranscriber(
 				{ whisperContext: ctx, audioStream },
@@ -74,14 +79,23 @@ export function useWhisperTranscription(
 				{
 					onTranscribe: (event) => {
 						if (event.type !== 'transcribe') return;
+
+						// When a new slice starts, commit the previous slice's text
+						if (event.sliceIndex !== lastSliceIndexRef.current && lastSliceIndexRef.current >= 0) {
+							completedSlicesRef.current = completedSlicesRef.current + ' ' + currentSliceText;
+						}
+						lastSliceIndexRef.current = event.sliceIndex;
+
 						const segments = event.data?.segments ?? [];
-						const text = segments
+						currentSliceText = segments
 							.map((s) => s.text)
 							.filter((t) => !t.includes('[BLANK_AUDIO]'))
 							.join('')
 							.trim();
-						fullTextRef.current = text;
-						setLiveText(text);
+
+						const fullText = (completedSlicesRef.current + ' ' + currentSliceText).trim();
+						fullTextRef.current = fullText;
+						setLiveText(fullText);
 					},
 					onStatusChange: (isActive) => {
 						setStatus(isActive ? 'recording' : 'idle');
@@ -102,11 +116,15 @@ export function useWhisperTranscription(
 	const stopRecording = useCallback(async () => {
 		await transcriberRef.current?.stop();
 		transcriberRef.current = null;
+
 		const text = fullTextRef.current.trim();
 		if (text.length > 0) {
 			onFinishRef.current(text);
 		}
+
+		completedSlicesRef.current = '';
 		fullTextRef.current = '';
+		lastSliceIndexRef.current = -1;
 		setLiveText('');
 		setStatus('idle');
 	}, []);

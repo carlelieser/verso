@@ -52,7 +52,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const { saveEmotions, getEmotions } = useEmotions();
 	const { journals, createJournal } = useJournals();
 
-	const [selectedJournalId, setSelectedJournalId] = useState<string | null>(null);
+	const [explicitJournalId, setExplicitJournalId] = useState<string | null>(null);
 	const [hasContent, setHasContent] = useState(isEditMode);
 	const [isLoading, setIsLoading] = useState(isEditMode);
 	const [defaultHtml, setDefaultHtml] = useState('');
@@ -64,19 +64,16 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const htmlRef = useRef('');
 	const textRef = useRef('');
 
+	// Follow the default journal (first by displayOrder) until the user interacts.
+	const defaultJournalId = journals[0]?.id ?? null;
+	const selectedJournalId = explicitJournalId ?? defaultJournalId;
+
 	const checkProgress = useSharedValue(isEditMode ? 1 : 0);
 
 	const checkButtonStyle = useAnimatedStyle(() => ({
 		opacity: checkProgress.value,
 		transform: [{ translateX: (1 - checkProgress.value) * -8 }],
 	}));
-
-	// Default to first journal in create mode
-	useEffect(() => {
-		if (!isEditMode && journals.length > 0 && !selectedJournalId) {
-			setSelectedJournalId(journals[0]?.id ?? null);
-		}
-	}, [isEditMode, journals, selectedJournalId]);
 
 	// Load existing entry + emotions in edit mode
 	useEffect(() => {
@@ -89,7 +86,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 				if (!isActive) return;
 
 				if (entry) {
-					setSelectedJournalId(entry.journalId);
+					setExplicitJournalId(entry.journalId);
 					setDefaultHtml(entry.contentHtml);
 					htmlRef.current = entry.contentHtml;
 					textRef.current = entry.contentText;
@@ -126,11 +123,16 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 			setAutoSaveContent({ html, text });
 			setHasContent(hasText);
 
+			// Lock to the current journal on first keystroke
+			if (hasText && explicitJournalId === null) {
+				setExplicitJournalId(defaultJournalId);
+			}
+
 			if (isAnimatedCheck) {
 				checkProgress.value = withSpring(hasText ? 1 : 0);
 			}
 		},
-		[isAnimatedCheck, checkProgress],
+		[isAnimatedCheck, checkProgress, explicitJournalId, defaultJournalId],
 	);
 
 	const handleHtmlChange = useCallback((html: string) => {
@@ -141,7 +143,12 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const handleEmotionSave = useCallback((selections: readonly EmotionSelection[]) => {
 		emotionSelectionsRef.current = [...selections];
 		setDefaultEmotions([...selections]);
-	}, []);
+
+		// Lock to the current journal when emotions are set
+		if (selections.length > 0 && explicitJournalId === null) {
+			setExplicitJournalId(defaultJournalId);
+		}
+	}, [explicitJournalId, defaultJournalId]);
 
 	const handleFinish = useCallback(() => {
 		const saves: Promise<void>[] = [
@@ -171,7 +178,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const handleCreateJournal = useCallback(
 		async (name: string, icon: string) => {
 			const journal = await createJournal(name, icon);
-			setSelectedJournalId(journal.id);
+			setExplicitJournalId(journal.id);
 		},
 		[createJournal],
 	);
@@ -190,7 +197,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 
 	return {
 		selectedJournalId,
-		setSelectedJournalId,
+		setSelectedJournalId: setExplicitJournalId,
 		entryId,
 		hasContent,
 		isLoading,

@@ -48,7 +48,7 @@ export function useEntries(journalId?: string): UseEntriesResult {
 			.from(entries)
 			.innerJoin(journals, eq(entries.journalId, journals.id))
 			.where(journalId ? and(NON_EMPTY, eq(entries.journalId, journalId)) : NON_EMPTY)
-			.orderBy(desc(entries.createdAt))
+			.orderBy(desc(entries.updatedAt))
 			.limit(50),
 		[journalId],
 	);

@@ -28,7 +28,9 @@ export function FabMenu({
 	fabVariant = 'secondary',
 	className,
 	style,
-}: FabMenuProps): React.JSX.Element {
+}: FabMenuProps): React.JSX.Element | null {
+	if (items.length === 0) return null;
+
 	return (
 		<Menu presentation="popover">
 			<Menu.Trigger asChild>
