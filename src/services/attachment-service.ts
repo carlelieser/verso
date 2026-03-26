@@ -3,17 +3,24 @@ import { Directory, File, Paths } from 'expo-file-system';
 
 import type { Db } from '@/db/client';
 import { attachments } from '@/db/schema';
-import type { Attachment, AttachmentType } from '@/types/attachment';
+import type { Attachment, AttachmentType, FileData, LocationData } from '@/types/attachment';
 import { isAttachmentType } from '@/types/attachment';
 import { generateId } from '@/utils/id';
 
-interface AddAttachmentInput {
+interface AddFileAttachmentInput {
 	readonly entryId: string;
-	readonly type: AttachmentType;
+	readonly type: 'image' | 'audio' | 'document';
 	readonly sourceUri: string;
 	readonly mimeType: string | null;
 	readonly fileName: string | null;
 	readonly sizeBytes: number | null;
+}
+
+interface AddLocationAttachmentInput {
+	readonly entryId: string;
+	readonly name: string;
+	readonly latitude: number | null;
+	readonly longitude: number | null;
 }
 
 function getExtension(fileName: string | null, mimeType: string | null): string {
@@ -28,37 +35,50 @@ function getExtension(fileName: string | null, mimeType: string | null): string 
 	return '';
 }
 
+function getAttachmentDir(entryId: string): Directory {
+	return new Directory(Paths.document, 'attachments', entryId);
+}
+
+function parseData(type: AttachmentType, raw: string): FileData | LocationData | null {
+	try {
+		return JSON.parse(raw) as FileData | LocationData;
+	} catch {
+		return null;
+	}
+}
+
 function toAttachment(row: {
 	id: string;
 	entryId: string;
 	type: string;
-	uri: string;
-	mimeType: string | null;
-	fileName: string | null;
-	sizeBytes: number | null;
+	data: string;
 	displayOrder: number;
 	createdAt: Date;
 }): Attachment | null {
 	if (!isAttachmentType(row.type)) return null;
 
+	const data = parseData(row.type, row.data);
+	if (!data) return null;
+
 	return {
 		id: row.id,
 		entryId: row.entryId,
 		type: row.type,
-		uri: row.uri,
-		mimeType: row.mimeType,
-		fileName: row.fileName,
-		sizeBytes: row.sizeBytes,
+		data,
 		displayOrder: row.displayOrder,
 		createdAt: row.createdAt.getTime(),
-	};
+	} as Attachment;
 }
 
-function getAttachmentDir(entryId: string): Directory {
-	return new Directory(Paths.document, 'attachments', entryId);
+async function getNextOrder(db: Db, entryId: string): Promise<number> {
+	const [maxRow] = await db
+		.select({ maxOrder: max(attachments.displayOrder) })
+		.from(attachments)
+		.where(eq(attachments.entryId, entryId));
+	return (maxRow?.maxOrder ?? -1) + 1;
 }
 
-export async function addAttachment(db: Db, input: AddAttachmentInput): Promise<Attachment> {
+export async function addFileAttachment(db: Db, input: AddFileAttachmentInput): Promise<Attachment> {
 	const id = generateId();
 	const ext = getExtension(input.fileName, input.mimeType);
 	const dir = getAttachmentDir(input.entryId);
@@ -76,22 +96,20 @@ export async function addAttachment(db: Db, input: AddAttachmentInput): Promise<
 	}
 
 	const now = new Date();
-
-	const [maxRow] = await db
-		.select({ maxOrder: max(attachments.displayOrder) })
-		.from(attachments)
-		.where(eq(attachments.entryId, input.entryId));
-	const nextOrder = (maxRow?.maxOrder ?? -1) + 1;
+	const nextOrder = await getNextOrder(db, input.entryId);
+	const data: FileData = {
+		uri: destFile.uri,
+		mimeType: input.mimeType,
+		fileName: input.fileName,
+		sizeBytes: input.sizeBytes,
+	};
 
 	try {
 		await db.insert(attachments).values({
 			id,
 			entryId: input.entryId,
 			type: input.type,
-			uri: destFile.uri,
-			mimeType: input.mimeType,
-			fileName: input.fileName,
-			sizeBytes: input.sizeBytes,
+			data: JSON.stringify(data),
 			displayOrder: nextOrder,
 			createdAt: now,
 		});
@@ -108,10 +126,36 @@ export async function addAttachment(db: Db, input: AddAttachmentInput): Promise<
 		id,
 		entryId: input.entryId,
 		type: input.type,
-		uri: destFile.uri,
-		mimeType: input.mimeType,
-		fileName: input.fileName,
-		sizeBytes: input.sizeBytes,
+		data,
+		displayOrder: nextOrder,
+		createdAt: now.getTime(),
+	};
+}
+
+export async function addLocationAttachment(db: Db, input: AddLocationAttachmentInput): Promise<Attachment> {
+	const id = generateId();
+	const now = new Date();
+	const nextOrder = await getNextOrder(db, input.entryId);
+	const data: LocationData = {
+		name: input.name,
+		latitude: input.latitude,
+		longitude: input.longitude,
+	};
+
+	await db.insert(attachments).values({
+		id,
+		entryId: input.entryId,
+		type: 'location',
+		data: JSON.stringify(data),
+		displayOrder: nextOrder,
+		createdAt: now,
+	});
+
+	return {
+		id,
+		entryId: input.entryId,
+		type: 'location',
+		data,
 		displayOrder: nextOrder,
 		createdAt: now.getTime(),
 	};
@@ -119,15 +163,18 @@ export async function addAttachment(db: Db, input: AddAttachmentInput): Promise<
 
 export async function deleteAttachment(db: Db, id: string): Promise<void> {
 	const [row] = await db
-		.select({ uri: attachments.uri })
+		.select({ type: attachments.type, data: attachments.data })
 		.from(attachments)
 		.where(eq(attachments.id, id))
 		.limit(1);
 
-	if (row) {
+	if (row && row.type !== 'location') {
 		try {
-			const file = new File(row.uri);
-			if (file.exists) file.delete();
+			const parsed = JSON.parse(row.data) as FileData;
+			if (parsed.uri) {
+				const file = new File(parsed.uri);
+				if (file.exists) file.delete();
+			}
 		} catch {
 			// Best-effort cleanup
 		}

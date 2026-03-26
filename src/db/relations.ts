@@ -5,7 +5,6 @@ import {
 	emotionRecords,
 	entries,
 	journals,
-	locations,
 	weatherRecords,
 } from './schema';
 
@@ -17,7 +16,6 @@ export const entriesRelations = relations(entries, ({ one, many }) => ({
 	journal: one(journals, { fields: [entries.journalId], references: [journals.id] }),
 	emotionRecords: many(emotionRecords),
 	attachments: many(attachments),
-	location: one(locations),
 	weather: one(weatherRecords),
 }));
 
@@ -27,10 +25,6 @@ export const emotionRecordsRelations = relations(emotionRecords, ({ one }) => ({
 
 export const attachmentsRelations = relations(attachments, ({ one }) => ({
 	entry: one(entries, { fields: [attachments.entryId], references: [entries.id] }),
-}));
-
-export const locationsRelations = relations(locations, ({ one }) => ({
-	entry: one(entries, { fields: [locations.entryId], references: [entries.id] }),
 }));
 
 export const weatherRecordsRelations = relations(weatherRecords, ({ one }) => ({

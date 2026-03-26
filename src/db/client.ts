@@ -59,7 +59,7 @@ async function getOrCreateEncryptionKey(): Promise<string> {
 export async function createDatabase(): Promise<Db> {
 	const encryptionKey = await getOrCreateEncryptionKey();
 
-	const sqliteDb = openDatabaseSync(DATABASE_NAME);
+	const sqliteDb = openDatabaseSync(DATABASE_NAME, { enableChangeListener: true });
 
 	sqliteDb.execSync(`PRAGMA key = '${encryptionKey.replace(/'/g, "''")}'`);
 	sqliteDb.execSync('PRAGMA journal_mode = WAL');

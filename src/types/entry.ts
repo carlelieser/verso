@@ -1,7 +1,6 @@
 import type { Attachment } from './attachment';
 import type { Timestamp } from './common';
 import type { EmotionRecord } from './emotion';
-import type { Location } from './location';
 import type { Weather } from './weather';
 
 export interface Entry {
@@ -20,6 +19,5 @@ export interface EntryWithJournal extends Entry {
 export interface EntryDetail extends Entry {
 	readonly emotions: readonly EmotionRecord[];
 	readonly attachments: readonly Attachment[];
-	readonly location: Location | null;
 	readonly weather: Weather | null;
 }

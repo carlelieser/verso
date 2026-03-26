@@ -1,12 +1,13 @@
 import * as ExpoLocation from 'expo-location';
 
 import type { Db } from '@/db/client';
-import { saveLocation } from '@/services/location-service';
+import { addLocationAttachment } from '@/services/attachment-service';
 import { fetchWeather, saveWeather } from '@/services/weather-service';
 
 /**
  * Captures the device's current location and weather, then persists both
- * for the given entry. Silently no-ops if permissions are denied or the
+ * for the given entry. Location is stored as an attachment. Weather is
+ * stored separately. Silently no-ops if permissions are denied or the
  * location/weather fetch fails — metadata is best-effort.
  */
 export async function captureLocationAndWeather(db: Db, entryId: string): Promise<void> {
@@ -15,7 +16,9 @@ export async function captureLocationAndWeather(db: Db, entryId: string): Promis
 	}));
 	if (status !== 'granted') return;
 
-	const position = await ExpoLocation.getLastKnownPositionAsync().catch(() => null);
+	const position =
+		(await ExpoLocation.getLastKnownPositionAsync().catch(() => null)) ??
+		(await ExpoLocation.getCurrentPositionAsync().catch(() => null));
 	if (!position) return;
 
 	const { latitude, longitude } = position.coords;
@@ -26,7 +29,7 @@ export async function captureLocationAndWeather(db: Db, entryId: string): Promis
 	const name =
 		[reverseGeocode?.city, reverseGeocode?.region].filter(Boolean).join(', ') || 'Unknown';
 
-	await saveLocation(db, entryId, { name, latitude, longitude });
+	await addLocationAttachment(db, { entryId, name, latitude, longitude });
 
 	const weather = await fetchWeather(latitude, longitude).catch(() => null);
 	if (weather) {

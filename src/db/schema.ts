@@ -67,29 +67,11 @@ export const attachments = sqliteTable(
 			.notNull()
 			.references(() => entries.id, { onDelete: 'cascade' }),
 		type: text('type').notNull(),
-		uri: text('uri').notNull(),
-		mimeType: text('mime_type'),
-		fileName: text('file_name'),
-		sizeBytes: integer('size_bytes'),
+		data: text('data').notNull(),
 		displayOrder: integer('display_order').notNull().default(0),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 	},
 	(table) => [index('attachment_entry_idx').on(table.entryId)],
-);
-
-export const locations = sqliteTable(
-	'location',
-	{
-		id: text('id').primaryKey(),
-		entryId: text('entry_id')
-			.notNull()
-			.references(() => entries.id, { onDelete: 'cascade' }),
-		name: text('name').notNull(),
-		latitude: real('latitude'),
-		longitude: real('longitude'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-	},
-	(table) => [uniqueIndex('location_entry_idx').on(table.entryId)],
 );
 
 export const weatherRecords = sqliteTable(

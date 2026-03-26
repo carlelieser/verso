@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1774002158704,
-      "tag": "0000_lyrical_lightspeed",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1774329600000,
-      "tag": "0001_add_journal_icon",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1774180431634,
-      "tag": "0002_harsh_inertia",
+      "when": 1774761600000,
+      "tag": "0000_initial",
       "breakpoints": true
     }
   ]

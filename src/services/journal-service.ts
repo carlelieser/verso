@@ -1,4 +1,4 @@
-import { asc, count, eq, sql } from 'drizzle-orm';
+import { asc, count, eq, ne, sql } from 'drizzle-orm';
 
 import type { Db } from '@/db/client';
 import { entries, journals } from '@/db/schema';
@@ -84,6 +84,7 @@ export async function getJournalEntryCounts(db: Db): Promise<Map<string, number>
 			count: count(),
 		})
 		.from(entries)
+		.where(ne(entries.contentText, ''))
 		.groupBy(entries.journalId);
 
 	return new Map(rows.map((row) => [row.journalId, row.count]));

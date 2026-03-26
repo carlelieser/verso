@@ -1,11 +1,12 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import {useCallback, useEffect, useState} from 'react';
+import {Alert} from 'react-native';
 
-import { useDatabaseContext } from '@/providers/database-provider';
-import { addAttachment, listAttachments } from '@/services/attachment-service';
-import type { Attachment, AttachmentType } from '@/types/attachment';
+import {useDatabaseContext} from '@/providers/database-provider';
+import {addFileAttachment, listAttachments} from '@/services/attachment-service';
+import type {Attachment} from '@/types/attachment';
+import type {FileData} from '@/types/attachment';
 
 interface UseAttachmentPickerResult {
 	readonly attachments: readonly Attachment[];
@@ -20,11 +21,11 @@ interface PickedFile {
 	readonly mimeType: string | null;
 	readonly fileName: string | null;
 	readonly sizeBytes: number | null;
-	readonly type: AttachmentType;
+	readonly type: 'image' | 'audio' | 'document';
 }
 
 export function useAttachmentPicker(entryId: string | null): UseAttachmentPickerResult {
-	const { db } = useDatabaseContext();
+	const {db} = useDatabaseContext();
 	const [attachmentList, setAttachmentList] = useState<readonly Attachment[]>([]);
 
 	const refresh = useCallback(async () => {
@@ -47,7 +48,7 @@ export function useAttachmentPicker(entryId: string | null): UseAttachmentPicker
 			const added: Attachment[] = [];
 			for (const file of files) {
 				try {
-					const attachment = await addAttachment(db, {
+					const attachment = await addFileAttachment(db, {
 						entryId,
 						type: file.type,
 						sourceUri: file.uri,
@@ -72,7 +73,7 @@ export function useAttachmentPicker(entryId: string | null): UseAttachmentPicker
 	const pickImages = useCallback(async () => {
 		const result = await ImagePicker.launchImageLibraryAsync({
 			allowsMultipleSelection: true,
-			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			mediaTypes: ['images'],
 		});
 
 		if (result.canceled) return;
@@ -89,7 +90,7 @@ export function useAttachmentPicker(entryId: string | null): UseAttachmentPicker
 	}, [addFiles]);
 
 	const pickAudio = useCallback(async () => {
-		const result = await DocumentPicker.getDocumentAsync({ type: 'audio/*' });
+		const result = await DocumentPicker.getDocumentAsync({type: 'audio/*'});
 
 		if (result.canceled) return;
 
@@ -105,7 +106,7 @@ export function useAttachmentPicker(entryId: string | null): UseAttachmentPicker
 	}, [addFiles]);
 
 	const pickDocuments = useCallback(async () => {
-		const result = await DocumentPicker.getDocumentAsync({ type: '*/*' });
+		const result = await DocumentPicker.getDocumentAsync({type: '*/*'});
 
 		if (result.canceled) return;
 
@@ -120,5 +121,5 @@ export function useAttachmentPicker(entryId: string | null): UseAttachmentPicker
 		await addFiles(files);
 	}, [addFiles]);
 
-	return { attachments: attachmentList, pickImages, pickAudio, pickDocuments, refresh };
+	return {attachments: attachmentList, pickImages, pickAudio, pickDocuments, refresh};
 }

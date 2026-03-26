@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { migrate } from 'drizzle-orm/expo-sqlite/migrator';
+
 import type { Db } from '@/db/client';
 import { createDatabase } from '@/db/client';
-import { createTables } from '@/db/create-tables';
 import { setupFts } from '@/db/fts';
 import { ensureDefaultJournal } from '@/db/seed';
+import migrations from '../../drizzle/migrations';
 
 interface DatabaseContextValue {
 	readonly db: Db;
@@ -33,8 +35,8 @@ export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX
 	useEffect(() => {
 		setError(null);
 		createDatabase()
-			.then((database) => {
-				createTables(database);
+			.then(async (database) => {
+				await migrate(database, migrations);
 				setupFts(database);
 				ensureDefaultJournal(database);
 				setDb(database);

@@ -1,25 +1,46 @@
 import type { Timestamp } from './common';
 
-export type AttachmentType = 'image' | 'audio' | 'document';
+export interface FileData {
+	readonly uri: string;
+	readonly mimeType: string | null;
+	readonly fileName: string | null;
+	readonly sizeBytes: number | null;
+}
+
+export interface LocationData {
+	readonly name: string;
+	readonly latitude: number | null;
+	readonly longitude: number | null;
+}
+
+interface AttachmentBase {
+	readonly id: string;
+	readonly entryId: string;
+	readonly displayOrder: number;
+	readonly createdAt: Timestamp;
+}
+
+export interface FileAttachment extends AttachmentBase {
+	readonly type: 'image' | 'audio' | 'document';
+	readonly data: FileData;
+}
+
+export interface LocationAttachment extends AttachmentBase {
+	readonly type: 'location';
+	readonly data: LocationData;
+}
+
+export type Attachment = FileAttachment | LocationAttachment;
+
+export type AttachmentType = Attachment['type'];
 
 const ATTACHMENT_TYPES: ReadonlySet<string> = new Set<AttachmentType>([
 	'image',
 	'audio',
 	'document',
+	'location',
 ]);
 
 export function isAttachmentType(value: string): value is AttachmentType {
 	return ATTACHMENT_TYPES.has(value);
-}
-
-export interface Attachment {
-	readonly id: string;
-	readonly entryId: string;
-	readonly type: AttachmentType;
-	readonly uri: string;
-	readonly mimeType: string | null;
-	readonly fileName: string | null;
-	readonly sizeBytes: number | null;
-	readonly displayOrder: number;
-	readonly createdAt: Timestamp;
 }
