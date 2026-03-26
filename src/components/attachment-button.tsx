@@ -9,9 +9,11 @@ import { useEntryContext } from '@/providers/entry-provider';
 
 interface AttachmentButtonProps {
 	readonly placement?: MenuContentPopoverProps['placement'];
+	readonly offset?: MenuContentPopoverProps['offset'];
+	readonly alignOffset?: MenuContentPopoverProps['alignOffset'];
 }
 
-export function AttachmentButton({ placement }: AttachmentButtonProps): React.JSX.Element {
+export function AttachmentButton({ placement, offset, alignOffset }: AttachmentButtonProps): React.JSX.Element {
 	const { entryId } = useEntryContext();
 	const { accent, muted } = useThemeColors();
 	const { attachments, pickImages, pickAudio, pickDocuments } = useAttachmentPicker(entryId);
@@ -25,7 +27,7 @@ export function AttachmentButton({ placement }: AttachmentButtonProps): React.JS
 			</Menu.Trigger>
 			<Menu.Portal>
 				<Menu.Overlay />
-				<Menu.Content presentation="popover" width={180} placement={placement}>
+				<Menu.Content presentation="popover" width={180} placement={placement} offset={offset} alignOffset={alignOffset}>
 					<Menu.Item id="images" shouldCloseOnSelect onPress={pickImages}>
 						<Image size={16} color={muted} />
 						<Menu.ItemTitle>Images</Menu.ItemTitle>
