@@ -189,6 +189,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const handleClear = useCallback(async () => {
 		editorRef.current?.clear();
 		setHasContent(false);
+		setExplicitJournalId(null);
 		setAutoSaveContent({ html: '', text: '' });
 		htmlRef.current = '';
 		textRef.current = '';

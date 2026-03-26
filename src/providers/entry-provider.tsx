@@ -71,9 +71,12 @@ export function EntryProvider({
 			});
 	}, [isEditMode, currentEntryId, resolveJournalId, createEntry, isAutoLocation, db]);
 
-	// Cleanup on unmount: delete entry only if it has no meaningful content
+	// Cleanup on unmount: delete entry only if it has no meaningful content.
+	// Deferred to avoid deleting during React strict mode's immediate
+	// teardown-and-remount cycle in development.
 	const currentEntryIdRef = useRef(currentEntryId);
 	const dbRef = useRef(db);
+	const cleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	currentEntryIdRef.current = currentEntryId;
 	dbRef.current = db;
@@ -81,30 +84,37 @@ export function EntryProvider({
 	useEffect(() => {
 		if (isEditMode) return;
 
+		// Cancel any pending cleanup from a previous unmount (strict mode remount)
+		if (cleanupTimerRef.current) {
+			clearTimeout(cleanupTimerRef.current);
+			cleanupTimerRef.current = null;
+		}
+
 		return () => {
 			const id = currentEntryIdRef.current;
 			if (!id) return;
 
-			getEntry(dbRef.current, id)
-				.then((entry) => {
-					const hasContent = entry.contentText.trim().length > 0;
-					const hasAttachments = entry.attachments.length > 0;
-					const hasEmotions = entry.emotions.length > 0;
+			cleanupTimerRef.current = setTimeout(() => {
+				getEntry(dbRef.current, id)
+					.then((entry) => {
+						const hasContent = entry.contentText.trim().length > 0;
+						const hasAttachments = entry.attachments.length > 0;
+						const hasEmotions = entry.emotions.length > 0;
 
-					if (!hasContent && !hasAttachments && !hasEmotions) {
-						deleteEntry(id).catch(() => {});
-					}
-				})
-				.catch(() => {});
+						if (!hasContent && !hasAttachments && !hasEmotions) {
+							deleteEntry(id).catch(() => {});
+						}
+					})
+					.catch(() => {});
+			}, 100);
 		};
 	}, [isEditMode, deleteEntry]);
 
 	const cycle = useCallback(async () => {
-		setCurrentEntryId(null);
-
 		const journalId = resolveJournalId();
 		if (!journalId) return;
 
+		// Create the new entry before swapping IDs so children never see null
 		const entry = await createEntry(journalId, '', '');
 		setCurrentEntryId(entry.id);
 
