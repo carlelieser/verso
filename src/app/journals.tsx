@@ -1,7 +1,7 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { BookOpen, Plus, Search, Star, Trash2 } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, Plus, Search, Star, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -76,8 +76,19 @@ export default function JournalsScreen(): React.JSX.Element {
 
 	const isSelectedDefault = selectedJournal?.displayOrder === 0;
 
+	const handleView = useCallback(() => {
+		if (!selectedJournal) return;
+		router.push(`/journal/${selectedJournal.id}`);
+	}, [selectedJournal]);
+
 	const actionItems: readonly ActionSheetItem[] = useMemo(
 		() => [
+			{
+				id: 'view',
+				label: 'View',
+				icon: ArrowUpRight,
+				onPress: handleView,
+			},
 			...(!isSelectedDefault
 				? [
 						{
@@ -96,7 +107,7 @@ export default function JournalsScreen(): React.JSX.Element {
 					]
 				: []),
 		],
-		[isSelectedDefault, handleSetDefault, handleDelete],
+		[isSelectedDefault, handleView, handleSetDefault, handleDelete],
 	);
 
 	return (

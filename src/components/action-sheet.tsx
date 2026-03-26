@@ -24,7 +24,7 @@ interface ActionSheetProps {
 export type { ActionSheetItem };
 
 export function ActionSheet({ header, items, sheet }: ActionSheetProps): React.JSX.Element | null {
-	const { danger, foreground } = useThemeColors();
+	const { danger, muted } = useThemeColors();
 
 	if (!sheet.isOpen) return null;
 
@@ -35,7 +35,7 @@ export function ActionSheet({ header, items, sheet }: ActionSheetProps): React.J
 				<Separator />
 				{items.map((item) => {
 					const isDanger = item.variant === 'danger';
-					const color = isDanger ? danger : foreground;
+					const color = isDanger ? danger : muted;
 					const Icon = item.icon;
 
 					return (

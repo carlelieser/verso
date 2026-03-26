@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Clock, Search, Trash2 } from 'lucide-react-native';
+import { ArrowUpRight, Clock, Search, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -58,8 +58,19 @@ export default function HistoryScreen(): React.JSX.Element {
 		await deleteEntry(selectedEntry.id);
 	}, [selectedEntry, deleteEntry, dialog]);
 
+	const handleView = useCallback(() => {
+		if (!selectedEntry) return;
+		router.push(`/journal/${selectedEntry.journalId}/entry/${selectedEntry.id}`);
+	}, [selectedEntry]);
+
 	const actionItems: readonly ActionSheetItem[] = useMemo(
 		() => [
+			{
+				id: 'view',
+				label: 'View',
+				icon: ArrowUpRight,
+				onPress: handleView,
+			},
 			{
 				id: 'delete',
 				label: 'Delete',
@@ -68,7 +79,7 @@ export default function HistoryScreen(): React.JSX.Element {
 				onPress: handleDelete,
 			},
 		],
-		[handleDelete],
+		[handleView, handleDelete],
 	);
 
 	return (

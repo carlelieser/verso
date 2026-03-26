@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
-import { EllipsisVertical, Plus, ScrollText, Search, Star, Trash2 } from 'lucide-react-native';
+import { ArrowUpRight, EllipsisVertical, Plus, ScrollText, Search, Star, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -118,8 +118,19 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		await deleteEntry(selectedEntry.id);
 	}, [selectedEntry, deleteEntry, dialog]);
 
+	const handleViewEntry = useCallback(() => {
+		if (!selectedEntry || !journalId) return;
+		router.push(`/journal/${journalId}/entry/${selectedEntry.id}`);
+	}, [selectedEntry, journalId]);
+
 	const entryActionItems: readonly ActionSheetItem[] = useMemo(
 		() => [
+			{
+				id: 'view',
+				label: 'View',
+				icon: ArrowUpRight,
+				onPress: handleViewEntry,
+			},
 			{
 				id: 'delete',
 				label: 'Delete',
@@ -128,7 +139,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				onPress: handleDeleteEntry,
 			},
 		],
-		[handleDeleteEntry],
+		[handleViewEntry, handleDeleteEntry],
 	);
 
 	const Icon = journal ? getJournalIcon(journal.icon) : null;
