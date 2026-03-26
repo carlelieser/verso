@@ -1,16 +1,29 @@
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowUpRight, EllipsisVertical, Plus, ScrollText, Search, Star, Trash2 } from 'lucide-react-native';
+import {
+	ArrowUpRight,
+	EllipsisVertical,
+	Palette,
+	Pencil,
+	Plus,
+	ScrollText,
+	Search,
+	Star,
+	Trash2,
+} from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActionSheet, type ActionSheetItem } from '@/components/action-sheet';
 import { AppDialog } from '@/components/app-dialog';
+import { ChangeJournalIcon } from '@/components/change-journal-icon';
 import { EmptyState } from '@/components/empty-state';
 import { EntryCard } from '@/components/entry-card';
 import { Fab } from '@/components/fab';
 import { FabMenu } from '@/components/fab-menu';
+import { RenameJournal } from '@/components/rename-journal';
 import { ScreenLayout } from '@/components/screen-layout';
 import { SearchInput } from '@/components/search-input';
 import { getJournalIcon } from '@/constants/journal-icons';
@@ -26,13 +39,15 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const { journalId } = useLocalSearchParams<{ journalId: string }>();
 	const insets = useSafeAreaInsets();
 	const { muted, danger, foreground, accentForeground } = useThemeColors();
-	const { journals, entryCounts, setDefaultJournal, deleteJournal } = useJournals();
+	const { journals, entryCounts, updateJournal, setDefaultJournal, deleteJournal } = useJournals();
 	const journal = journals.find((j) => j.id === journalId);
 	const isDefault = journal?.displayOrder === 0;
 	const entryCount = journalId ? (entryCounts.get(journalId) ?? 0) : 0;
 	const { entries, searchEntries, createEntry, deleteEntry } = useEntries(journalId);
 	const [searchQuery, setSearchQuery] = useState('');
 	const dialog = useDialog();
+	const renameSheet = useBottomSheet();
+	const iconSheet = useBottomSheet();
 	const entryActionSheet = useBottomSheet();
 	const [selectedEntry, setSelectedEntry] = useState<EntryWithJournal | null>(null);
 
@@ -49,6 +64,24 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		const entry = await createEntry(journalId);
 		router.push(`/journal/${journalId}/entry/${entry.id}/edit`);
 	}, [journalId, createEntry]);
+
+	const handleRename = useCallback(
+		async (name: string) => {
+			if (!journalId) return;
+			await updateJournal(journalId, { name });
+			renameSheet.close();
+		},
+		[journalId, updateJournal, renameSheet],
+	);
+
+	const handleChangeIcon = useCallback(
+		async (icon: string) => {
+			if (!journalId) return;
+			await updateJournal(journalId, { icon });
+			iconSheet.close();
+		},
+		[journalId, updateJournal, iconSheet],
+	);
 
 	const handleSetDefault = useCallback(async () => {
 		if (!journalId) return;
@@ -73,6 +106,18 @@ export default function JournalDetailScreen(): React.JSX.Element {
 
 	const menuItems = useMemo(
 		() => [
+			{
+				id: 'rename',
+				label: 'Rename',
+				icon: <Pencil size={16} color={muted} />,
+				onPress: renameSheet.open,
+			},
+			{
+				id: 'change-icon',
+				label: 'Change icon',
+				icon: <Palette size={16} color={muted} />,
+				onPress: iconSheet.open,
+			},
 			...(!isDefault
 				? [
 						{
@@ -91,7 +136,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					]
 				: []),
 		],
-		[muted, danger, isDefault, handleSetDefault, handleDelete],
+		[muted, danger, isDefault, renameSheet, iconSheet, handleSetDefault, handleDelete],
 	);
 
 	const handleEntryLongPress = useCallback(
@@ -217,6 +262,28 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				items={entryActionItems}
 				sheet={entryActionSheet}
 			/>
+
+			{renameSheet.isOpen ? (
+				<BottomSheet ref={renameSheet.ref} {...renameSheet.sheetProps}>
+					<BottomSheetScrollView keyboardShouldPersistTaps="handled">
+						<RenameJournal
+							currentName={journal?.name ?? ''}
+							onRename={handleRename}
+						/>
+					</BottomSheetScrollView>
+				</BottomSheet>
+			) : null}
+
+			{iconSheet.isOpen ? (
+				<BottomSheet ref={iconSheet.ref} {...iconSheet.sheetProps}>
+					<BottomSheetScrollView>
+						<ChangeJournalIcon
+							currentIcon={journal?.icon ?? 'book-open'}
+							onChangeIcon={handleChangeIcon}
+						/>
+					</BottomSheetScrollView>
+				</BottomSheet>
+			) : null}
 
 			<AppDialog
 				{...dialog.state}

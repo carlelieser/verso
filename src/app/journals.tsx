@@ -1,17 +1,19 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { ArrowUpRight, BookOpen, Plus, Search, Star, Trash2 } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, Palette, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActionSheet, type ActionSheetItem } from '@/components/action-sheet';
 import { AppDialog } from '@/components/app-dialog';
+import { ChangeJournalIcon } from '@/components/change-journal-icon';
 import { CreateJournal } from '@/components/create-journal';
 import { EmptyState } from '@/components/empty-state';
 import { Fab } from '@/components/fab';
 import { JournalCard } from '@/components/journal-card';
+import { RenameJournal } from '@/components/rename-journal';
 import { ScreenLayout } from '@/components/screen-layout';
 import { SearchInput } from '@/components/search-input';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
@@ -24,9 +26,11 @@ export default function JournalsScreen(): React.JSX.Element {
 	const insets = useSafeAreaInsets();
 	const { muted, accentForeground } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
-	const { journals, entryCounts, createJournal, setDefaultJournal, deleteJournal } =
+	const { journals, entryCounts, createJournal, updateJournal, setDefaultJournal, deleteJournal } =
 		useJournals();
 	const createSheet = useBottomSheet();
+	const renameSheet = useBottomSheet();
+	const iconSheet = useBottomSheet();
 	const actionSheet = useBottomSheet();
 	const dialog = useDialog();
 	const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null);
@@ -52,6 +56,24 @@ export default function JournalsScreen(): React.JSX.Element {
 			actionSheet.open();
 		},
 		[actionSheet],
+	);
+
+	const handleRename = useCallback(
+		async (name: string) => {
+			if (!selectedJournal) return;
+			await updateJournal(selectedJournal.id, { name });
+			renameSheet.close();
+		},
+		[selectedJournal, updateJournal, renameSheet],
+	);
+
+	const handleChangeIcon = useCallback(
+		async (icon: string) => {
+			if (!selectedJournal) return;
+			await updateJournal(selectedJournal.id, { icon });
+			iconSheet.close();
+		},
+		[selectedJournal, updateJournal, iconSheet],
 	);
 
 	const handleSetDefault = useCallback(async () => {
@@ -89,6 +111,18 @@ export default function JournalsScreen(): React.JSX.Element {
 				icon: ArrowUpRight,
 				onPress: handleView,
 			},
+			{
+				id: 'rename',
+				label: 'Rename',
+				icon: Pencil,
+				onPress: renameSheet.open,
+			},
+			{
+				id: 'change-icon',
+				label: 'Change icon',
+				icon: Palette,
+				onPress: iconSheet.open,
+			},
 			...(!isSelectedDefault
 				? [
 						{
@@ -107,7 +141,7 @@ export default function JournalsScreen(): React.JSX.Element {
 					]
 				: []),
 		],
-		[isSelectedDefault, handleView, handleSetDefault, handleDelete],
+		[isSelectedDefault, renameSheet, iconSheet, handleView, handleSetDefault, handleDelete],
 	);
 
 	return (
@@ -179,6 +213,28 @@ export default function JournalsScreen(): React.JSX.Element {
 				items={actionItems}
 				sheet={actionSheet}
 			/>
+
+			{renameSheet.isOpen ? (
+				<BottomSheet ref={renameSheet.ref} {...renameSheet.sheetProps}>
+					<BottomSheetScrollView keyboardShouldPersistTaps="handled">
+						<RenameJournal
+							currentName={selectedJournal?.name ?? ''}
+							onRename={handleRename}
+						/>
+					</BottomSheetScrollView>
+				</BottomSheet>
+			) : null}
+
+			{iconSheet.isOpen ? (
+				<BottomSheet ref={iconSheet.ref} {...iconSheet.sheetProps}>
+					<BottomSheetScrollView>
+						<ChangeJournalIcon
+							currentIcon={selectedJournal?.icon ?? 'book-open'}
+							onChangeIcon={handleChangeIcon}
+						/>
+					</BottomSheetScrollView>
+				</BottomSheet>
+			) : null}
 
 			<AppDialog
 				{...dialog.state}
