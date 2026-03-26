@@ -45,6 +45,7 @@ export default function JournalsScreen(): React.JSX.Element {
 			/>
 
 			<FlatList
+				className="rounded-t-4xl overflow-hidden"
 				data={filteredJournals}
 				keyExtractor={(item) => item.id}
 				renderItem={({ item }) => (

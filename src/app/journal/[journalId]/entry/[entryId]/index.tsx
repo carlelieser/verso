@@ -93,8 +93,9 @@ export default function EntryViewScreen(): React.JSX.Element {
 			) : (
 				<>
 					<ScrollView
+						className="rounded-t-4xl overflow-hidden"
 						contentContainerClassName="px-5"
-						contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+						contentContainerStyle={{ paddingBottom: insets.bottom + 188 }}
 					>
 						<Text className="text-4xl font-heading text-foreground mb-4 pb-2">
 							{formatRelativeDate(entry.createdAt)}

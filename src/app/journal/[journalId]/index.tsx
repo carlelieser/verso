@@ -113,6 +113,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 			/>
 
 			<FlatList
+				className="rounded-t-4xl overflow-hidden"
 				data={entries}
 				keyExtractor={(item) => item.id}
 				renderItem={({ item }) => (
@@ -122,7 +123,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					/>
 				)}
 				contentContainerClassName="pt-2 px-4 gap-3"
-				contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+				contentContainerStyle={{ paddingBottom: insets.bottom + 188 }}
 				ListEmptyComponent={
 					searchQuery.length > 0 ? (
 						<EmptyState

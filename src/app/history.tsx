@@ -34,6 +34,7 @@ export default function HistoryScreen(): React.JSX.Element {
 			/>
 
 			<FlatList
+				className="rounded-t-4xl overflow-hidden"
 				data={entries}
 				keyExtractor={(item) => item.id}
 				renderItem={({ item }) => (

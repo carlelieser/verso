@@ -17,6 +17,7 @@ function AttachmentsContent(): React.JSX.Element {
 	return (
 		<ScreenLayout title="Attachments">
 			<ScrollView
+				className="rounded-t-4xl overflow-hidden"
 				contentContainerClassName="px-4"
 				contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
 			>
