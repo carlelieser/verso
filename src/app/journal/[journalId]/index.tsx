@@ -223,7 +223,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					/>
 				)}
 				contentContainerClassName="pt-2 px-4 gap-3"
-				contentContainerStyle={{ paddingBottom: insets.bottom + 188 }}
+				contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 188 }}
 				ListEmptyComponent={
 					searchQuery.length > 0 ? (
 						<EmptyState

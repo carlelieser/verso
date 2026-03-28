@@ -73,6 +73,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const checkButtonStyle = useAnimatedStyle(() => ({
 		opacity: checkProgress.value,
 		transform: [{ translateX: (1 - checkProgress.value) * -8 }],
+		pointerEvents: checkProgress.value === 0 ? 'none' : 'auto',
 	}));
 
 	// Load existing entry + emotions in edit mode

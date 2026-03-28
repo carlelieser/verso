@@ -1,7 +1,7 @@
+import { Button } from 'heroui-native';
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { Button } from 'heroui-native';
 
 import { JOURNAL_ICONS } from '@/constants/journal-icons';
 import { useThemeColors } from '@/hooks/use-theme-colors';

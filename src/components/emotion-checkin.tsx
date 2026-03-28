@@ -92,7 +92,7 @@ export function EmotionCheckin({
 			<ScrollView
 				horizontal
 				showsHorizontalScrollIndicator={false}
-				contentContainerStyle={{ paddingHorizontal: 24 }}
+				contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 12 }}
 			>
 				<View className="gap-2">
 					{rows.map((row, rowIdx) => (

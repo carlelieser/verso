@@ -3,7 +3,9 @@ import { Mic } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { Text, View } from 'react-native';
 import type { EnrichedTextInputInstance } from 'react-native-enriched';
+import type { SharedValue } from 'react-native-reanimated';
 
+import { AudioWaveform } from '@/components/audio-waveform';
 import { useSettings } from '@/hooks/use-settings';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useWhisperTranscription } from '@/hooks/use-whisper-transcription';
@@ -17,6 +19,7 @@ interface UseEditorTranscriptionResult {
 	readonly isRecording: boolean;
 	readonly isLoading: boolean;
 	readonly liveText: string;
+	readonly amplitudes: readonly SharedValue<number>[];
 	readonly toggle: () => void;
 }
 
@@ -42,6 +45,7 @@ export function useEditorTranscription({
 		isRecording: transcription.isRecording,
 		isLoading: transcription.status === 'loading',
 		liveText: transcription.liveText,
+		amplitudes: transcription.amplitudes,
 		toggle: transcription.toggle,
 	};
 }
@@ -86,7 +90,11 @@ export function TranscriptionButton({
 			isDisabled={transcription.isLoading}
 			onPress={transcription.toggle}
 		>
-			<Mic size={18} color={transcription.isRecording ? accent : muted} />
+			{transcription.isRecording ? (
+				<AudioWaveform amplitudes={transcription.amplitudes} color={accent} />
+			) : (
+				<Mic size={18} color={muted} />
+			)}
 		</Button>
 	);
 }

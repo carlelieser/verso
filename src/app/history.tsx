@@ -103,7 +103,7 @@ export default function HistoryScreen(): React.JSX.Element {
 					/>
 				)}
 				contentContainerClassName="pt-2 px-4 gap-3"
-				contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+				contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 16 }}
 				ListEmptyComponent={
 					searchQuery.length > 0 ? (
 						<EmptyState
