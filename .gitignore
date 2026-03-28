@@ -57,3 +57,4 @@ coverage/
 
 # Build
 build/
+*.ai
