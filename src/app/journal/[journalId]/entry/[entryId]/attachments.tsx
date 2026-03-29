@@ -19,7 +19,7 @@ function AttachmentsContent(): React.JSX.Element {
 			<ScrollView
 				className="rounded-t-4xl overflow-hidden"
 				contentContainerClassName="px-4"
-				contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+				contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 80 }}
 			>
 				<AttachmentList attachments={attachments} />
 			</ScrollView>

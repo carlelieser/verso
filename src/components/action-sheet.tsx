@@ -3,6 +3,7 @@ import { Button, Separator } from 'heroui-native';
 import { type LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -25,12 +26,13 @@ export type { ActionSheetItem };
 
 export function ActionSheet({ header, items, sheet }: ActionSheetProps): React.JSX.Element | null {
 	const { danger, muted } = useThemeColors();
+	const { bottom } = useSafeAreaInsets();
 
 	if (!sheet.isOpen) return null;
 
 	return (
 		<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
-			<BottomSheetView className="px-4 pb-4 gap-2">
+			<BottomSheetView className="px-4 gap-2" style={{ paddingBottom: bottom }}>
 				{header ? <View pointerEvents="none">{header}</View> : null}
 				<Separator />
 				{items.map((item) => {
