@@ -33,7 +33,7 @@ export function AppDialog({
 			}}
 		>
 			<Dialog.Portal>
-				<Dialog.Overlay className={"bg-background/50"} />
+				<Dialog.Overlay className={'bg-background/50'} />
 				<Dialog.Content>
 					<View className="mb-5 gap-1">
 						<Dialog.Title>{title}</Dialog.Title>

@@ -37,11 +37,12 @@ function loadInitialBooleans(): Record<string, boolean> {
 	return values;
 }
 
-
 export function useSettings(): UseSettingsResult {
 	const [boolValues, setBoolValues] = useState<Record<string, boolean>>(loadInitialBooleans);
 	const initialTheme = SecureStore.getItem(SETTINGS_THEME_KEY);
-	const [theme, setThemeState] = useState<Theme>(isValidTheme(initialTheme) ? initialTheme : DEFAULT_THEME);
+	const [theme, setThemeState] = useState<Theme>(
+		isValidTheme(initialTheme) ? initialTheme : DEFAULT_THEME,
+	);
 
 	const load = useCallback(() => {
 		Promise.all([

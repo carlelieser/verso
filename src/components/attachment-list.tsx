@@ -195,7 +195,7 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 	);
 
 	return (
-		<View className={"flex-1"}>
+		<View className={'flex-1'}>
 			{attachments.length === 0 ? (
 				<EmptyState
 					icon={<Paperclip size={48} color={muted} />}

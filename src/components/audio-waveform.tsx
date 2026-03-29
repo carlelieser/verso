@@ -10,7 +10,11 @@ interface AudioWaveformProps {
 
 const MIN_HEIGHT = 3;
 
-function Bar({ amplitude, color, maxHeight }: {
+function Bar({
+	amplitude,
+	color,
+	maxHeight,
+}: {
 	readonly amplitude: SharedValue<number>;
 	readonly color: string;
 	readonly maxHeight: number;
@@ -20,9 +24,7 @@ function Bar({ amplitude, color, maxHeight }: {
 	}));
 
 	return (
-		<Animated.View
-			style={[{ width: 3, borderRadius: 1.5, backgroundColor: color }, style]}
-		/>
+		<Animated.View style={[{ width: 3, borderRadius: 1.5, backgroundColor: color }, style]} />
 	);
 }
 
@@ -32,7 +34,10 @@ export function AudioWaveform({
 	size = 18,
 }: AudioWaveformProps): React.JSX.Element {
 	return (
-		<View style={{ width: size, height: size }} className="flex-row items-center justify-center gap-0.5">
+		<View
+			style={{ width: size, height: size }}
+			className="flex-row items-center justify-center gap-0.5"
+		>
 			{amplitudes.map((amp, i) => (
 				<Bar key={i} amplitude={amp} color={color} maxHeight={size} />
 			))}
