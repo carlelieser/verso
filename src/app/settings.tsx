@@ -1,129 +1,71 @@
-import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from 'expo-audio';
-import * as ExpoLocation from 'expo-location';
-import * as Notifications from 'expo-notifications';
-import {router, useFocusEffect} from 'expo-router';
+import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import {ControlField, Description, Label, ListGroup} from 'heroui-native';
-import React, {useCallback, useState} from 'react';
-import {Linking, Platform, ScrollView, View} from 'react-native';
+import { ControlField, Description, Label, ListGroup } from 'heroui-native';
+import React, { useCallback, useState } from 'react';
+import { Linking, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {LibrariesDialog} from '@/components/libraries-dialog';
-import {Overline} from '@/components/overline';
-import {ScreenLayout} from '@/components/screen-layout';
+import { LibrariesDialog } from '@/components/libraries-dialog';
+import { Overline } from '@/components/overline';
+import { ScreenLayout } from '@/components/screen-layout';
 import {
 	SETTINGS_AUTO_LOCATION_KEY,
 	SETTINGS_ONBOARDING_COMPLETE_KEY,
 	SETTINGS_TRANSCRIPTION_KEY,
 } from '@/constants/settings';
-import {useSettings} from '@/hooks/use-settings';
+import { type PermissionStatus, usePermissions } from '@/hooks/use-permissions';
+import { useSettings } from '@/hooks/use-settings';
 
 import packageJson from '../../package.json';
-import {useSafeAreaInsets} from "react-native-safe-area-context";
-
-type PermissionStatus = 'undetermined' | 'granted' | 'denied';
-
-function toPermissionStatus(status: ExpoLocation.PermissionStatus): PermissionStatus {
-	switch (status) {
-		case ExpoLocation.PermissionStatus.GRANTED:
-			return 'granted';
-		case ExpoLocation.PermissionStatus.DENIED:
-			return 'denied';
-		default:
-			return 'undetermined';
-	}
-}
 
 function getPermissionDescription(
-	status: PermissionStatus | null,
+	status: PermissionStatus,
 	grantedText: string,
-	requiredText: string,
+	defaultText: string,
 ): string {
-	if (status === null) return requiredText;
 	switch (status) {
 		case 'granted':
 			return grantedText;
 		case 'denied':
-			return 'Access denied — tap to open system settings';
+			return 'Denied';
 		default:
-			return requiredText;
+			return defaultText;
 	}
 }
 
-function openAppSettings(): void {
-	if (Platform.OS === 'ios') {
-		Linking.openURL('app-settings:');
-	} else {
-		Linking.openSettings();
-	}
+function restartOnboarding(): void {
+	SecureStore.deleteItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY).then(() => {
+		router.replace('/onboarding');
+	});
 }
 
 export default function SettingsScreen(): React.JSX.Element {
-	const [locationStatus, setLocationStatus] = useState<PermissionStatus | null>(null);
-	const [microphoneStatus, setMicrophoneStatus] = useState<PermissionStatus | null>(null);
-	const [notificationStatus, setNotificationStatus] = useState<PermissionStatus | null>(null);
 	const [isAboutOpen, setIsAboutOpen] = useState(false);
-	const {isAutoLocation, isTranscriptionEnabled, theme, setSetting, setTheme} = useSettings();
-	const {bottom} = useSafeAreaInsets();
+	const { isAutoLocation, isTranscriptionEnabled, theme, setSetting, setTheme } = useSettings();
+	const permissions = usePermissions();
+	const { bottom } = useSafeAreaInsets();
 	const isSystemTheme = theme === 'system';
 	const isDark = theme === 'dark';
 
-	const checkPermissions = useCallback(async () => {
-		const [location, microphone, notification] = await Promise.all([
-			ExpoLocation.getForegroundPermissionsAsync(),
-			getRecordingPermissionsAsync(),
-			Notifications.getPermissionsAsync(),
-		]);
-		setLocationStatus(toPermissionStatus(location.status));
-		setMicrophoneStatus(
-			microphone.granted ? 'granted' : microphone.canAskAgain ? 'undetermined' : 'denied',
-		);
-		setNotificationStatus(
-			notification.granted ? 'granted' : notification.canAskAgain ? 'undetermined' : 'denied',
-		);
-	}, []);
-
-	useFocusEffect(
-		useCallback(() => {
-			checkPermissions();
-		}, [checkPermissions]),
+	const handleAutoLocationToggle = useCallback(
+		(enabled: boolean) => {
+			setSetting(SETTINGS_AUTO_LOCATION_KEY, enabled);
+			if (enabled && permissions.location.status !== 'granted') {
+				permissions.location.action();
+			}
+		},
+		[permissions.location, setSetting],
 	);
 
-	const handleLocationToggle = useCallback(() => {
-		if (locationStatus === 'granted' || locationStatus === 'denied') {
-			openAppSettings();
-			return;
-		}
-
-		ExpoLocation.requestForegroundPermissionsAsync().then(({status}) => {
-			const mapped = toPermissionStatus(status);
-			setLocationStatus(mapped);
-			if (mapped === 'granted') {
-				setSetting(SETTINGS_AUTO_LOCATION_KEY, true);
+	const handleTranscriptionToggle = useCallback(
+		(enabled: boolean) => {
+			setSetting(SETTINGS_TRANSCRIPTION_KEY, enabled);
+			if (enabled && permissions.microphone.status !== 'granted') {
+				permissions.microphone.action();
 			}
-		});
-	}, [locationStatus, setSetting]);
-
-	const handleMicrophoneToggle = useCallback(() => {
-		if (microphoneStatus === 'granted' || microphoneStatus === 'denied') {
-			openAppSettings();
-			return;
-		}
-
-		requestRecordingPermissionsAsync().then(({granted}) => {
-			setMicrophoneStatus(granted ? 'granted' : 'denied');
-		});
-	}, [microphoneStatus]);
-
-	const handleNotificationToggle = useCallback(() => {
-		if (notificationStatus === 'granted' || notificationStatus === 'denied') {
-			openAppSettings();
-			return;
-		}
-
-		Notifications.requestPermissionsAsync().then(({granted}) => {
-			setNotificationStatus(granted ? 'granted' : 'denied');
-		});
-	}, [notificationStatus]);
+		},
+		[permissions.microphone, setSetting],
+	);
 
 	return (
 		<ScreenLayout title="Settings">
@@ -137,24 +79,24 @@ export default function SettingsScreen(): React.JSX.Element {
 
 					<ControlField
 						isSelected={isAutoLocation}
-						onSelectedChange={(v) => setSetting(SETTINGS_AUTO_LOCATION_KEY, v)}
+						onSelectedChange={handleAutoLocationToggle}
 					>
 						<View className="flex-1">
 							<Label>Location tagging</Label>
 							<Description>Automatically tag entries with your location</Description>
 						</View>
-						<ControlField.Indicator/>
+						<ControlField.Indicator />
 					</ControlField>
 
 					<ControlField
 						isSelected={isTranscriptionEnabled}
-						onSelectedChange={(v) => setSetting(SETTINGS_TRANSCRIPTION_KEY, v)}
+						onSelectedChange={handleTranscriptionToggle}
 					>
 						<View className="flex-1">
 							<Label>Voice input</Label>
 							<Description>Enable speech-to-text (STT)</Description>
 						</View>
-						<ControlField.Indicator/>
+						<ControlField.Indicator />
 					</ControlField>
 				</View>
 
@@ -168,7 +110,7 @@ export default function SettingsScreen(): React.JSX.Element {
 						<View className="flex-1">
 							<Label>Follow system theme</Label>
 						</View>
-						<ControlField.Indicator/>
+						<ControlField.Indicator />
 					</ControlField>
 
 					<ControlField
@@ -180,7 +122,7 @@ export default function SettingsScreen(): React.JSX.Element {
 							<Label>Dark mode</Label>
 							<Description>Switch between light and dark theme</Description>
 						</View>
-						<ControlField.Indicator/>
+						<ControlField.Indicator />
 					</ControlField>
 				</View>
 
@@ -188,54 +130,54 @@ export default function SettingsScreen(): React.JSX.Element {
 					<Overline>PERMISSIONS</Overline>
 
 					<ControlField
-						isSelected={locationStatus === 'granted'}
-						onSelectedChange={handleLocationToggle}
+						isSelected={permissions.location.status === 'granted'}
+						onSelectedChange={permissions.location.action}
 					>
 						<View className="flex-1">
 							<Label>Location</Label>
 							<Description>
 								{getPermissionDescription(
-									locationStatus,
-									'Location access is enabled',
-									'Required for saving location with entries',
+									permissions.location.status,
+									'Granted',
+									'Required for location-tagging',
 								)}
 							</Description>
 						</View>
-						<ControlField.Indicator/>
+						<ControlField.Indicator />
 					</ControlField>
 
 					<ControlField
-						isSelected={microphoneStatus === 'granted'}
-						onSelectedChange={handleMicrophoneToggle}
+						isSelected={permissions.microphone.status === 'granted'}
+						onSelectedChange={permissions.microphone.action}
 					>
 						<View className="flex-1">
 							<Label>Microphone</Label>
 							<Description>
 								{getPermissionDescription(
-									microphoneStatus,
-									'Microphone access is enabled',
-									'Required for voice-to-text input',
+									permissions.microphone.status,
+									'Granted',
+									'Required for speech-to-text',
 								)}
 							</Description>
 						</View>
-						<ControlField.Indicator/>
+						<ControlField.Indicator />
 					</ControlField>
 
 					<ControlField
-						isSelected={notificationStatus === 'granted'}
-						onSelectedChange={handleNotificationToggle}
+						isSelected={permissions.notification.status === 'granted'}
+						onSelectedChange={permissions.notification.action}
 					>
 						<View className="flex-1">
 							<Label>Notifications</Label>
 							<Description>
 								{getPermissionDescription(
-									notificationStatus,
-									'Notifications are enabled',
-									'Required for journaling reminders',
+									permissions.notification.status,
+									'Granted',
+									'Required for reminders',
 								)}
 							</Description>
 						</View>
-						<ControlField.Indicator/>
+						<ControlField.Indicator />
 					</ControlField>
 				</View>
 
@@ -256,36 +198,28 @@ export default function SettingsScreen(): React.JSX.Element {
 									{packageJson.author.name}
 								</ListGroup.ItemDescription>
 							</ListGroup.ItemContent>
-							<ListGroup.ItemSuffix/>
+							<ListGroup.ItemSuffix />
 						</ListGroup.Item>
 						<ListGroup.Item onPress={() => setIsAboutOpen(true)}>
 							<ListGroup.ItemContent>
 								<ListGroup.ItemTitle>Open source libraries</ListGroup.ItemTitle>
 							</ListGroup.ItemContent>
-							<ListGroup.ItemSuffix/>
+							<ListGroup.ItemSuffix />
 						</ListGroup.Item>
-						<ListGroup.Item
-							onPress={() => {
-								SecureStore.deleteItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY).then(
-									() => {
-										router.replace('/onboarding');
-									},
-								);
-							}}
-						>
+						<ListGroup.Item onPress={restartOnboarding}>
 							<ListGroup.ItemContent>
 								<ListGroup.ItemTitle>Restart onboarding</ListGroup.ItemTitle>
 								<ListGroup.ItemDescription>
 									Go through the welcome flow again
 								</ListGroup.ItemDescription>
 							</ListGroup.ItemContent>
-							<ListGroup.ItemSuffix/>
+							<ListGroup.ItemSuffix />
 						</ListGroup.Item>
 					</ListGroup>
 				</View>
 			</ScrollView>
 
-			<LibrariesDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)}/>
+			<LibrariesDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
 		</ScreenLayout>
 	);
 }

@@ -11,10 +11,10 @@ import { fetchWeather, saveWeather } from '@/services/weather-service';
  * location/weather fetch fails — metadata is best-effort.
  */
 export async function captureLocationAndWeather(db: Db, entryId: string): Promise<void> {
-	const { status } = await ExpoLocation.requestForegroundPermissionsAsync().catch(() => ({
-		status: 'denied' as const,
+	const { granted } = await ExpoLocation.getForegroundPermissionsAsync().catch(() => ({
+		granted: false,
 	}));
-	if (status !== 'granted') return;
+	if (!granted) return;
 
 	const position =
 		(await ExpoLocation.getLastKnownPositionAsync().catch(() => null)) ??

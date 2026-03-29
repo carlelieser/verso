@@ -1,11 +1,8 @@
-import { requestRecordingPermissionsAsync } from 'expo-audio';
-import * as ExpoLocation from 'expo-location';
-import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { Bell, Check, MapPin, Mic } from 'lucide-react-native';
-import React, { useCallback, useRef, useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { Image, Pressable, Text, View } from 'react-native';
 
 import {
 	type OnboardingPage,
@@ -17,67 +14,32 @@ import {
 	SETTINGS_ONBOARDING_COMPLETE_KEY,
 	SETTINGS_TRANSCRIPTION_KEY,
 } from '@/constants/settings';
+import { type Permission, usePermissions } from '@/hooks/use-permissions';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
 const ICON = require('../../assets/images/icon.png') as number;
 
-type PermissionKey = 'notifications' | 'location' | 'microphone';
-
 interface PermissionItem {
-	readonly key: PermissionKey;
 	readonly label: string;
 	readonly description: string;
 	readonly icon: React.ComponentType<{ size: number; color: string }>;
+	readonly permission: Permission;
 }
 
-const PERMISSIONS: readonly PermissionItem[] = [
-	{
-		key: 'notifications',
-		label: 'Notifications',
-		description: 'Daily journaling reminders',
-		icon: Bell,
-	},
-	{
-		key: 'location',
-		label: 'Location',
-		description: 'Tag entries with where you are',
-		icon: MapPin,
-	},
-	{
-		key: 'microphone',
-		label: 'Microphone',
-		description: 'Voice-to-text for hands-free writing',
-		icon: Mic,
-	},
-];
-
-async function requestPermission(key: PermissionKey): Promise<boolean> {
-	switch (key) {
-		case 'notifications': {
-			const { status } = await Notifications.requestPermissionsAsync();
-			return status === 'granted';
-		}
-		case 'location': {
-			const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
-			return status === ExpoLocation.PermissionStatus.GRANTED;
-		}
-		case 'microphone': {
-			const { granted } = await requestRecordingPermissionsAsync();
-			return granted;
-		}
-	}
-}
-
-async function completeOnboarding(granted: Record<PermissionKey, boolean>): Promise<void> {
+async function completeOnboarding(permissions: ReturnType<typeof usePermissions>): Promise<void> {
 	await Promise.all([
 		SecureStore.setItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY, 'true'),
-		SecureStore.setItemAsync(SETTINGS_AUTO_LOCATION_KEY, String(granted.location)),
-		SecureStore.setItemAsync(SETTINGS_TRANSCRIPTION_KEY, String(granted.microphone)),
+		SecureStore.setItemAsync(
+			SETTINGS_AUTO_LOCATION_KEY,
+			String(permissions.location.status === 'granted'),
+		),
+		SecureStore.setItemAsync(
+			SETTINGS_TRANSCRIPTION_KEY,
+			String(permissions.microphone.status === 'granted'),
+		),
 	]);
 	router.replace('/');
 }
-
-// -- Page content components --------------------------------------------------
 
 function WelcomeContent(): React.JSX.Element {
 	return (
@@ -92,10 +54,10 @@ function WelcomeContent(): React.JSX.Element {
 }
 
 interface PermissionsContentProps {
-	readonly granted: Record<PermissionKey, boolean>;
+	readonly items: readonly PermissionItem[];
 }
 
-function PermissionsContent({ granted }: PermissionsContentProps): React.JSX.Element {
+function PermissionsContent({ items }: PermissionsContentProps): React.JSX.Element {
 	const { background, muted } = useThemeColors();
 
 	return (
@@ -106,13 +68,14 @@ function PermissionsContent({ granted }: PermissionsContentProps): React.JSX.Ele
 			</Text>
 
 			<View className="gap-4">
-				{PERMISSIONS.map((item) => {
-					const isGranted = granted[item.key];
+				{items.map((item) => {
+					const isGranted = item.permission.status === 'granted';
 					const IconComponent = item.icon;
 
 					return (
-						<View
-							key={item.key}
+						<Pressable
+							key={item.label}
+							onPress={() => !isGranted && item.permission.request()}
 							className={`flex-row items-center gap-4 rounded-xl px-4 py-4 ${isGranted ? 'bg-foreground' : 'bg-surface'}`}
 						>
 							<View
@@ -133,7 +96,7 @@ function PermissionsContent({ granted }: PermissionsContentProps): React.JSX.Ele
 								</Text>
 							</View>
 							{isGranted ? <Check size={20} color={background} /> : null}
-						</View>
+						</Pressable>
 					);
 				})}
 			</View>
@@ -141,27 +104,41 @@ function PermissionsContent({ granted }: PermissionsContentProps): React.JSX.Ele
 	);
 }
 
-// -- Screen -------------------------------------------------------------------
-
 export default function OnboardingScreen(): React.JSX.Element {
-	const [granted, setGranted] = useState<Record<PermissionKey, boolean>>({
-		notifications: false,
-		location: false,
-		microphone: false,
-	});
+	const permissions = usePermissions();
 	const pagerRef = useRef<OnboardingPagerHandle>(null);
 
-	const allGranted = PERMISSIONS.every((p) => granted[p.key]);
+	const items: readonly PermissionItem[] = [
+		{
+			label: 'Notifications',
+			description: 'Reminders',
+			icon: Bell,
+			permission: permissions.notification,
+		},
+		{
+			label: 'Location',
+			description: 'Location-tagging',
+			icon: MapPin,
+			permission: permissions.location,
+		},
+		{
+			label: 'Microphone',
+			description: 'Speech-to-text (STT)',
+			icon: Mic,
+			permission: permissions.microphone,
+		},
+	];
+
+	const allGranted = items.every((item) => item.permission.status === 'granted');
 
 	const handleSetup = useCallback(async () => {
-		const results = { ...granted };
-		for (const permission of PERMISSIONS) {
-			const result = await requestPermission(permission.key);
-			results[permission.key] = result;
-			setGranted((prev) => ({ ...prev, [permission.key]: result }));
+		for (const item of items) {
+			if (item.permission.status !== 'granted') {
+				await item.permission.request();
+			}
 		}
-		await completeOnboarding(results);
-	}, [granted]);
+		await completeOnboarding(permissions);
+	}, [items, permissions]);
 
 	const pages: readonly OnboardingPage[] = [
 		{
@@ -174,12 +151,12 @@ export default function OnboardingScreen(): React.JSX.Element {
 		},
 		{
 			key: 'permissions',
-			content: <PermissionsContent granted={granted} />,
+			content: <PermissionsContent items={items} />,
 			cta: {
 				label: allGranted ? 'Get Started' : 'Setup',
-				onPress: allGranted ? () => completeOnboarding(granted) : handleSetup,
+				onPress: allGranted ? () => completeOnboarding(permissions) : handleSetup,
 			},
-			secondaryAction: { label: 'Skip', onPress: () => completeOnboarding(granted) },
+			secondaryAction: { label: 'Skip', onPress: () => completeOnboarding(permissions) },
 		},
 	];
 

@@ -1,4 +1,4 @@
-import { requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
+import { getRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { type SharedValue, useSharedValue } from 'react-native-reanimated';
@@ -26,7 +26,7 @@ function computeAmplitude(pcm: Uint8Array): number {
 
 	let sum = 0;
 	for (let i = 0; i < pcm.length - 1; i += 2) {
-		const sample = (pcm[i]! | (pcm[i + 1]! << 8)) << 16 >> 16; // Int16
+		const sample = ((pcm[i]! | (pcm[i + 1]! << 8)) << 16) >> 16; // Int16
 		sum += sample * sample;
 	}
 
@@ -71,7 +71,7 @@ export function useWhisperTranscription(
 	const startRecording = useCallback(async () => {
 		setStatus('loading');
 		try {
-			const { granted } = await requestRecordingPermissionsAsync();
+			const { granted } = await getRecordingPermissionsAsync();
 			if (!granted) {
 				setStatus('idle');
 				return;
