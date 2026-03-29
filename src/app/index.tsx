@@ -1,4 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { BookOpen, History, Settings } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
@@ -9,9 +10,14 @@ import {
 	type OverflowMenuItem,
 } from '@/components/entry-composer';
 import { EntrySaved } from '@/components/entry-saved';
+import { SETTINGS_ONBOARDING_COMPLETE_KEY } from '@/constants/settings';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
-export default function HomeScreen(): React.JSX.Element {
+function isOnboardingDone(): boolean {
+	return SecureStore.getItem(SETTINGS_ONBOARDING_COMPLETE_KEY) === 'true';
+}
+
+function HomeContent(): React.JSX.Element {
 	const { journalId } = useLocalSearchParams<{ journalId?: string }>();
 	const { muted } = useThemeColors();
 	const [showSaved, setShowSaved] = useState(false);
@@ -63,4 +69,12 @@ export default function HomeScreen(): React.JSX.Element {
 			{showSaved ? <EntrySaved onComplete={handleSavedComplete} /> : null}
 		</View>
 	);
+}
+
+export default function HomeScreen(): React.JSX.Element {
+	if (!isOnboardingDone()) {
+		return <Redirect href="/onboarding" />;
+	}
+
+	return <HomeContent />;
 }

@@ -75,7 +75,14 @@ export default function RootLayout(): React.JSX.Element {
 							screenOptions={{
 								headerShown: false,
 							}}
-						/>
+						>
+							<Stack.Screen
+								name="onboarding"
+								options={{
+									gestureEnabled: false,
+								}}
+							/>
+						</Stack>
 					</DatabaseProvider>
 					<StatusBar style="auto" />
 				</PortalProvider>
