@@ -1,6 +1,11 @@
 {
   "name": "verso",
   "main": "expo-router/entry",
+  "author": {
+    "name": "Carlos Santos",
+    "url": "https://carlelieser.com",
+    "email": "hello@carlelieser.com"
+  },
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
@@ -20,13 +25,10 @@
     "@fugood/react-native-audio-pcm-stream": "^1.1.4",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@gorhom/portal": "^1.0.14",
-    "@powersync/drizzle-driver": "^0.7.3",
-    "@powersync/react-native": "^1.32.0",
     "@react-navigation/native": "^7.1.33",
-    "@supabase/supabase-js": "^2.99.3",
     "drizzle-orm": "^0.45.1",
     "expo": "~55.0.8",
-    "expo-av": "^16.0.8",
+    "expo-audio": "~55.0.9",
     "expo-constants": "~55.0.9",
     "expo-crypto": "~55.0.10",
     "expo-document-picker": "~55.0.9",
@@ -57,7 +59,6 @@
     "react-native-enriched": "^0.5.2",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "~2.30.0",
-    "react-native-gifted-charts": "^1.4.76",
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.23.0",

@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { type SharedValue, useSharedValue } from 'react-native-reanimated';
@@ -71,16 +71,16 @@ export function useWhisperTranscription(
 	const startRecording = useCallback(async () => {
 		setStatus('loading');
 		try {
-			const { granted } = await Audio.requestPermissionsAsync();
+			const { granted } = await requestRecordingPermissionsAsync();
 			if (!granted) {
 				setStatus('idle');
 				return;
 			}
 
 			if (Platform.OS === 'ios') {
-				await Audio.setAudioModeAsync({
-					allowsRecordingIOS: true,
-					playsInSilentModeIOS: true,
+				await setAudioModeAsync({
+					allowsRecording: true,
+					playsInSilentMode: true,
 				});
 			}
 
