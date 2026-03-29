@@ -57,12 +57,13 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	const [isLoading, setIsLoading] = useState(isEditMode);
 	const [defaultHtml, setDefaultHtml] = useState('');
 	const [defaultEmotions, setDefaultEmotions] = useState<readonly EmotionSelection[]>([]);
-	const [autoSaveContent, setAutoSaveContent] = useState({ html: '', text: '' });
 
 	const editorRef = useRef<EditorHandle>(null);
 	const emotionSelectionsRef = useRef<EmotionSelection[]>([]);
 	const htmlRef = useRef('');
 	const textRef = useRef('');
+
+	const { markDirty } = useAutoSave(entryId, { html: htmlRef, text: textRef });
 
 	// Follow the default journal (first by displayOrder) until the user interacts.
 	const defaultJournalId = journals[0]?.id ?? null;
@@ -91,7 +92,6 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 					setDefaultHtml(entry.contentHtml);
 					htmlRef.current = entry.contentHtml;
 					textRef.current = entry.contentText;
-					setAutoSaveContent({ html: entry.contentHtml, text: entry.contentText });
 				}
 				if (emotions.length > 0) {
 					const mapped = emotions.map((e) => ({
@@ -114,14 +114,12 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		};
 	}, [isEditMode, entryId, loadEntry, getEmotions]);
 
-	useAutoSave(entryId, autoSaveContent);
-
 	const handleTextChange = useCallback(
 		(text: string, html: string) => {
 			const hasText = text.trim().length > 0;
 			htmlRef.current = html;
 			textRef.current = text;
-			setAutoSaveContent({ html, text });
+			markDirty();
 			setHasContent(hasText);
 
 			// Lock to the current journal on first keystroke
@@ -133,13 +131,13 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 				checkProgress.value = withSpring(hasText ? 1 : 0);
 			}
 		},
-		[isAnimatedCheck, checkProgress, explicitJournalId, defaultJournalId],
+		[isAnimatedCheck, checkProgress, explicitJournalId, defaultJournalId, markDirty],
 	);
 
 	const handleHtmlChange = useCallback((html: string) => {
 		htmlRef.current = html;
-		setAutoSaveContent((prev) => ({ ...prev, html }));
-	}, []);
+		markDirty();
+	}, [markDirty]);
 
 	const handleEmotionSave = useCallback(
 		(selections: readonly EmotionSelection[]) => {
@@ -191,7 +189,6 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		editorRef.current?.clear();
 		setHasContent(false);
 		setExplicitJournalId(null);
-		setAutoSaveContent({ html: '', text: '' });
 		htmlRef.current = '';
 		textRef.current = '';
 		emotionSelectionsRef.current = [];
