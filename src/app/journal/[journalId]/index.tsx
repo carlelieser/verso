@@ -263,17 +263,21 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				sheet={entryActionSheet}
 			/>
 
-			<RenameJournal
-				sheet={renameSheet}
-				currentName={journal?.name ?? ''}
-				onRename={handleRename}
-			/>
+			{renameSheet.isOpen ? (
+				<RenameJournal
+					sheet={renameSheet}
+					currentName={journal?.name ?? ''}
+					onRename={handleRename}
+				/>
+			) : null}
 
-			<ChangeJournalIcon
-				sheet={iconSheet}
-				currentIcon={journal?.icon ?? 'book-open'}
-				onChangeIcon={handleChangeIcon}
-			/>
+			{iconSheet.isOpen ? (
+				<ChangeJournalIcon
+					sheet={iconSheet}
+					currentIcon={journal?.icon ?? 'book-open'}
+					onChangeIcon={handleChangeIcon}
+				/>
+			) : null}
 
 			<AppDialog
 				{...dialog.state}

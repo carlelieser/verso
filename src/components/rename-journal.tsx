@@ -13,20 +13,24 @@ interface RenameJournalProps {
 	readonly onRename: (name: string) => void;
 }
 
-export function RenameJournal({ sheet, currentName, onRename }: RenameJournalProps): React.JSX.Element | null {
+export function RenameJournal({
+	sheet,
+	currentName,
+	onRename,
+}: RenameJournalProps): React.JSX.Element {
 	const [name, setName] = useState(currentName);
 	const { foreground, muted } = useThemeColors();
 
 	const isValid = name.trim().length > 0 && name.trim() !== currentName;
-
-	if (!sheet.isOpen) return null;
 
 	return (
 		<Portal>
 			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
 				<BottomSheetScrollView keyboardShouldPersistTaps="handled">
 					<View className="p-6 gap-6">
-						<Text className="text-3xl font-heading text-foreground pb-1">Rename Journal</Text>
+						<Text className="text-3xl font-heading text-foreground pb-1">
+							Rename Journal
+						</Text>
 
 						<BottomSheetTextInput
 							value={name}
@@ -39,7 +43,11 @@ export function RenameJournal({ sheet, currentName, onRename }: RenameJournalPro
 						/>
 
 						<View className="flex-row items-center justify-end">
-							<Button variant="primary" isDisabled={!isValid} onPress={() => onRename(name.trim())}>
+							<Button
+								variant="primary"
+								isDisabled={!isValid}
+								onPress={() => onRename(name.trim())}
+							>
 								<Button.Label>Save</Button.Label>
 							</Button>
 						</View>

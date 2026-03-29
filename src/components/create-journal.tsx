@@ -14,21 +14,21 @@ interface CreateJournalProps {
 	readonly onCreate: (name: string, icon: string) => void;
 }
 
-export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JSX.Element | null {
+export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JSX.Element {
 	const [name, setName] = useState('');
 	const [selectedIcon, setSelectedIcon] = useState('book-open');
 	const { accentForeground, foreground, muted } = useThemeColors();
 
 	const isValid = name.trim().length > 0;
 
-	if (!sheet.isOpen) return null;
-
 	return (
 		<Portal>
 			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
 				<BottomSheetScrollView keyboardShouldPersistTaps="handled">
 					<View className="p-6 gap-6">
-						<Text className="text-3xl font-heading text-foreground pb-1">New Journal</Text>
+						<Text className="text-3xl font-heading text-foreground pb-1">
+							New Journal
+						</Text>
 
 						<View className="gap-2">
 							<Overline>ICON</Overline>
@@ -45,7 +45,10 @@ export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JS
 													: 'bg-transparent border-border'
 											}`}
 										>
-											<Icon size={20} color={isSelected ? accentForeground : muted} />
+											<Icon
+												size={20}
+												color={isSelected ? accentForeground : muted}
+											/>
 										</Pressable>
 									);
 								})}

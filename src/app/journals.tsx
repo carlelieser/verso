@@ -205,7 +205,9 @@ export default function JournalsScreen(): React.JSX.Element {
 				style={{ bottom: insets.bottom + 16 }}
 			/>
 
-			<CreateJournal sheet={createSheet} onCreate={handleCreate} />
+			{createSheet.isOpen ? (
+				<CreateJournal sheet={createSheet} onCreate={handleCreate} />
+			) : null}
 
 			<ActionSheet
 				header={
@@ -222,17 +224,21 @@ export default function JournalsScreen(): React.JSX.Element {
 				sheet={actionSheet}
 			/>
 
-			<RenameJournal
-				sheet={renameSheet}
-				currentName={selectedJournal?.name ?? ''}
-				onRename={handleRename}
-			/>
+			{renameSheet.isOpen ? (
+				<RenameJournal
+					sheet={renameSheet}
+					currentName={selectedJournal?.name ?? ''}
+					onRename={handleRename}
+				/>
+			) : null}
 
-			<ChangeJournalIcon
-				sheet={iconSheet}
-				currentIcon={selectedJournal?.icon ?? 'book-open'}
-				onChangeIcon={handleChangeIcon}
-			/>
+			{iconSheet.isOpen ? (
+				<ChangeJournalIcon
+					sheet={iconSheet}
+					currentIcon={selectedJournal?.icon ?? 'book-open'}
+					onChangeIcon={handleChangeIcon}
+				/>
+			) : null}
 
 			<AppDialog
 				{...dialog.state}

@@ -45,7 +45,7 @@ export function JournalSelect({
 				<Menu.Trigger asChild>
 					<Button variant="ghost" size="sm">
 						<BookOpen size={16} color={muted} />
-						<Button.Label className={"text-muted"}>{label}</Button.Label>
+						<Button.Label className={'text-muted'}>{label}</Button.Label>
 						<ChevronDown size={14} color={muted} />
 					</Button>
 				</Menu.Trigger>
@@ -87,7 +87,9 @@ export function JournalSelect({
 				</Menu.Portal>
 			</Menu>
 
-			<CreateJournal sheet={createSheet} onCreate={handleCreate} />
+			{createSheet.isOpen ? (
+				<CreateJournal sheet={createSheet} onCreate={handleCreate} />
+			) : null}
 		</>
 	);
 }
