@@ -4,7 +4,7 @@ import { Button } from 'heroui-native';
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { Overline } from '@/components/overline';
+import { Overline } from '@/components/ui/overline';
 import { JOURNAL_ICONS } from '@/constants/journal-icons';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useThemeColors } from '@/hooks/use-theme-colors';

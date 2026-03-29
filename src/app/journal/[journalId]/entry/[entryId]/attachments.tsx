@@ -3,9 +3,9 @@ import React from 'react';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AttachmentButton } from '@/components/attachment-button';
-import { AttachmentList } from '@/components/attachment-list';
-import { ScreenLayout } from '@/components/screen-layout';
+import { AttachmentButton } from '@/components/entry/attachment-button';
+import { AttachmentList } from '@/components/entry/attachment-list';
+import { ScreenLayout } from '@/components/layout/screen-layout';
 import { useLiveAttachments } from '@/hooks/use-live-attachments';
 import { EntryProvider } from '@/providers/entry-provider';
 

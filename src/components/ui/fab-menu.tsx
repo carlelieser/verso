@@ -2,7 +2,7 @@ import { type ButtonVariant, Menu } from 'heroui-native';
 import React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import { Fab } from '@/components/fab';
+import { Fab } from '@/components/ui/fab';
 
 interface FabMenuItem {
 	readonly id: string;

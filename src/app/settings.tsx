@@ -5,9 +5,9 @@ import React, { useCallback, useState } from 'react';
 import { Linking, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LibrariesDialog } from '@/components/libraries-dialog';
-import { Overline } from '@/components/overline';
-import { ScreenLayout } from '@/components/screen-layout';
+import { ScreenLayout } from '@/components/layout/screen-layout';
+import { LibrariesDialog } from '@/components/settings/libraries-dialog';
+import { Overline } from '@/components/ui/overline';
 import {
 	SETTINGS_AUTO_LOCATION_KEY,
 	SETTINGS_ONBOARDING_COMPLETE_KEY,

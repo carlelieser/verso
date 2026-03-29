@@ -3,7 +3,7 @@ import { BookOpen, ChevronDown, Plus } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { Keyboard, Text, View } from 'react-native';
 
-import { CreateJournal } from '@/components/create-journal';
+import { CreateJournal } from '@/components/journal/create-journal';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Journal } from '@/types/journal';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 
-import { Overline } from '@/components/overline';
+import { Overline } from '@/components/ui/overline';
 
 interface SectionProps {
 	readonly label: string;

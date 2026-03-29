@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 import { Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { EmotionCheckin } from '@/components/emotion-checkin';
+import { EmotionCheckin } from '@/components/entry/emotion-checkin';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useEntryContext } from '@/providers/entry-provider';

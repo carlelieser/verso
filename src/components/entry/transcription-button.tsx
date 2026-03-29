@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 import type { EnrichedTextInputInstance } from 'react-native-enriched';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { AudioWaveform } from '@/components/audio-waveform';
+import { AudioWaveform } from '@/components/ui/audio-waveform';
 import { useSettings } from '@/hooks/use-settings';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useWhisperTranscription } from '@/hooks/use-whisper-transcription';

@@ -13,8 +13,8 @@ import {
 import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { AppDialog } from '@/components/app-dialog';
-import { EmptyState } from '@/components/empty-state';
+import { AppDialog } from '@/components/ui/app-dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useDialog } from '@/hooks/use-dialog';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';

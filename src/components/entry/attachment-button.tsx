@@ -4,8 +4,8 @@ import { AudioLines, FileText, Image, MapPin, Paperclip } from 'lucide-react-nat
 import React, { useCallback } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import { AppDialog } from '@/components/app-dialog';
-import { Fab } from '@/components/fab';
+import { AppDialog } from '@/components/ui/app-dialog';
+import { Fab } from '@/components/ui/fab';
 import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
 import { useDialog } from '@/hooks/use-dialog';
 import { useThemeColors } from '@/hooks/use-theme-colors';

@@ -8,7 +8,7 @@ import {
 	type OnboardingPage,
 	type OnboardingPagerHandle,
 	OnboardingPager,
-} from '@/components/onboarding-pager';
+} from '@/components/onboarding/onboarding-pager';
 import {
 	SETTINGS_AUTO_LOCATION_KEY,
 	SETTINGS_ONBOARDING_COMPLETE_KEY,

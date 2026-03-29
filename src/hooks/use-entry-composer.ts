@@ -3,7 +3,7 @@ import type { ViewStyle } from 'react-native';
 import type { AnimatedStyle } from 'react-native-reanimated';
 import { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-import type { EditorHandle } from '@/components/editor';
+import type { EditorHandle } from '@/components/entry/editor';
 import { useAutoSave } from '@/hooks/use-auto-save';
 import { useEmotions } from '@/hooks/use-emotions';
 import { useEntries } from '@/hooks/use-entries';

@@ -8,8 +8,8 @@ import {
 	type EntryComposerHandle,
 	EntryComposer,
 	type OverflowMenuItem,
-} from '@/components/entry-composer';
-import { EntrySaved } from '@/components/entry-saved';
+} from '@/components/entry/entry-composer';
+import { EntrySaved } from '@/components/entry/entry-saved';
 import { SETTINGS_ONBOARDING_COMPLETE_KEY } from '@/constants/settings';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 

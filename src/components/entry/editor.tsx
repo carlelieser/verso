@@ -26,7 +26,7 @@ import {
 	TranscriptionButton,
 	TranscriptionLiveText,
 	useEditorTranscription,
-} from '@/components/transcription-button';
+} from '@/components/entry/transcription-button';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 

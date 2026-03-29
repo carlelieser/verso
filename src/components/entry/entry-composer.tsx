@@ -6,18 +6,18 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppDialog } from '@/components/app-dialog';
-import { Editor } from '@/components/editor';
-import { EmotionButton } from '@/components/emotion-button';
-import { JournalSelect } from '@/components/journal-select';
-import { OverflowMenu, type OverflowMenuItem } from '@/components/overflow-menu';
+import { Editor } from '@/components/entry/editor';
+import { EmotionButton } from '@/components/entry/emotion-button';
+import { JournalSelect } from '@/components/journal/journal-select';
+import { AppDialog } from '@/components/ui/app-dialog';
+import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
 import { useDialog } from '@/hooks/use-dialog';
 import { useEntryComposer } from '@/hooks/use-entry-composer';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { EntryProvider } from '@/providers/entry-provider';
 
-export type { OverflowMenuItem } from '@/components/overflow-menu';
+export type { OverflowMenuItem } from '@/components/ui/overflow-menu';
 
 export interface EntryComposerHandle {
 	clear: () => void;

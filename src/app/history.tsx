@@ -5,12 +5,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ActionSheet, type ActionSheetItem } from '@/components/action-sheet';
-import { AppDialog } from '@/components/app-dialog';
-import { EmptyState } from '@/components/empty-state';
-import { EntryCard } from '@/components/entry-card';
-import { ScreenLayout } from '@/components/screen-layout';
-import { SearchInput } from '@/components/search-input';
+import { EntryCard } from '@/components/entry/entry-card';
+import { ScreenLayout } from '@/components/layout/screen-layout';
+import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
+import { AppDialog } from '@/components/ui/app-dialog';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SearchInput } from '@/components/ui/search-input';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useDialog } from '@/hooks/use-dialog';
 import { useEntries } from '@/hooks/use-entries';

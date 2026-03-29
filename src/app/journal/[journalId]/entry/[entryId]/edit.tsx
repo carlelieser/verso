@@ -3,7 +3,7 @@ import { Button } from 'heroui-native';
 import { ChevronLeft } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 
-import { EntryComposer } from '@/components/entry-composer';
+import { EntryComposer } from '@/components/entry/entry-composer';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
 export default function EntryEditScreen(): React.JSX.Element {
