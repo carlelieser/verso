@@ -12,20 +12,22 @@ import {
 	Strikethrough,
 	Underline,
 } from 'lucide-react-native';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
-import { Keyboard, KeyboardAvoidingView, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import {
 	EnrichedTextInput,
 	type EnrichedTextInputInstance,
 	type OnChangeStateEvent,
 } from 'react-native-enriched';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import {
 	TranscriptionButton,
 	TranscriptionLiveText,
 	useEditorTranscription,
 } from '@/components/transcription-button';
+import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
 interface FormatAction {
@@ -78,19 +80,17 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 ) {
 	const ref = useRef<EnrichedTextInputInstance>(null);
 	const [styleState, setStyleState] = useState<OnChangeStateEvent | null>(null);
-	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+	const keyboardProgress = useKeyboardVisible();
 
 	const { foreground, accent, muted, surface, editorFont } = useThemeColors();
 	const transcription = useEditorTranscription({ editorRef: ref });
 
-	useEffect(() => {
-		const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
-		const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
-		return () => {
-			showSub.remove();
-			hideSub.remove();
-		};
-	}, []);
+	const formatBarAnimatedStyle = useAnimatedStyle(() => ({
+		opacity: keyboardProgress.value,
+		transform: [{ translateY: (1 - keyboardProgress.value) * 10 }],
+		height: keyboardProgress.value === 0 ? 0 : 'auto',
+		overflow: 'hidden' as const,
+	}));
 
 	useImperativeHandle(forwardedRef, () => ({
 		clear: () => ref.current?.setValue(''),
@@ -164,48 +164,49 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 
 			<TranscriptionLiveText transcription={transcription} />
 
-			{isKeyboardVisible ? (
-				<View className="flex-row items-center border-t border-border">
-					<ScrollView
-						horizontal
-						showsHorizontalScrollIndicator={false}
-						keyboardShouldPersistTaps="always"
-						contentContainerStyle={{
-							paddingHorizontal: 8,
-							paddingVertical: 6,
-							gap: 2,
-						}}
-						className="flex-1"
-					>
-						{FORMAT_ACTIONS.map((action) => {
-							const isActive = styleState?.[action.stateKey]?.isActive ?? false;
-							const IconComponent = action.icon;
+			<Animated.View
+				className="flex-row items-center border-t border-border"
+				style={formatBarAnimatedStyle}
+			>
+				<ScrollView
+					horizontal
+					showsHorizontalScrollIndicator={false}
+					keyboardShouldPersistTaps="always"
+					contentContainerStyle={{
+						paddingHorizontal: 8,
+						paddingVertical: 6,
+						gap: 2,
+					}}
+					className="flex-1"
+				>
+					{FORMAT_ACTIONS.map((action) => {
+						const isActive = styleState?.[action.stateKey]?.isActive ?? false;
+						const IconComponent = action.icon;
 
-							return (
-								<Button
-									key={action.key}
-									variant="ghost"
-									isIconOnly
-									onPress={() => {
-										if (ref.current) {
-											action.toggle(ref.current);
-										}
-									}}
-									style={isActive ? { backgroundColor: surface } : undefined}
-								>
-									<IconComponent size={18} color={isActive ? accent : muted} />
-								</Button>
-							);
-						})}
-					</ScrollView>
-					<View className={'flex-row items-center border-l border-border bg-background'}>
-						<TranscriptionButton transcription={transcription} />
-						<Button variant="ghost" isIconOnly onPress={() => ref.current?.blur()}>
-							<ChevronDown size={18} color={muted} />
-						</Button>
-					</View>
+						return (
+							<Button
+								key={action.key}
+								variant="ghost"
+								isIconOnly
+								onPress={() => {
+									if (ref.current) {
+										action.toggle(ref.current);
+									}
+								}}
+								style={isActive ? { backgroundColor: surface } : undefined}
+							>
+								<IconComponent size={18} color={isActive ? accent : muted} />
+							</Button>
+						);
+					})}
+				</ScrollView>
+				<View className={'flex-row items-center border-l border-border bg-background'}>
+					<TranscriptionButton transcription={transcription} />
+					<Button variant="ghost" isIconOnly onPress={() => ref.current?.blur()}>
+						<ChevronDown size={18} color={muted} />
+					</Button>
 				</View>
-			) : null}
+			</Animated.View>
 		</KeyboardAvoidingView>
 	);
 });

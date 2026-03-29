@@ -3,7 +3,7 @@ import { Button } from 'heroui-native';
 import { Check, Paperclip } from 'lucide-react-native';
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppDialog } from '@/components/app-dialog';
@@ -13,7 +13,7 @@ import { JournalSelect } from '@/components/journal-select';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/overflow-menu';
 import { useDialog } from '@/hooks/use-dialog';
 import { useEntryComposer } from '@/hooks/use-entry-composer';
-import { useKeyboardAnimatedHeader } from '@/hooks/use-keyboard-animated-header';
+import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { EntryProvider } from '@/providers/entry-provider';
 
@@ -68,7 +68,13 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 	) {
 		const insets = useSafeAreaInsets();
 		const { muted, accentForeground } = useThemeColors();
-		const headerAnimatedStyle = useKeyboardAnimatedHeader();
+		const keyboardProgress = useKeyboardVisible();
+		const headerAnimatedStyle = useAnimatedStyle(() => ({
+			opacity: 1 - keyboardProgress.value,
+			transform: [{ translateY: keyboardProgress.value * -10 }],
+			height: keyboardProgress.value === 1 ? 0 : 'auto',
+			overflow: 'hidden' as const,
+		}));
 		const dialog = useDialog();
 
 		const composer = useEntryComposer({
