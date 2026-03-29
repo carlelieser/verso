@@ -26,17 +26,14 @@ interface PermissionItem {
 	readonly permission: Permission;
 }
 
-async function completeOnboarding(permissions: ReturnType<typeof usePermissions>): Promise<void> {
+async function completeOnboarding(
+	locationGranted: boolean,
+	microphoneGranted: boolean,
+): Promise<void> {
 	await Promise.all([
 		SecureStore.setItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY, 'true'),
-		SecureStore.setItemAsync(
-			SETTINGS_AUTO_LOCATION_KEY,
-			String(permissions.location.status === 'granted'),
-		),
-		SecureStore.setItemAsync(
-			SETTINGS_TRANSCRIPTION_KEY,
-			String(permissions.microphone.status === 'granted'),
-		),
+		SecureStore.setItemAsync(SETTINGS_AUTO_LOCATION_KEY, String(locationGranted)),
+		SecureStore.setItemAsync(SETTINGS_TRANSCRIPTION_KEY, String(microphoneGranted)),
 	]);
 	router.replace('/');
 }
@@ -132,13 +129,11 @@ export default function OnboardingScreen(): React.JSX.Element {
 	const allGranted = items.every((item) => item.permission.status === 'granted');
 
 	const handleSetup = useCallback(async () => {
-		for (const item of items) {
-			if (item.permission.status !== 'granted') {
-				await item.permission.request();
-			}
-		}
-		await completeOnboarding(permissions);
-	}, [items, permissions]);
+		await permissions.notification.request();
+		const locationGranted = await permissions.location.request();
+		const microphoneGranted = await permissions.microphone.request();
+		await completeOnboarding(locationGranted, microphoneGranted);
+	}, [permissions]);
 
 	const pages: readonly OnboardingPage[] = [
 		{
@@ -154,9 +149,22 @@ export default function OnboardingScreen(): React.JSX.Element {
 			content: <PermissionsContent items={items} />,
 			cta: {
 				label: allGranted ? 'Get Started' : 'Setup',
-				onPress: allGranted ? () => completeOnboarding(permissions) : handleSetup,
+				onPress: allGranted
+					? () =>
+							completeOnboarding(
+								permissions.location.status === 'granted',
+								permissions.microphone.status === 'granted',
+							)
+					: handleSetup,
 			},
-			secondaryAction: { label: 'Skip', onPress: () => completeOnboarding(permissions) },
+			secondaryAction: {
+				label: 'Skip',
+				onPress: () =>
+					completeOnboarding(
+						permissions.location.status === 'granted',
+						permissions.microphone.status === 'granted',
+					),
+			},
 		},
 	];
 
