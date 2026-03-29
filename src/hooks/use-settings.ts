@@ -28,9 +28,20 @@ const BOOLEAN_KEYS = [SETTINGS_AUTO_LOCATION_KEY, SETTINGS_TRANSCRIPTION_KEY] as
 
 const DEFAULT_THEME: Theme = 'system';
 
+function loadInitialBooleans(): Record<string, boolean> {
+	const values: Record<string, boolean> = {};
+	for (const key of BOOLEAN_KEYS) {
+		const raw = SecureStore.getItem(key);
+		values[key] = raw === null ? BOOLEAN_DEFAULTS[key]! : raw === 'true';
+	}
+	return values;
+}
+
+
 export function useSettings(): UseSettingsResult {
-	const [boolValues, setBoolValues] = useState<Record<string, boolean>>(BOOLEAN_DEFAULTS);
-	const [theme, setThemeState] = useState<Theme>(DEFAULT_THEME);
+	const [boolValues, setBoolValues] = useState<Record<string, boolean>>(loadInitialBooleans);
+	const initialTheme = SecureStore.getItem(SETTINGS_THEME_KEY);
+	const [theme, setThemeState] = useState<Theme>(isValidTheme(initialTheme) ? initialTheme : DEFAULT_THEME);
 
 	const load = useCallback(() => {
 		Promise.all([
@@ -57,7 +68,6 @@ export function useSettings(): UseSettingsResult {
 	}, []);
 
 	useEffect(() => {
-		load();
 		const sub = AppState.addEventListener('change', (state) => {
 			if (state === 'active') load();
 		});
