@@ -1,4 +1,3 @@
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Button, Menu, Separator } from 'heroui-native';
 import { BookOpen, ChevronDown, Plus } from 'lucide-react-native';
 import React, { useCallback } from 'react';
@@ -25,20 +24,20 @@ export function JournalSelect({
 	const { accent, muted } = useThemeColors();
 	const selected = journals.find((j) => j.id === selectedId);
 	const label = selected?.name ?? 'Select journal';
-	const sheet = useBottomSheet();
+	const createSheet = useBottomSheet();
 
 	const handleCreate = useCallback(
 		async (name: string, icon: string) => {
 			await onCreateJournal(name, icon);
-			sheet.close();
+			createSheet.close();
 		},
-		[onCreateJournal, sheet],
+		[onCreateJournal, createSheet],
 	);
 
 	const handleOpenCreate = useCallback(() => {
 		Keyboard.dismiss();
-		sheet.open();
-	}, [sheet]);
+		createSheet.open();
+	}, [createSheet]);
 
 	return (
 		<>
@@ -88,13 +87,7 @@ export function JournalSelect({
 				</Menu.Portal>
 			</Menu>
 
-			{sheet.isOpen ? (
-				<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
-					<BottomSheetScrollView keyboardShouldPersistTaps="handled">
-						<CreateJournal onCreate={handleCreate} />
-					</BottomSheetScrollView>
-				</BottomSheet>
-			) : null}
+			<CreateJournal sheet={createSheet} onCreate={handleCreate} />
 		</>
 	);
 }

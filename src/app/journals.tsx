@@ -1,7 +1,15 @@
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { ArrowUpRight, BookOpen, Palette, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react-native';
+import {
+	ArrowUpRight,
+	BookOpen,
+	Maximize,
+	Pencil,
+	Plus,
+	Search,
+	Star,
+	Trash2,
+} from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,8 +34,14 @@ export default function JournalsScreen(): React.JSX.Element {
 	const insets = useSafeAreaInsets();
 	const { muted, accentForeground } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
-	const { journals, entryCounts, createJournal, updateJournal, setDefaultJournal, deleteJournal } =
-		useJournals();
+	const {
+		journals,
+		entryCounts,
+		createJournal,
+		updateJournal,
+		setDefaultJournal,
+		deleteJournal,
+	} = useJournals();
 	const createSheet = useBottomSheet();
 	const renameSheet = useBottomSheet();
 	const iconSheet = useBottomSheet();
@@ -120,7 +134,7 @@ export default function JournalsScreen(): React.JSX.Element {
 			{
 				id: 'change-icon',
 				label: 'Change icon',
-				icon: Palette,
+				icon: Maximize,
 				onPress: iconSheet.open,
 			},
 			...(!isSelectedDefault
@@ -191,13 +205,7 @@ export default function JournalsScreen(): React.JSX.Element {
 				style={{ bottom: insets.bottom + 16 }}
 			/>
 
-			{createSheet.isOpen ? (
-				<BottomSheet ref={createSheet.ref} {...createSheet.sheetProps}>
-					<BottomSheetScrollView keyboardShouldPersistTaps="handled">
-						<CreateJournal onCreate={handleCreate} />
-					</BottomSheetScrollView>
-				</BottomSheet>
-			) : null}
+			<CreateJournal sheet={createSheet} onCreate={handleCreate} />
 
 			<ActionSheet
 				header={
@@ -214,27 +222,17 @@ export default function JournalsScreen(): React.JSX.Element {
 				sheet={actionSheet}
 			/>
 
-			{renameSheet.isOpen ? (
-				<BottomSheet ref={renameSheet.ref} {...renameSheet.sheetProps}>
-					<BottomSheetScrollView keyboardShouldPersistTaps="handled">
-						<RenameJournal
-							currentName={selectedJournal?.name ?? ''}
-							onRename={handleRename}
-						/>
-					</BottomSheetScrollView>
-				</BottomSheet>
-			) : null}
+			<RenameJournal
+				sheet={renameSheet}
+				currentName={selectedJournal?.name ?? ''}
+				onRename={handleRename}
+			/>
 
-			{iconSheet.isOpen ? (
-				<BottomSheet ref={iconSheet.ref} {...iconSheet.sheetProps}>
-					<BottomSheetScrollView>
-						<ChangeJournalIcon
-							currentIcon={selectedJournal?.icon ?? 'book-open'}
-							onChangeIcon={handleChangeIcon}
-						/>
-					</BottomSheetScrollView>
-				</BottomSheet>
-			) : null}
+			<ChangeJournalIcon
+				sheet={iconSheet}
+				currentIcon={selectedJournal?.icon ?? 'book-open'}
+				onChangeIcon={handleChangeIcon}
+			/>
 
 			<AppDialog
 				{...dialog.state}

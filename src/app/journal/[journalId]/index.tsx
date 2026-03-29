@@ -1,10 +1,9 @@
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
 	ArrowUpRight,
 	EllipsisVertical,
-	Palette,
+	Maximize,
 	Pencil,
 	Plus,
 	ScrollText,
@@ -39,7 +38,8 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const { journalId } = useLocalSearchParams<{ journalId: string }>();
 	const insets = useSafeAreaInsets();
 	const { muted, danger, foreground, accentForeground } = useThemeColors();
-	const { journals, entryCounts, updateJournal, setDefaultJournal, deleteJournal } = useJournals();
+	const { journals, entryCounts, updateJournal, setDefaultJournal, deleteJournal } =
+		useJournals();
 	const journal = journals.find((j) => j.id === journalId);
 	const isDefault = journal?.displayOrder === 0;
 	const entryCount = journalId ? (entryCounts.get(journalId) ?? 0) : 0;
@@ -115,7 +115,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 			{
 				id: 'change-icon',
 				label: 'Change icon',
-				icon: <Palette size={16} color={muted} />,
+				icon: <Maximize size={16} color={muted} />,
 				onPress: iconSheet.open,
 			},
 			...(!isDefault
@@ -263,27 +263,17 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				sheet={entryActionSheet}
 			/>
 
-			{renameSheet.isOpen ? (
-				<BottomSheet ref={renameSheet.ref} {...renameSheet.sheetProps}>
-					<BottomSheetScrollView keyboardShouldPersistTaps="handled">
-						<RenameJournal
-							currentName={journal?.name ?? ''}
-							onRename={handleRename}
-						/>
-					</BottomSheetScrollView>
-				</BottomSheet>
-			) : null}
+			<RenameJournal
+				sheet={renameSheet}
+				currentName={journal?.name ?? ''}
+				onRename={handleRename}
+			/>
 
-			{iconSheet.isOpen ? (
-				<BottomSheet ref={iconSheet.ref} {...iconSheet.sheetProps}>
-					<BottomSheetScrollView>
-						<ChangeJournalIcon
-							currentIcon={journal?.icon ?? 'book-open'}
-							onChangeIcon={handleChangeIcon}
-						/>
-					</BottomSheetScrollView>
-				</BottomSheet>
-			) : null}
+			<ChangeJournalIcon
+				sheet={iconSheet}
+				currentIcon={journal?.icon ?? 'book-open'}
+				onChangeIcon={handleChangeIcon}
+			/>
 
 			<AppDialog
 				{...dialog.state}
