@@ -1,9 +1,10 @@
 import { Button, Slider } from 'heroui-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import { Overline } from '@/components/ui/overline';
+import { SelectablePill } from '@/components/ui/selectable-pill';
 import { EMOTION_LABELS, EMOTIONS } from '@/constants/emotions';
 import type { EmotionCategory, EmotionIntensity } from '@/types/common';
 import { isEmotionIntensity } from '@/types/common';
@@ -97,30 +98,15 @@ export function EmotionCheckin({
 				<View className="gap-2">
 					{rows.map((row, rowIdx) => (
 						<View key={rowIdx} className="flex-row gap-2">
-							{row.map((emotion) => {
-								const isSelected = selected.has(emotion.key);
-								return (
-									<Pressable
-										key={emotion.key}
-										onPress={() => toggleEmotion(emotion.key)}
-										className={`px-4 py-2 rounded-full border ${
-											isSelected
-												? 'bg-accent border-accent'
-												: 'bg-transparent border-border'
-										}`}
-									>
-										<Text
-											className={`text-sm ${
-												isSelected
-													? 'font-semibold text-accent-foreground'
-													: 'font-normal text-foreground'
-											}`}
-										>
-											{emotion.label}
-										</Text>
-									</Pressable>
-								);
-							})}
+							{row.map((emotion) => (
+								<SelectablePill
+									key={emotion.key}
+									label={emotion.label}
+									isSelected={selected.has(emotion.key)}
+									onPress={() => toggleEmotion(emotion.key)}
+									className="px-4 py-2"
+								/>
+							))}
 						</View>
 					))}
 				</View>
