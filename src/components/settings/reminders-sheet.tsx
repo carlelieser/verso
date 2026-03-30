@@ -1,12 +1,12 @@
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Portal } from '@gorhom/portal';
 import { ControlField } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { SelectablePill } from '@/components/ui/selectable-pill';
-import { SheetContent } from '@/components/ui/sheet-content';
+import { PortalSheet } from '@/components/ui/portal-sheet';
 import { TimePickerDialog } from '@/components/ui/time-picker-dialog';
+import { getErrorMessage } from '@/utils/error';
 import { SETTINGS_REMINDERS_ENABLED_KEY } from '@/constants/settings';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useSettings } from '@/hooks/use-settings';
@@ -31,7 +31,7 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 				minute: overrides.minute ?? reminders.minute,
 				days: overrides.days ?? reminders.days,
 			}).catch((err: unknown) => {
-				console.warn('Failed to schedule reminders:', err instanceof Error ? err.message : err);
+				console.warn('Failed to schedule reminders:', getErrorMessage(err));
 			});
 		},
 		[reminders],
@@ -67,49 +67,47 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 	const formatted = formatTime12(reminders.hour, reminders.minute);
 
 	return (
-		<Portal>
-			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
-				<BottomSheetScrollView>
-					<SheetContent title="Reminders">
-						<View className="flex-row items-center justify-between">
-							<Pressable
-								onPress={() => setIsTimePickerOpen(true)}
-								className="flex-row items-baseline gap-1"
-							>
-								<Text className="text-5xl text-foreground">
-									{formatted.time}
-								</Text>
-								<Text className="text-base text-muted">
-									{formatted.period}
-								</Text>
-							</Pressable>
-							<ControlField isSelected={reminders.isEnabled} onSelectedChange={handleToggle}>
-								<ControlField.Indicator />
-							</ControlField>
-						</View>
+		<>
+			<PortalSheet sheet={sheet} title="Reminders">
+				<View className="flex-row items-center justify-between">
+					<Pressable
+						onPress={() => setIsTimePickerOpen(true)}
+						className={`flex-row items-baseline gap-1 ${reminders.isEnabled ? '' : 'opacity-50 pointer-events-none'}`}
+					>
+						<Text className="text-5xl text-foreground">
+							{formatted.time}
+						</Text>
+						<Text className="text-base text-muted">
+							{formatted.period}
+						</Text>
+					</Pressable>
+					<ControlField isSelected={reminders.isEnabled} onSelectedChange={handleToggle}>
+						<ControlField.Indicator />
+					</ControlField>
+				</View>
 
-						<View className="flex-row gap-2">
-							{DAY_LABELS.map((label, index) => (
-								<SelectablePill
-									key={index}
-									label={label}
-									isSelected={reminders.days.includes(index)}
-									onPress={() => handleDayToggle(index)}
-									className="flex-1 items-center justify-center py-3"
-								/>
-							))}
-						</View>
-					</SheetContent>
-				</BottomSheetScrollView>
-			</BottomSheet>
+				<View className="flex-row gap-2 mb-8">
+					{DAY_LABELS.map((label, index) => (
+						<SelectablePill
+							key={index}
+							label={label}
+							isSelected={reminders.days.includes(index)}
+							onPress={() => handleDayToggle(index)}
+							className="flex-1 items-center justify-center p-3"
+						/>
+					))}
+				</View>
+			</PortalSheet>
 
-			<TimePickerDialog
-				isOpen={isTimePickerOpen}
-				initialHour={reminders.hour}
-				initialMinute={reminders.minute}
-				onConfirm={handleTimeConfirm}
-				onClose={() => setIsTimePickerOpen(false)}
-			/>
-		</Portal>
+			<Portal>
+				<TimePickerDialog
+					isOpen={isTimePickerOpen}
+					initialHour={reminders.hour}
+					initialMinute={reminders.minute}
+					onConfirm={handleTimeConfirm}
+					onClose={() => setIsTimePickerOpen(false)}
+				/>
+			</Portal>
+		</>
 	);
 }

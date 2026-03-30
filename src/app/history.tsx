@@ -9,42 +9,35 @@ import { ScreenLayout } from '@/components/layout/screen-layout';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
+import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
+import { useDeleteEntry } from '@/hooks/use-delete-entry';
 import { useEntries } from '@/hooks/use-entries';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-import { useAppDialog } from '@/providers/dialog-provider';
-import type { EntryWithJournal } from '@/types/entry';
+import type { EntrySummaryWithJournal } from '@/types/entry';
 
 export default function HistoryScreen(): React.JSX.Element {
 	const insets = useSafeAreaInsets();
 	const { muted } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
 	const { entries, searchEntries, deleteEntry } = useEntries();
-	const { selectedItem: selectedEntry, handleLongPress, actionSheet } = useLongPressAction<EntryWithJournal>();
-	const dialog = useAppDialog();
+	const { selectedItem: selectedEntry, handleLongPress, actionSheet } = useLongPressAction<EntrySummaryWithJournal>();
+	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
+
+	const debouncedSearch = useDebouncedCallback(searchEntries);
 
 	const handleSearch = useCallback(
-		async (query: string) => {
+		(query: string) => {
 			setSearchQuery(query);
-			await searchEntries(query);
+			debouncedSearch(query);
 		},
-		[searchEntries],
+		[debouncedSearch],
 	);
 
 	const handleDelete = useCallback(async () => {
 		if (!selectedEntry) return;
-
-		const confirmed = await dialog.confirm({
-			title: 'Delete Entry',
-			description: 'This entry will be permanently deleted. This cannot be undone.',
-			confirmLabel: 'Delete',
-			variant: 'danger',
-		});
-
-		if (!confirmed) return;
-
-		await deleteEntry(selectedEntry.id);
-	}, [selectedEntry, deleteEntry, dialog]);
+		await confirmDeleteEntry(selectedEntry.id);
+	}, [selectedEntry, confirmDeleteEntry]);
 
 	const handleView = useCallback(() => {
 		if (!selectedEntry) return;

@@ -14,6 +14,7 @@ import {
 	SETTINGS_ONBOARDING_COMPLETE_KEY,
 	SETTINGS_TRANSCRIPTION_KEY,
 } from '@/constants/settings';
+import { getErrorMessage } from '@/utils/error';
 import {useBottomSheet} from '@/hooks/use-bottom-sheet';
 import {type PermissionStatus, usePermissions} from '@/hooks/use-permissions';
 import {useSettings} from '@/hooks/use-settings';
@@ -41,7 +42,7 @@ function restartOnboarding(): void {
 			router.replace('/onboarding');
 		})
 		.catch((err: unknown) => {
-			console.error('Failed to restart onboarding:', err instanceof Error ? err.message : err);
+			console.error('Failed to restart onboarding:', getErrorMessage(err));
 		});
 }
 
@@ -91,7 +92,7 @@ export default function SettingsScreen(): React.JSX.Element {
 				</ListGroup>
 
 				<View className="gap-3">
-					<Overline>APPEARANCE</Overline>
+					<Overline>Appearance</Overline>
 
 					<ControlField
 						isSelected={isSystemTheme}
@@ -117,7 +118,7 @@ export default function SettingsScreen(): React.JSX.Element {
 				</View>
 
 				<View className="gap-3">
-					<Overline>GENERAL</Overline>
+					<Overline>General</Overline>
 
 					<ControlField
 						isSelected={isAutoLocation}
@@ -143,7 +144,7 @@ export default function SettingsScreen(): React.JSX.Element {
 				</View>
 
 				<View className="gap-3">
-					<Overline>PERMISSIONS</Overline>
+					<Overline>Permissions</Overline>
 
 					<ControlField
 						isSelected={permissions.location.status === 'granted'}
@@ -237,7 +238,7 @@ export default function SettingsScreen(): React.JSX.Element {
 
 			<LibrariesDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)}/>
 
-			<RemindersSheet sheet={remindersSheet} />
+			{remindersSheet.isOpen ? <RemindersSheet sheet={remindersSheet} /> : null}
 		</ScreenLayout>
 	);
 }
