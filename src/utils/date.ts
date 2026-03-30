@@ -10,5 +10,10 @@ export function formatRelativeDate(timestamp: number): string {
 	if (diffDays === 1) return 'Yesterday';
 	if (diffDays < 7) return `${diffDays} days ago`;
 
-	return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+	const isSameYear = date.getFullYear() === now.getFullYear();
+	return date.toLocaleDateString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		...(isSameYear ? {} : { year: 'numeric' }),
+	});
 }

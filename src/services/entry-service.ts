@@ -176,6 +176,8 @@ interface FtsRow {
 }
 
 export async function searchEntries(db: Db, query: string): Promise<EntryWithJournal[]> {
+	if (query.trim().length === 0) return [];
+
 	const rawDb = getRawClient(db);
 
 	const rows = (await rawDb.getAllAsync(

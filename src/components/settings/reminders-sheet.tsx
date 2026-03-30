@@ -25,20 +25,32 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 	const { reminders, setSetting, setReminderTime, setReminderDays } = useSettings();
 	const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
 
+	const reschedule = useCallback(
+		(overrides: { isEnabled?: boolean; hour?: number; minute?: number; days?: readonly number[] } = {}) => {
+			scheduleReminders(
+				overrides.isEnabled ?? reminders.isEnabled,
+				overrides.hour ?? reminders.hour,
+				overrides.minute ?? reminders.minute,
+				overrides.days ?? reminders.days,
+			);
+		},
+		[reminders],
+	);
+
 	const handleToggle = useCallback(
 		(enabled: boolean) => {
 			setSetting(SETTINGS_REMINDERS_ENABLED_KEY, enabled);
-			scheduleReminders(enabled, reminders.hour, reminders.minute, reminders.days);
+			reschedule({ isEnabled: enabled });
 		},
-		[setSetting, reminders.hour, reminders.minute, reminders.days],
+		[setSetting, reschedule],
 	);
 
 	const handleTimeConfirm = useCallback(
 		(hour: number, minute: number) => {
 			setReminderTime(hour, minute);
-			scheduleReminders(reminders.isEnabled, hour, minute, reminders.days);
+			reschedule({ hour, minute });
 		},
-		[setReminderTime, reminders.isEnabled, reminders.days],
+		[setReminderTime, reschedule],
 	);
 
 	const handleDayToggle = useCallback(
@@ -47,9 +59,9 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 				? reminders.days.filter((d) => d !== day)
 				: [...reminders.days, day].sort();
 			setReminderDays(next);
-			scheduleReminders(reminders.isEnabled, reminders.hour, reminders.minute, next);
+			reschedule({ days: next });
 		},
-		[setReminderDays, reminders],
+		[reminders.days, setReminderDays, reschedule],
 	);
 
 	const formatted = formatTime12(reminders.hour, reminders.minute);
