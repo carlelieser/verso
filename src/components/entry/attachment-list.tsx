@@ -1,21 +1,13 @@
 import { Button } from 'heroui-native';
 import * as Sharing from 'expo-sharing';
-import {
-	AudioLines,
-	EllipsisVertical,
-	FileText,
-	Image,
-	MapPin,
-	Paperclip,
-	Share2,
-	Trash2,
-} from 'lucide-react-native';
+import { EllipsisVertical, MapPin, Paperclip, Share2, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { AppDialog } from '@/components/ui/app-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
+import { ATTACHMENT_TYPE_ICONS } from '@/constants/attachment-icons';
 import { useDialog } from '@/hooks/use-dialog';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
@@ -26,12 +18,6 @@ import { formatFileSize } from '@/utils/format-file-size';
 interface AttachmentListProps {
 	readonly attachments: readonly Attachment[];
 }
-
-const FILE_TYPE_ICONS = {
-	image: Image,
-	audio: AudioLines,
-	document: FileText,
-} as const;
 
 function FileCard({
 	attachment,
@@ -45,7 +31,7 @@ function FileCard({
 	readonly isDeleting: boolean;
 }): React.JSX.Element {
 	const { muted } = useThemeColors();
-	const Icon = FILE_TYPE_ICONS[attachment.type];
+	const Icon = ATTACHMENT_TYPE_ICONS[attachment.type];
 
 	const menuItems: readonly PopoverMenuItem[] = useMemo(
 		() => [

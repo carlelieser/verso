@@ -1,11 +1,14 @@
 import { router } from 'expo-router';
-import { AudioLines, ChevronRight, FileText, Image, MapPin, Paperclip } from 'lucide-react-native';
+import { ChevronRight, Paperclip } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { ATTACHMENT_TYPE_ICONS } from '@/constants/attachment-icons';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Attachment } from '@/types/attachment';
 import { formatFileSize } from '@/utils/format-file-size';
+
+const PREVIEW_LIMIT = 3;
 
 interface AttachmentPreviewProps {
 	readonly journalId: string;
@@ -13,21 +16,13 @@ interface AttachmentPreviewProps {
 	readonly attachments: readonly Attachment[];
 }
 
-const FILE_TYPE_ICONS = {
-	image: Image,
-	audio: AudioLines,
-	document: FileText,
-	location: MapPin,
-} as const;
-
 function AttachmentSummary({
 	attachment,
-	muted,
 }: {
 	readonly attachment: Attachment;
-	readonly muted: string;
 }): React.JSX.Element {
-	const Icon = FILE_TYPE_ICONS[attachment.type];
+	const { muted } = useThemeColors();
+	const Icon = ATTACHMENT_TYPE_ICONS[attachment.type];
 
 	if (attachment.type === 'location') {
 		return (
@@ -64,7 +59,7 @@ export function AttachmentPreview({
 
 	if (attachments.length === 0) return null;
 
-	const previewed = attachments.slice(0, 3);
+	const previewed = attachments.slice(0, PREVIEW_LIMIT);
 
 	return (
 		<Pressable
@@ -72,7 +67,7 @@ export function AttachmentPreview({
 			onPress={() => router.push(`/journal/${journalId}/entry/${entryId}/attachments`)}
 		>
 			{previewed.map((attachment) => (
-				<AttachmentSummary key={attachment.id} attachment={attachment} muted={muted} />
+				<AttachmentSummary key={attachment.id} attachment={attachment} />
 			))}
 
 			<View className="flex-row items-center justify-between mt-1 pt-3 border-t border-border">

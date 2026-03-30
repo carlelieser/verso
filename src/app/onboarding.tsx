@@ -128,12 +128,19 @@ export default function OnboardingScreen(): React.JSX.Element {
 
 	const allGranted = items.every((item) => item.permission.status === 'granted');
 
+	const handleComplete = useCallback(() => {
+		completeOnboarding(
+			permissions.location.status === 'granted',
+			permissions.microphone.status === 'granted',
+		);
+	}, [permissions.location.status, permissions.microphone.status]);
+
 	const handleSetup = useCallback(async () => {
 		await permissions.notification.request();
-		const locationGranted = await permissions.location.request();
-		const microphoneGranted = await permissions.microphone.request();
-		await completeOnboarding(locationGranted, microphoneGranted);
-	}, [permissions]);
+		await permissions.location.request();
+		await permissions.microphone.request();
+		handleComplete();
+	}, [permissions, handleComplete]);
 
 	const pages: readonly OnboardingPage[] = [
 		{
@@ -149,22 +156,9 @@ export default function OnboardingScreen(): React.JSX.Element {
 			content: <PermissionsContent items={items} />,
 			cta: {
 				label: allGranted ? 'Get Started' : 'Setup',
-				onPress: allGranted
-					? () =>
-							completeOnboarding(
-								permissions.location.status === 'granted',
-								permissions.microphone.status === 'granted',
-							)
-					: handleSetup,
+				onPress: allGranted ? handleComplete : handleSetup,
 			},
-			secondaryAction: {
-				label: 'Skip',
-				onPress: () =>
-					completeOnboarding(
-						permissions.location.status === 'granted',
-						permissions.microphone.status === 'granted',
-					),
-			},
+			secondaryAction: { label: 'Skip', onPress: handleComplete },
 		},
 	];
 
