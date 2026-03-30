@@ -8,6 +8,7 @@ import {
 	createJournal as createJournalService,
 	deleteJournal as deleteJournalService,
 	setDefaultJournal as setDefaultJournalService,
+	toJournal,
 	updateJournal as updateJournalService,
 } from '@/services/journal-service';
 import type { Journal } from '@/types/journal';
@@ -43,15 +44,7 @@ export function useJournals(): UseJournalsResult {
 	);
 
 	const mappedJournals: readonly Journal[] = useMemo(
-		() =>
-			journalRows.map((row) => ({
-				id: row.id,
-				name: row.name,
-				icon: row.icon,
-				displayOrder: row.displayOrder,
-				createdAt: row.createdAt.getTime(),
-				updatedAt: row.updatedAt.getTime(),
-			})),
+		() => journalRows.map(toJournal),
 		[journalRows],
 	);
 

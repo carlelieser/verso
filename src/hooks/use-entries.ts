@@ -9,6 +9,7 @@ import {
 	deleteEntry as deleteEntryService,
 	getEntry,
 	searchEntries as searchEntriesService,
+	toEntry,
 	updateEntry as updateEntryService,
 } from '@/services/entry-service';
 import type { Entry, EntryDetail, EntryWithJournal } from '@/types/entry';
@@ -57,12 +58,7 @@ export function useEntries(journalId?: string): UseEntriesResult {
 	const liveEntries: readonly EntryWithJournal[] = useMemo(
 		() =>
 			rows.map((row) => ({
-				id: row.id,
-				journalId: row.journalId,
-				contentHtml: row.contentHtml,
-				contentText: row.contentText,
-				createdAt: row.createdAt.getTime(),
-				updatedAt: row.updatedAt.getTime(),
+				...toEntry(row),
 				journalName: row.journalName,
 			})),
 		[rows],

@@ -17,17 +17,27 @@ interface UpdateJournalInput {
 	readonly icon?: string;
 }
 
-export async function listJournals(db: Db): Promise<Journal[]> {
-	const rows = await db.select().from(journals).orderBy(asc(journals.displayOrder));
-
-	return rows.map((row) => ({
+export function toJournal(row: {
+	id: string;
+	name: string;
+	icon: string;
+	displayOrder: number;
+	createdAt: Date;
+	updatedAt: Date;
+}): Journal {
+	return {
 		id: row.id,
 		name: row.name,
 		icon: row.icon,
 		displayOrder: row.displayOrder,
 		createdAt: row.createdAt.getTime(),
 		updatedAt: row.updatedAt.getTime(),
-	}));
+	};
+}
+
+export async function listJournals(db: Db): Promise<Journal[]> {
+	const rows = await db.select().from(journals).orderBy(asc(journals.displayOrder));
+	return rows.map(toJournal);
 }
 
 export async function createJournal(db: Db, input: CreateJournalInput): Promise<Journal> {

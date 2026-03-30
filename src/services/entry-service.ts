@@ -30,7 +30,7 @@ interface ListEntriesInput {
 	readonly offset?: number;
 }
 
-function toEntry(row: {
+export function toEntry(row: {
 	id: string;
 	journalId: string;
 	contentHtml: string;
