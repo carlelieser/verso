@@ -39,7 +39,7 @@ function getAttachmentDir(entryId: string): Directory {
 	return new Directory(Paths.document, 'attachments', entryId);
 }
 
-export function parseData(type: AttachmentType, raw: string): FileData | LocationData | null {
+function parseData(type: AttachmentType, raw: string): FileData | LocationData | null {
 	try {
 		return JSON.parse(raw) as FileData | LocationData;
 	} catch {

@@ -47,7 +47,7 @@ export function useAutoSave(entryId: string | null, content: AutoSaveRefs): UseA
 				clearTimeout(timerRef.current);
 			}
 		};
-	}, []);
+	}, [entryId]);
 
 	return { markDirty };
 }

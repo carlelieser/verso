@@ -237,7 +237,7 @@ export default function SettingsScreen(): React.JSX.Element {
 
 			<LibrariesDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)}/>
 
-			{remindersSheet.isOpen ? <RemindersSheet sheet={remindersSheet}/> : null}
+			<RemindersSheet sheet={remindersSheet} />
 		</ScreenLayout>
 	);
 }

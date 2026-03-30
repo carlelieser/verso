@@ -146,10 +146,9 @@ export function TimePicker({
 	const updateValue = useCallback(
 		(x: number, y: number) => {
 			const value = positionToValue(x, y, focused);
-			if (value !== prevValueRef.current) {
-				prevValueRef.current = value;
-				Haptics.selectionAsync();
-			}
+			if (value === prevValueRef.current) return;
+			prevValueRef.current = value;
+			Haptics.selectionAsync();
 			if (focused === 'hour') {
 				setHour12(value);
 			} else {
@@ -196,8 +195,7 @@ export function TimePicker({
 	return (
 		<View className="gap-6 items-center">
 			<Text className={"text-accent font-heading self-start"}>Select time</Text>
-			{/* Time display */}
-			<View className="flex-row items-center gap-2">
+<View className="flex-row items-center gap-2">
 				<View className="flex-row items-center">
 					<Pressable
 						onPress={() => { setFocused('hour'); prevValueRef.current = hour12; }}
@@ -225,37 +223,28 @@ export function TimePicker({
 				</View>
 
 				<View className="rounded-2xl overflow-hidden border border-border">
-					<Pressable
-						onPress={() => setPeriod('AM')}
-						className={`rounded-2xl px-3 py-2 ${period === 'AM' ? 'bg-accent' : 'bg-surface'}`}
-					>
-						<Text
-							className={`text-sm font-semibold ${period === 'AM' ? 'text-accent-foreground' : 'text-muted'}`}
+					{(['AM', 'PM'] as const).map((p) => (
+						<Pressable
+							key={p}
+							onPress={() => setPeriod(p)}
+							className={`rounded-2xl px-3 py-2 ${period === p ? 'bg-accent' : 'bg-surface'}`}
 						>
-							AM
-						</Text>
-					</Pressable>
-					<Pressable
-						onPress={() => setPeriod('PM')}
-						className={`rounded-2xl px-3 py-2 ${period === 'PM' ? 'bg-accent' : 'bg-surface'}`}
-					>
-						<Text
-							className={`text-sm font-semibold ${period === 'PM' ? 'text-accent-foreground' : 'text-muted'}`}
-						>
-							PM
-						</Text>
-					</Pressable>
+							<Text
+								className={`text-sm font-semibold ${period === p ? 'text-accent-foreground' : 'text-muted'}`}
+							>
+								{p}
+							</Text>
+						</Pressable>
+					))}
 				</View>
 			</View>
 
-			{/* Circular dial */}
-			<GestureDetector gesture={composedGesture}>
+<GestureDetector gesture={composedGesture}>
 				<View
 					style={{width: DIAL_SIZE, height: DIAL_SIZE}}
 					className="rounded-full bg-surface items-center justify-center"
 				>
-					{/* Line from center to indicator */}
-					<Svg
+<Svg
 						width={DIAL_SIZE}
 						height={DIAL_SIZE}
 						style={{position: 'absolute'}}
@@ -271,14 +260,11 @@ export function TimePicker({
 						/>
 					</Svg>
 
-					{/* Numbers in foreground color (base layer) */}
-					<DialNumbersLayer numbers={numbers} color={foreground} />
+<DialNumbersLayer numbers={numbers} color={foreground} />
 
-					{/* Indicator circle */}
-					<View style={indicatorStyle} />
+<View style={indicatorStyle} />
 
-					{/* Numbers in accent-foreground, masked to indicator area */}
-					<MaskedView
+<MaskedView
 						style={{ position: 'absolute', width: DIAL_SIZE, height: DIAL_SIZE }}
 						maskElement={<View style={indicatorStyle} />}
 					>
@@ -288,8 +274,7 @@ export function TimePicker({
 				</View>
 			</GestureDetector>
 
-			{/* Actions */}
-			<View className="flex-row items-center justify-end gap-2 w-full">
+<View className="flex-row items-center justify-end gap-2 w-full">
 				<Button variant="ghost" onPress={onCancel}>
 					<Button.Label>Cancel</Button.Label>
 				</Button>

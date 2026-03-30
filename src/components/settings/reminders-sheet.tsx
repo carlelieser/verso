@@ -3,9 +3,9 @@ import { Portal } from '@gorhom/portal';
 import { ControlField } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SelectablePill } from '@/components/ui/selectable-pill';
+import { SheetContent } from '@/components/ui/sheet-content';
 import { TimePickerDialog } from '@/components/ui/time-picker-dialog';
 import { SETTINGS_REMINDERS_ENABLED_KEY } from '@/constants/settings';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
@@ -20,18 +20,19 @@ interface RemindersSheetProps {
 }
 
 export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Element {
-	const { bottom } = useSafeAreaInsets();
 	const { reminders, setSetting, setReminderTime, setReminderDays } = useSettings();
 	const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
 
 	const reschedule = useCallback(
 		(overrides: { isEnabled?: boolean; hour?: number; minute?: number; days?: readonly number[] } = {}) => {
-			scheduleReminders(
-				overrides.isEnabled ?? reminders.isEnabled,
-				overrides.hour ?? reminders.hour,
-				overrides.minute ?? reminders.minute,
-				overrides.days ?? reminders.days,
-			);
+			scheduleReminders({
+				isEnabled: overrides.isEnabled ?? reminders.isEnabled,
+				hour: overrides.hour ?? reminders.hour,
+				minute: overrides.minute ?? reminders.minute,
+				days: overrides.days ?? reminders.days,
+			}).catch((err: unknown) => {
+				console.warn('Failed to schedule reminders:', err instanceof Error ? err.message : err);
+			});
 		},
 		[reminders],
 	);
@@ -69,11 +70,7 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 		<Portal>
 			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
 				<BottomSheetScrollView>
-					<View className="p-6 gap-6" style={{ paddingBottom: bottom + 16 }}>
-						<Text className="text-3xl font-heading text-foreground">
-							Reminders
-						</Text>
-
+					<SheetContent title="Reminders">
 						<View className="flex-row items-center justify-between">
 							<Pressable
 								onPress={() => setIsTimePickerOpen(true)}
@@ -91,20 +88,18 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 							</ControlField>
 						</View>
 
-						<View className="gap-2">
-							<View className="flex-row gap-2">
-								{DAY_LABELS.map((label, index) => (
-									<SelectablePill
-										key={index}
-										label={label}
-										isSelected={reminders.days.includes(index)}
-										onPress={() => handleDayToggle(index)}
-										className="flex-1 items-center justify-center py-3"
-									/>
-								))}
-							</View>
+						<View className="flex-row gap-2">
+							{DAY_LABELS.map((label, index) => (
+								<SelectablePill
+									key={index}
+									label={label}
+									isSelected={reminders.days.includes(index)}
+									onPress={() => handleDayToggle(index)}
+									className="flex-1 items-center justify-center py-3"
+								/>
+							))}
 						</View>
-					</View>
+					</SheetContent>
 				</BottomSheetScrollView>
 			</BottomSheet>
 

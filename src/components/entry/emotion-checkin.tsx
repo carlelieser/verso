@@ -60,8 +60,8 @@ export function EmotionCheckin({
 		[emitChange],
 	);
 
-	const isSelected = useCallback(
-		(emotion: EmotionCategory) => selections.some((s) => s.emotion === emotion),
+	const selectedSet = useMemo(
+		() => new Set(selections.map((s) => s.emotion)),
 		[selections],
 	);
 
@@ -96,7 +96,7 @@ export function EmotionCheckin({
 								<SelectablePill
 									key={emotion.key}
 									label={emotion.label}
-									isSelected={isSelected(emotion.key)}
+									isSelected={selectedSet.has(emotion.key)}
 									onPress={() => toggleEmotion(emotion.key)}
 									className="px-4 py-2"
 								/>

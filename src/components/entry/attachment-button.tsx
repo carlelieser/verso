@@ -73,16 +73,13 @@ export function AttachmentButton({
 	);
 
 	return (
-		<>
-			<PopoverMenu
-				trigger={trigger}
-				items={items}
-				width={180}
-				placement={placement}
-				offset={offset}
-				alignOffset={alignOffset}
-			/>
-
-		</>
+		<PopoverMenu
+			trigger={trigger}
+			items={items}
+			width={180}
+			placement={placement}
+			offset={offset}
+			alignOffset={alignOffset}
+		/>
 	);
 }
