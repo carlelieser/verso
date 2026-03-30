@@ -1,7 +1,7 @@
-import { asc, count, eq, ne, sql } from 'drizzle-orm';
+import { asc, eq, ne, sql } from 'drizzle-orm';
 
 import type { Db } from '@/db/client';
-import { entries, journals } from '@/db/schema';
+import { journals } from '@/db/schema';
 import { JournalNotFoundError } from '@/errors/domain-errors';
 import type { Journal } from '@/types/journal';
 import { generateId } from '@/utils/id';
@@ -9,18 +9,21 @@ import { generateId } from '@/utils/id';
 interface CreateJournalInput {
 	readonly name: string;
 	readonly icon: string;
+	readonly color: string;
 }
 
 interface UpdateJournalInput {
 	readonly id: string;
 	readonly name?: string;
 	readonly icon?: string;
+	readonly color?: string;
 }
 
 export function toJournal(row: {
 	id: string;
 	name: string;
 	icon: string;
+	color: string;
 	displayOrder: number;
 	createdAt: Date;
 	updatedAt: Date;
@@ -29,6 +32,7 @@ export function toJournal(row: {
 		id: row.id,
 		name: row.name,
 		icon: row.icon,
+		color: row.color,
 		displayOrder: row.displayOrder,
 		createdAt: row.createdAt.getTime(),
 		updatedAt: row.updatedAt.getTime(),
@@ -54,6 +58,7 @@ export async function createJournal(db: Db, input: CreateJournalInput): Promise<
 		id,
 		name: input.name,
 		icon: input.icon,
+		color: input.color,
 		displayOrder,
 		createdAt: now,
 		updatedAt: now,
@@ -63,6 +68,7 @@ export async function createJournal(db: Db, input: CreateJournalInput): Promise<
 		id,
 		name: input.name,
 		icon: input.icon,
+		color: input.color,
 		displayOrder,
 		createdAt: now.getTime(),
 		updatedAt: now.getTime(),
@@ -73,6 +79,7 @@ export async function updateJournal(db: Db, input: UpdateJournalInput): Promise<
 	const updates: Record<string, unknown> = { updatedAt: new Date() };
 	if (input.name !== undefined) updates.name = input.name;
 	if (input.icon !== undefined) updates.icon = input.icon;
+	if (input.color !== undefined) updates.color = input.color;
 
 	await db.update(journals).set(updates).where(eq(journals.id, input.id));
 }
@@ -101,15 +108,3 @@ export async function deleteJournal(db: Db, id: string): Promise<void> {
 	await db.delete(journals).where(eq(journals.id, id));
 }
 
-export async function getJournalEntryCounts(db: Db): Promise<Map<string, number>> {
-	const rows = await db
-		.select({
-			journalId: entries.journalId,
-			count: count(),
-		})
-		.from(entries)
-		.where(ne(entries.contentText, ''))
-		.groupBy(entries.journalId);
-
-	return new Map(rows.map((row) => [row.journalId, row.count]));
-}

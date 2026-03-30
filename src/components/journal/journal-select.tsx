@@ -12,7 +12,7 @@ interface JournalSelectProps {
 	readonly journals: readonly Journal[];
 	readonly selectedId: string | null;
 	readonly onSelect: (id: string) => void;
-	readonly onCreateJournal: (name: string, icon: string) => Promise<void>;
+	readonly onCreateJournal: (name: string, icon: string, color: string) => Promise<void>;
 }
 
 export function JournalSelect({
@@ -27,8 +27,8 @@ export function JournalSelect({
 	const createSheet = useBottomSheet();
 
 	const handleCreate = useCallback(
-		async (name: string, icon: string) => {
-			await onCreateJournal(name, icon);
+		async (name: string, icon: string, color: string) => {
+			await onCreateJournal(name, icon, color);
 			createSheet.close();
 		},
 		[onCreateJournal, createSheet],

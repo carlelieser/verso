@@ -1,0 +1,1 @@
+ALTER TABLE `journal` ADD `color` text DEFAULT '#7A8A8C' NOT NULL;

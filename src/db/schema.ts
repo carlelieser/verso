@@ -1,11 +1,14 @@
 import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
+import { DEFAULT_JOURNAL_COLOR } from '@/constants/journal-icons';
+
 export const journals = sqliteTable(
 	'journal',
 	{
 		id: text('id').primaryKey(),
 		name: text('name').notNull(),
 		icon: text('icon').notNull().default('book-open'),
+		color: text('color').notNull().default(DEFAULT_JOURNAL_COLOR),
 		displayOrder: integer('display_order').notNull().default(0),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),

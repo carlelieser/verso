@@ -19,6 +19,8 @@ interface IconDefinition {
 	readonly Icon: ComponentType<{ size?: number; color?: string }>;
 }
 
+export const DEFAULT_JOURNAL_COLOR = '#7A8A8C';
+
 export const JOURNAL_ICONS: readonly IconDefinition[] = [
 	{ key: 'book-open', Icon: BookOpen },
 	{ key: 'heart', Icon: Heart },

@@ -11,6 +11,7 @@ import { useJournals } from '@/hooks/use-journals';
 import { useEntryContext } from '@/providers/entry-provider';
 import type { EmotionSelection } from '@/types/emotion';
 import type { Journal } from '@/types/journal';
+import { getErrorMessage } from '@/utils/error';
 
 interface UseEntryComposerOptions {
 	/** Called after the entry is successfully saved. */
@@ -38,7 +39,7 @@ interface UseEntryComposerResult {
 	readonly handleHtmlChange: (html: string) => void;
 	readonly handleEmotionSave: (selections: readonly EmotionSelection[]) => void;
 	readonly handleFinish: () => void;
-	readonly handleCreateJournal: (name: string, icon: string) => Promise<void>;
+	readonly handleCreateJournal: (name: string, icon: string, color: string) => Promise<void>;
 	readonly handleClear: () => void;
 }
 
@@ -104,10 +105,10 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 				setIsLoading(false);
 			})
 			.catch((err: unknown) => {
-				console.error('Failed to load entry:', err instanceof Error ? err.message : err);
+				console.error('Failed to load entry:', getErrorMessage(err));
 				if (isActive) {
 					setIsLoading(false);
-					onError?.('Load Error', err instanceof Error ? err.message : 'Failed to load entry');
+					onError?.('Load Error', getErrorMessage(err, 'Failed to load entry'));
 				}
 			});
 
@@ -172,7 +173,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		}
 
 		Promise.all(saves).catch((err: unknown) => {
-			const message = err instanceof Error ? err.message : 'Failed to save entry';
+			const message = getErrorMessage(err, 'Failed to save entry');
 			onError?.('Save Error', message);
 		});
 
@@ -180,8 +181,8 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 	}, [entryId, selectedJournalId, updateEntry, saveEmotions, onFinish, onError]);
 
 	const handleCreateJournal = useCallback(
-		async (name: string, icon: string) => {
-			const journal = await createJournal(name, icon);
+		async (name: string, icon: string, color: string) => {
+			const journal = await createJournal(name, icon, color);
 			setExplicitJournalId(journal.id);
 		},
 		[createJournal],

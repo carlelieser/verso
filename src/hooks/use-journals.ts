@@ -16,10 +16,10 @@ import type { Journal } from '@/types/journal';
 interface UseJournalsResult {
 	readonly journals: readonly Journal[];
 	readonly entryCounts: ReadonlyMap<string, number>;
-	readonly createJournal: (name: string, icon: string) => Promise<Journal>;
+	readonly createJournal: (name: string, icon: string, color: string) => Promise<Journal>;
 	readonly updateJournal: (
 		id: string,
-		updates: { name?: string; icon?: string },
+		updates: { name?: string; icon?: string; color?: string },
 	) => Promise<void>;
 	readonly setDefaultJournal: (id: string) => Promise<void>;
 	readonly deleteJournal: (id: string) => Promise<void>;
@@ -54,14 +54,14 @@ export function useJournals(): UseJournalsResult {
 	);
 
 	const createJournal = useCallback(
-		async (name: string, icon: string): Promise<Journal> => {
-			return createJournalService(db, { name, icon });
+		async (name: string, icon: string, color: string): Promise<Journal> => {
+			return createJournalService(db, { name, icon, color });
 		},
 		[db],
 	);
 
 	const updateJournal = useCallback(
-		async (id: string, updates: { name?: string; icon?: string }): Promise<void> => {
+		async (id: string, updates: { name?: string; icon?: string; color?: string }): Promise<void> => {
 			await updateJournalService(db, { id, ...updates });
 		},
 		[db],
