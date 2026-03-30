@@ -19,6 +19,8 @@ interface PopoverMenuProps {
 	readonly items: readonly PopoverMenuItem[];
 	readonly width?: number;
 	readonly placement?: 'top' | 'bottom' | 'left' | 'right';
+	readonly offset?: number;
+	readonly alignOffset?: number;
 }
 
 export type { PopoverMenuItem };
@@ -28,6 +30,8 @@ export function PopoverMenu({
 	items,
 	width = 200,
 	placement,
+	offset,
+	alignOffset,
 }: PopoverMenuProps): React.JSX.Element | null {
 	const { muted, danger } = useThemeColors();
 
@@ -38,7 +42,7 @@ export function PopoverMenu({
 			<Menu.Trigger asChild>{trigger}</Menu.Trigger>
 			<Menu.Portal>
 				<Menu.Overlay />
-				<Menu.Content presentation="popover" width={width} placement={placement}>
+				<Menu.Content presentation="popover" width={width} placement={placement} offset={offset} alignOffset={alignOffset}>
 					{items.map((item) => {
 						const color = item.variant === 'danger' ? danger : muted;
 						const icon =

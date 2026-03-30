@@ -80,6 +80,8 @@ export function AttachmentButton({
 				items={items}
 				width={180}
 				placement={placement}
+				offset={offset}
+				alignOffset={alignOffset}
 			/>
 
 			<AppDialog

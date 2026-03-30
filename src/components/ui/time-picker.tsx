@@ -1,6 +1,6 @@
 import MaskedView from '@react-native-masked-view/masked-view';
-import {Button} from 'heroui-native';
 import * as Haptics from 'expo-haptics';
+import {Button} from 'heroui-native';
 import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {Pressable, Text, View} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
