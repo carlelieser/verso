@@ -2,9 +2,9 @@ import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Portal } from '@gorhom/portal';
 import { Button } from 'heroui-native';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
 
 import { IconPicker } from '@/components/ui/icon-picker';
+import { SheetContent } from '@/components/ui/sheet-content';
 import { JOURNAL_ICONS } from '@/constants/journal-icons';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 
@@ -27,18 +27,9 @@ export function ChangeJournalIcon({
 		<Portal>
 			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
 				<BottomSheetScrollView>
-					<View className="p-6 gap-6">
-						<Text className="text-3xl font-heading text-foreground pb-1">
-							Change Icon
-						</Text>
-
-						<IconPicker
-							icons={JOURNAL_ICONS}
-							selectedKey={selectedIcon}
-							onSelect={setSelectedIcon}
-						/>
-
-						<View className="flex-row items-center justify-end">
+					<SheetContent
+						title="Change Icon"
+						footer={
 							<Button
 								variant="primary"
 								isDisabled={!hasChanged}
@@ -46,8 +37,14 @@ export function ChangeJournalIcon({
 							>
 								<Button.Label>Save</Button.Label>
 							</Button>
-						</View>
-					</View>
+						}
+					>
+						<IconPicker
+							icons={JOURNAL_ICONS}
+							selectedKey={selectedIcon}
+							onSelect={setSelectedIcon}
+						/>
+					</SheetContent>
 				</BottomSheetScrollView>
 			</BottomSheet>
 		</Portal>

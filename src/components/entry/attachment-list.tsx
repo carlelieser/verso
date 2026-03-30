@@ -6,6 +6,7 @@ import { Text, View } from 'react-native';
 
 import { AppDialog } from '@/components/ui/app-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { InfoCard } from '@/components/ui/info-card';
 import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
 import { ATTACHMENT_TYPE_ICONS } from '@/constants/attachment-icons';
 import { useDialog } from '@/hooks/use-dialog';
@@ -42,10 +43,7 @@ function FileCard({
 	);
 
 	return (
-		<View
-			className="flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border"
-			style={isDeleting ? { opacity: 0.5 } : undefined}
-		>
+		<InfoCard style={isDeleting ? { opacity: 0.5 } : undefined}>
 			<Icon size={20} color={muted} />
 			<View className="flex-1">
 				<Text className="text-sm text-foreground" numberOfLines={1}>
@@ -64,7 +62,7 @@ function FileCard({
 				items={menuItems}
 				width={180}
 			/>
-		</View>
+		</InfoCard>
 	);
 }
 
@@ -87,10 +85,7 @@ function LocationCard({
 	);
 
 	return (
-		<View
-			className="flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border"
-			style={isDeleting ? { opacity: 0.5 } : undefined}
-		>
+		<InfoCard style={isDeleting ? { opacity: 0.5 } : undefined}>
 			<MapPin size={20} color={muted} />
 			<View className="flex-1">
 				<Text className="text-sm text-foreground" numberOfLines={1}>
@@ -112,7 +107,7 @@ function LocationCard({
 				items={menuItems}
 				width={180}
 			/>
-		</View>
+		</InfoCard>
 	);
 }
 

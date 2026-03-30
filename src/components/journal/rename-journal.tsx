@@ -2,8 +2,8 @@ import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from '@gorho
 import { Portal } from '@gorhom/portal';
 import { Button } from 'heroui-native';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
 
+import { SheetContent } from '@/components/ui/sheet-content';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
@@ -27,11 +27,18 @@ export function RenameJournal({
 		<Portal>
 			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
 				<BottomSheetScrollView keyboardShouldPersistTaps="handled">
-					<View className="p-6 gap-6">
-						<Text className="text-3xl font-heading text-foreground pb-1">
-							Rename Journal
-						</Text>
-
+					<SheetContent
+						title="Rename Journal"
+						footer={
+							<Button
+								variant="primary"
+								isDisabled={!isValid}
+								onPress={() => onRename(name.trim())}
+							>
+								<Button.Label>Save</Button.Label>
+							</Button>
+						}
+					>
 						<BottomSheetTextInput
 							value={name}
 							onChangeText={setName}
@@ -41,17 +48,7 @@ export function RenameJournal({
 							className="bg-surface rounded-xl px-4 py-3 text-base border border-border"
 							style={{ color: foreground }}
 						/>
-
-						<View className="flex-row items-center justify-end">
-							<Button
-								variant="primary"
-								isDisabled={!isValid}
-								onPress={() => onRename(name.trim())}
-							>
-								<Button.Label>Save</Button.Label>
-							</Button>
-						</View>
-					</View>
+					</SheetContent>
 				</BottomSheetScrollView>
 			</BottomSheet>
 		</Portal>

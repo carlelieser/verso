@@ -2,10 +2,11 @@ import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from '@gorho
 import { Portal } from '@gorhom/portal';
 import { Button } from 'heroui-native';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { IconPicker } from '@/components/ui/icon-picker';
 import { Overline } from '@/components/ui/overline';
+import { SheetContent } from '@/components/ui/sheet-content';
 import { JOURNAL_ICONS } from '@/constants/journal-icons';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -26,11 +27,18 @@ export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JS
 		<Portal>
 			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
 				<BottomSheetScrollView keyboardShouldPersistTaps="handled">
-					<View className="p-6 gap-6">
-						<Text className="text-3xl font-heading text-foreground pb-1">
-							New Journal
-						</Text>
-
+					<SheetContent
+						title="New Journal"
+						footer={
+							<Button
+								variant="primary"
+								isDisabled={!isValid}
+								onPress={() => onCreate(name.trim(), selectedIcon)}
+							>
+								<Button.Label>Create</Button.Label>
+							</Button>
+						}
+					>
 						<View className="gap-2">
 							<Overline>ICON</Overline>
 							<IconPicker
@@ -52,17 +60,7 @@ export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JS
 								style={{ color: foreground }}
 							/>
 						</View>
-
-						<View className="flex-row items-center justify-end">
-							<Button
-								variant="primary"
-								isDisabled={!isValid}
-								onPress={() => onCreate(name.trim(), selectedIcon)}
-							>
-								<Button.Label>Create</Button.Label>
-							</Button>
-						</View>
-					</View>
+					</SheetContent>
 				</BottomSheetScrollView>
 			</BottomSheet>
 		</Portal>

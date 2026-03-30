@@ -1,7 +1,8 @@
 import { CloudSun } from 'lucide-react-native';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 
+import { InfoCard } from '@/components/ui/info-card';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Weather } from '@/types/weather';
 
@@ -13,11 +14,11 @@ export function WeatherCard({ weather }: WeatherCardProps): React.JSX.Element {
 	const { muted } = useThemeColors();
 
 	return (
-		<View className="p-3 rounded-xl bg-surface border border-border flex-row items-center gap-3">
+		<InfoCard>
 			<CloudSun size={20} color={muted} />
 			<Text className="text-sm text-foreground">
 				{Math.round(weather.temperature)}°F {weather.condition}
 			</Text>
-		</View>
+		</InfoCard>
 	);
 }
