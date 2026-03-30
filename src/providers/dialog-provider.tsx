@@ -1,6 +1,6 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 
-import { AppDialog } from '@/components/ui/app-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useDialog } from '@/hooks/use-dialog';
 
 interface DialogContextValue {
@@ -11,10 +11,10 @@ interface DialogContextValue {
 
 const DialogContext = createContext<DialogContextValue | null>(null);
 
-export function useAppDialog(): DialogContextValue {
+export function useConfirmDialog(): DialogContextValue {
 	const context = useContext(DialogContext);
 	if (!context) {
-		throw new Error('useAppDialog must be used within a DialogProvider');
+		throw new Error('useConfirmDialog must be used within a DialogProvider');
 	}
 	return context;
 }
@@ -26,10 +26,15 @@ interface DialogProviderProps {
 export function DialogProvider({ children }: DialogProviderProps): React.JSX.Element {
 	const dialog = useDialog();
 
+	const contextValue = useMemo(
+		() => ({ alert: dialog.alert, confirm: dialog.confirm, showError: dialog.showError }),
+		[dialog.alert, dialog.confirm, dialog.showError],
+	);
+
 	return (
-		<DialogContext.Provider value={{ alert: dialog.alert, confirm: dialog.confirm, showError: dialog.showError }}>
+		<DialogContext.Provider value={contextValue}>
 			{children}
-			<AppDialog
+			<ConfirmDialog
 				{...dialog.state}
 				onConfirm={dialog.handleConfirm}
 				onCancel={dialog.handleCancel}

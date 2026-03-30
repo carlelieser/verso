@@ -4,7 +4,7 @@ import { View } from 'react-native';
 
 import type { DialogState, DialogVariant } from '@/hooks/use-dialog';
 
-interface AppDialogProps extends DialogState {
+interface ConfirmDialogProps extends DialogState {
 	readonly onConfirm: () => void;
 	readonly onCancel: () => void;
 }
@@ -14,7 +14,7 @@ const CONFIRM_BUTTON_VARIANTS: Record<DialogVariant, ButtonVariant> = {
 	danger: 'danger',
 };
 
-export function AppDialog({
+export function ConfirmDialog({
 	isOpen,
 	mode,
 	title,
@@ -24,7 +24,7 @@ export function AppDialog({
 	variant,
 	onConfirm,
 	onCancel,
-}: AppDialogProps): React.JSX.Element {
+}: ConfirmDialogProps): React.JSX.Element {
 	return (
 		<Dialog
 			isOpen={isOpen}

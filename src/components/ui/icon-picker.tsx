@@ -25,7 +25,7 @@ export function IconPicker({ icons, selectedKey, onSelect }: IconPickerProps): R
 					<Pressable
 						key={key}
 						onPress={() => onSelect(key)}
-						className={`w-11 h-11 rounded-xl items-center justify-center border ${
+						className={`size-11 rounded-xl items-center justify-center border ${
 							isSelected ? 'bg-accent border-accent' : 'bg-transparent border-border'
 						}`}
 					>

@@ -1,12 +1,10 @@
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { Portal } from '@gorhom/portal';
 import { Button } from 'heroui-native';
 import React, { useState } from 'react';
 
 import { IconPicker } from '@/components/ui/icon-picker';
-import { SheetContent } from '@/components/ui/sheet-content';
+import { PortalSheet } from '@/components/ui/portal-sheet';
 import { JOURNAL_ICONS } from '@/constants/journal-icons';
-import { useBottomSheet } from '@/hooks/use-bottom-sheet';
+import type { useBottomSheet } from '@/hooks/use-bottom-sheet';
 
 interface ChangeJournalIconProps {
 	readonly sheet: ReturnType<typeof useBottomSheet>;
@@ -24,29 +22,24 @@ export function ChangeJournalIcon({
 	const hasChanged = selectedIcon !== currentIcon;
 
 	return (
-		<Portal>
-			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
-				<BottomSheetScrollView>
-					<SheetContent
-						title="Change Icon"
-						footer={
-							<Button
-								variant="primary"
-								isDisabled={!hasChanged}
-								onPress={() => onChangeIcon(selectedIcon)}
-							>
-								<Button.Label>Save</Button.Label>
-							</Button>
-						}
-					>
-						<IconPicker
-							icons={JOURNAL_ICONS}
-							selectedKey={selectedIcon}
-							onSelect={setSelectedIcon}
-						/>
-					</SheetContent>
-				</BottomSheetScrollView>
-			</BottomSheet>
-		</Portal>
+		<PortalSheet
+			sheet={sheet}
+			title="Change Icon"
+			footer={
+				<Button
+					variant="primary"
+					isDisabled={!hasChanged}
+					onPress={() => onChangeIcon(selectedIcon)}
+				>
+					<Button.Label>Save</Button.Label>
+				</Button>
+			}
+		>
+			<IconPicker
+				icons={JOURNAL_ICONS}
+				selectedKey={selectedIcon}
+				onSelect={setSelectedIcon}
+			/>
+		</PortalSheet>
 	);
 }

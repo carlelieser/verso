@@ -45,13 +45,12 @@ export function PopoverMenu({
 				<Menu.Content presentation="popover" width={width} placement={placement} offset={offset} alignOffset={alignOffset}>
 					{items.map((item) => {
 						const color = item.variant === 'danger' ? danger : muted;
-						const icon =
-							item.icon && typeof item.icon === 'function'
-								? React.createElement(item.icon as LucideIcon, {
-										size: MENU_ICON_SIZE,
-										color,
-									})
-								: (item.icon ?? null);
+						const icon = (() => {
+							if (!item.icon) return null;
+							if (React.isValidElement(item.icon)) return item.icon;
+							const IconComponent = item.icon as LucideIcon;
+							return <IconComponent size={MENU_ICON_SIZE} color={color} />;
+						})();
 
 						return (
 							<Menu.Item
