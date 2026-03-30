@@ -76,6 +76,24 @@ export function useAttachmentPicker(
 		[db, entryId, onError],
 	);
 
+	const pickDocumentFiles = useCallback(
+		async (mimeType: string, fileType: PickedFile['type']) => {
+			const result = await DocumentPicker.getDocumentAsync({ type: mimeType });
+			if (result.canceled) return;
+
+			const files: PickedFile[] = result.assets.map((asset) => ({
+				uri: asset.uri,
+				mimeType: asset.mimeType ?? null,
+				fileName: asset.name ?? null,
+				sizeBytes: asset.size ?? null,
+				type: fileType,
+			}));
+
+			await addFiles(files);
+		},
+		[addFiles],
+	);
+
 	const pickImages = useCallback(async () => {
 		const result = await ImagePicker.launchImageLibraryAsync({
 			allowsMultipleSelection: true,
@@ -95,37 +113,9 @@ export function useAttachmentPicker(
 		await addFiles(files);
 	}, [addFiles]);
 
-	const pickAudio = useCallback(async () => {
-		const result = await DocumentPicker.getDocumentAsync({ type: 'audio/*' });
+	const pickAudio = useCallback(() => pickDocumentFiles('audio/*', 'audio'), [pickDocumentFiles]);
 
-		if (result.canceled) return;
-
-		const files: PickedFile[] = result.assets.map((asset) => ({
-			uri: asset.uri,
-			mimeType: asset.mimeType ?? null,
-			fileName: asset.name ?? null,
-			sizeBytes: asset.size ?? null,
-			type: 'audio' as const,
-		}));
-
-		await addFiles(files);
-	}, [addFiles]);
-
-	const pickDocuments = useCallback(async () => {
-		const result = await DocumentPicker.getDocumentAsync({ type: '*/*' });
-
-		if (result.canceled) return;
-
-		const files: PickedFile[] = result.assets.map((asset) => ({
-			uri: asset.uri,
-			mimeType: asset.mimeType ?? null,
-			fileName: asset.name ?? null,
-			sizeBytes: asset.size ?? null,
-			type: 'document' as const,
-		}));
-
-		await addFiles(files);
-	}, [addFiles]);
+	const pickDocuments = useCallback(() => pickDocumentFiles('*/*', 'document'), [pickDocumentFiles]);
 
 	return { attachments: attachmentList, pickImages, pickAudio, pickDocuments, refresh };
 }

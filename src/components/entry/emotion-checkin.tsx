@@ -11,10 +11,10 @@ import { isEmotionIntensity } from '@/types/common';
 import type { EmotionSelection } from '@/types/emotion';
 
 const DEFAULT_INTENSITY: EmotionIntensity = 3;
+const NUM_ROWS = 4;
 
 interface EmotionCheckinProps {
 	readonly onSave: (selections: readonly EmotionSelection[]) => void;
-	/** Called on every selection/intensity change so the parent can persist state across unmounts. */
 	readonly onChange?: (selections: readonly EmotionSelection[]) => void;
 	readonly defaultSelections?: readonly EmotionSelection[];
 }
@@ -24,31 +24,24 @@ export function EmotionCheckin({
 	onChange,
 	defaultSelections,
 }: EmotionCheckinProps): React.JSX.Element {
-	const [selected, setSelected] = useState<Map<EmotionCategory, EmotionIntensity>>(() => {
-		if (!defaultSelections || defaultSelections.length === 0) return new Map();
-		return new Map(defaultSelections.map((s) => [s.emotion, s.intensity]));
-	});
+	const [selections, setSelections] = useState<readonly EmotionSelection[]>(
+		defaultSelections ?? [],
+	);
+
 	const emitChange = useCallback(
-		(map: Map<EmotionCategory, EmotionIntensity>) => {
-			if (!onChange) return;
-			const selections = [...map.entries()].map(([emotion, intensity]) => ({
-				emotion,
-				intensity,
-			}));
-			onChange(selections);
+		(next: readonly EmotionSelection[]) => {
+			onChange?.(next);
 		},
 		[onChange],
 	);
 
 	const toggleEmotion = useCallback(
 		(emotion: EmotionCategory) => {
-			setSelected((prev) => {
-				const next = new Map(prev);
-				if (next.has(emotion)) {
-					next.delete(emotion);
-				} else {
-					next.set(emotion, DEFAULT_INTENSITY);
-				}
+			setSelections((prev) => {
+				const exists = prev.some((s) => s.emotion === emotion);
+				const next = exists
+					? prev.filter((s) => s.emotion !== emotion)
+					: [...prev, { emotion, intensity: DEFAULT_INTENSITY }];
 				emitChange(next);
 				return next;
 			});
@@ -58,9 +51,8 @@ export function EmotionCheckin({
 
 	const updateIntensity = useCallback(
 		(emotion: EmotionCategory, intensity: EmotionIntensity) => {
-			setSelected((prev) => {
-				const next = new Map(prev);
-				next.set(emotion, intensity);
+			setSelections((prev) => {
+				const next = prev.map((s) => (s.emotion === emotion ? { ...s, intensity } : s));
 				emitChange(next);
 				return next;
 			});
@@ -68,9 +60,11 @@ export function EmotionCheckin({
 		[emitChange],
 	);
 
-	const selectedEmotions = [...selected.entries()];
+	const isSelected = useCallback(
+		(emotion: EmotionCategory) => selections.some((s) => s.emotion === emotion),
+		[selections],
+	);
 
-	const NUM_ROWS = 4;
 	const rows = useMemo(() => {
 		const result: (typeof EMOTIONS)[number][][] = Array.from({ length: NUM_ROWS }, () => []);
 		for (let i = 0; i < EMOTIONS.length; i++) {
@@ -102,7 +96,7 @@ export function EmotionCheckin({
 								<SelectablePill
 									key={emotion.key}
 									label={emotion.label}
-									isSelected={selected.has(emotion.key)}
+									isSelected={isSelected(emotion.key)}
 									onPress={() => toggleEmotion(emotion.key)}
 									className="px-4 py-2"
 								/>
@@ -112,21 +106,21 @@ export function EmotionCheckin({
 				</View>
 			</ScrollView>
 
-			{selectedEmotions.length > 0 ? (
+			{selections.length > 0 ? (
 				<View className="gap-5 px-6">
 					<Overline>INTENSITY</Overline>
-					{selectedEmotions.map(([emotion, intensity]) => (
-						<View key={emotion} className="gap-2">
+					{selections.map((selection) => (
+						<View key={selection.emotion} className="gap-2">
 							<View className="flex-row justify-between items-center">
 								<Text className="text-sm font-medium text-foreground">
-									{EMOTION_LABELS[emotion]}
+									{EMOTION_LABELS[selection.emotion]}
 								</Text>
 								<Text className="text-sm font-semibold text-accent">
-									{intensity}
+									{selection.intensity}
 								</Text>
 							</View>
 							<Slider
-								value={intensity}
+								value={selection.intensity}
 								minValue={1}
 								maxValue={5}
 								step={1}
@@ -135,7 +129,7 @@ export function EmotionCheckin({
 										Array.isArray(val) ? (val[0] ?? DEFAULT_INTENSITY) : val,
 									);
 									if (isEmotionIntensity(rounded)) {
-										updateIntensity(emotion, rounded);
+										updateIntensity(selection.emotion, rounded);
 									}
 								}}
 							>
@@ -149,20 +143,9 @@ export function EmotionCheckin({
 				</View>
 			) : null}
 
-			{selected.size > 0 ? (
+			{selections.length > 0 ? (
 				<View className="px-6 flex-row justify-end">
-					<Button
-						variant="secondary"
-						onPress={() => {
-							const selections = [...selected.entries()].map(
-								([emotion, intensity]) => ({
-									emotion,
-									intensity,
-								}),
-							);
-							onSave(selections);
-						}}
-					>
+					<Button variant="secondary" onPress={() => onSave(selections)}>
 						<Button.Label>Done</Button.Label>
 					</Button>
 				</View>
