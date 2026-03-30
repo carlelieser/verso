@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import {
 	ArrowUpRight,
@@ -27,6 +26,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useDialog } from '@/hooks/use-dialog';
 import { useJournals } from '@/hooks/use-journals';
+import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Journal } from '@/types/journal';
 
@@ -45,9 +45,8 @@ export default function JournalsScreen(): React.JSX.Element {
 	const createSheet = useBottomSheet();
 	const renameSheet = useBottomSheet();
 	const iconSheet = useBottomSheet();
-	const actionSheet = useBottomSheet();
+	const { selectedItem: selectedJournal, handleLongPress, actionSheet } = useLongPressAction<Journal>();
 	const dialog = useDialog();
-	const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null);
 
 	const filteredJournals = useMemo(() => {
 		if (searchQuery.trim().length === 0) return journals;
@@ -63,14 +62,6 @@ export default function JournalsScreen(): React.JSX.Element {
 		[createJournal, createSheet],
 	);
 
-	const handleLongPress = useCallback(
-		(journal: Journal) => {
-			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-			setSelectedJournal(journal);
-			actionSheet.open();
-		},
-		[actionSheet],
-	);
 
 	const handleRename = useCallback(
 		async (name: string) => {

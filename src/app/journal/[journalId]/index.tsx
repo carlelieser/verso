@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
 	ArrowUpRight,
@@ -30,6 +29,7 @@ import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useDialog } from '@/hooks/use-dialog';
 import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
+import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntryWithJournal } from '@/types/entry';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
@@ -48,8 +48,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const dialog = useDialog();
 	const renameSheet = useBottomSheet();
 	const iconSheet = useBottomSheet();
-	const entryActionSheet = useBottomSheet();
-	const [selectedEntry, setSelectedEntry] = useState<EntryWithJournal | null>(null);
+	const { selectedItem: selectedEntry, handleLongPress: handleEntryLongPress, actionSheet: entryActionSheet } = useLongPressAction<EntryWithJournal>();
 
 	const handleSearch = useCallback(
 		async (query: string) => {
@@ -139,14 +138,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		[muted, danger, isDefault, renameSheet, iconSheet, handleSetDefault, handleDelete],
 	);
 
-	const handleEntryLongPress = useCallback(
-		(entry: EntryWithJournal) => {
-			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-			setSelectedEntry(entry);
-			entryActionSheet.open();
-		},
-		[entryActionSheet],
-	);
+
 
 	const handleDeleteEntry = useCallback(async () => {
 		if (!selectedEntry) return;

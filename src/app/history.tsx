@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { ArrowUpRight, Clock, Search, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -11,9 +10,9 @@ import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet'
 import { AppDialog } from '@/components/ui/app-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
-import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useDialog } from '@/hooks/use-dialog';
 import { useEntries } from '@/hooks/use-entries';
+import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntryWithJournal } from '@/types/entry';
 
@@ -22,9 +21,8 @@ export default function HistoryScreen(): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
 	const { entries, searchEntries, deleteEntry } = useEntries();
+	const { selectedItem: selectedEntry, handleLongPress, actionSheet } = useLongPressAction<EntryWithJournal>();
 	const dialog = useDialog();
-	const actionSheet = useBottomSheet();
-	const [selectedEntry, setSelectedEntry] = useState<EntryWithJournal | null>(null);
 
 	const handleSearch = useCallback(
 		async (query: string) => {
@@ -32,15 +30,6 @@ export default function HistoryScreen(): React.JSX.Element {
 			await searchEntries(query);
 		},
 		[searchEntries],
-	);
-
-	const handleLongPress = useCallback(
-		(entry: EntryWithJournal) => {
-			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-			setSelectedEntry(entry);
-			actionSheet.open();
-		},
-		[actionSheet],
 	);
 
 	const handleDelete = useCallback(async () => {
