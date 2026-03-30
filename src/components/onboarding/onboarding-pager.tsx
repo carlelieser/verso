@@ -1,8 +1,6 @@
 import { Button } from 'heroui-native';
 import React, { useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { Dimensions, FlatList, View, type ViewToken } from 'react-native';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
+import { FlatList, useWindowDimensions, View, type ViewToken } from 'react-native';
 
 interface OnboardingAction {
 	readonly label: string;
@@ -45,6 +43,7 @@ function DotIndicator({
 
 export const OnboardingPager = React.forwardRef<OnboardingPagerHandle, OnboardingPagerProps>(
 	function OnboardingPager({ pages }, ref) {
+		const { width: screenWidth } = useWindowDimensions();
 		const [activeIndex, setActiveIndex] = useState(0);
 		const flatListRef = useRef<FlatList>(null);
 
@@ -85,7 +84,7 @@ export const OnboardingPager = React.forwardRef<OnboardingPagerHandle, Onboardin
 					showsHorizontalScrollIndicator={false}
 					keyExtractor={(page) => page.key}
 					renderItem={({ item }) => (
-						<View style={{ width: SCREEN_WIDTH }} className="flex-1">
+						<View style={{ width: screenWidth }} className="flex-1">
 							{item.content}
 						</View>
 					)}
