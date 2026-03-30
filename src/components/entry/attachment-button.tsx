@@ -7,9 +7,9 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import { Fab } from '@/components/ui/fab';
 import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
 import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
-import { useAppDialog } from '@/providers/dialog-provider';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { useEntryContext } from '@/providers/entry-provider';
 import { captureLocationAndWeather } from '@/services/location-weather-service';
 

@@ -23,10 +23,10 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
 import { SearchInput } from '@/components/ui/search-input';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
-import { useAppDialog } from '@/providers/dialog-provider';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useAppDialog } from '@/providers/dialog-provider';
 import type { Journal } from '@/types/journal';
 
 export default function JournalsScreen(): React.JSX.Element {

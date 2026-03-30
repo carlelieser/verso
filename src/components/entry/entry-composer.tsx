@@ -10,10 +10,10 @@ import { Editor } from '@/components/entry/editor';
 import { EmotionButton } from '@/components/entry/emotion-button';
 import { JournalSelect } from '@/components/journal/journal-select';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
-import { useAppDialog } from '@/providers/dialog-provider';
 import { useEntryComposer } from '@/hooks/use-entry-composer';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { EntryProvider } from '@/providers/entry-provider';
 
 export type { OverflowMenuItem } from '@/components/ui/overflow-menu';

@@ -11,8 +11,8 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { useEntries } from '@/hooks/use-entries';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
-import { useAppDialog } from '@/providers/dialog-provider';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useAppDialog } from '@/providers/dialog-provider';
 import type { EntryWithJournal } from '@/types/entry';
 
 export default function HistoryScreen(): React.JSX.Element {

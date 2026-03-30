@@ -25,11 +25,11 @@ import { FabMenu } from '@/components/ui/fab-menu';
 import { SearchInput } from '@/components/ui/search-input';
 import { getJournalIcon } from '@/constants/journal-icons';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
-import { useAppDialog } from '@/providers/dialog-provider';
 import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useAppDialog } from '@/providers/dialog-provider';
 import type { EntryWithJournal } from '@/types/entry';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
 

@@ -11,9 +11,9 @@ import { ScreenLayout } from '@/components/layout/screen-layout';
 import { Section } from '@/components/layout/section';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu, type FabMenuItem } from '@/components/ui/fab-menu';
-import { useAppDialog } from '@/providers/dialog-provider';
 import { useEntries } from '@/hooks/use-entries';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useAppDialog } from '@/providers/dialog-provider';
 import type { EntryDetail } from '@/types/entry';
 import { formatRelativeDate } from '@/utils/date';
 
