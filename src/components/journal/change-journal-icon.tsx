@@ -2,11 +2,11 @@ import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Portal } from '@gorhom/portal';
 import { Button } from 'heroui-native';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { IconPicker } from '@/components/ui/icon-picker';
 import { JOURNAL_ICONS } from '@/constants/journal-icons';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
-import { useThemeColors } from '@/hooks/use-theme-colors';
 
 interface ChangeJournalIconProps {
 	readonly sheet: ReturnType<typeof useBottomSheet>;
@@ -20,7 +20,6 @@ export function ChangeJournalIcon({
 	onChangeIcon,
 }: ChangeJournalIconProps): React.JSX.Element {
 	const [selectedIcon, setSelectedIcon] = useState(currentIcon);
-	const { accentForeground, muted } = useThemeColors();
 
 	const hasChanged = selectedIcon !== currentIcon;
 
@@ -33,27 +32,11 @@ export function ChangeJournalIcon({
 							Change Icon
 						</Text>
 
-						<View className="flex-row flex-wrap gap-2">
-							{JOURNAL_ICONS.map(({ key, Icon }) => {
-								const isSelected = selectedIcon === key;
-								return (
-									<Pressable
-										key={key}
-										onPress={() => setSelectedIcon(key)}
-										className={`w-11 h-11 rounded-xl items-center justify-center border ${
-											isSelected
-												? 'bg-accent border-accent'
-												: 'bg-transparent border-border'
-										}`}
-									>
-										<Icon
-											size={20}
-											color={isSelected ? accentForeground : muted}
-										/>
-									</Pressable>
-								);
-							})}
-						</View>
+						<IconPicker
+							icons={JOURNAL_ICONS}
+							selectedKey={selectedIcon}
+							onSelect={setSelectedIcon}
+						/>
 
 						<View className="flex-row items-center justify-end">
 							<Button

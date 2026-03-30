@@ -2,8 +2,9 @@ import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from '@gorho
 import { Portal } from '@gorhom/portal';
 import { Button } from 'heroui-native';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { IconPicker } from '@/components/ui/icon-picker';
 import { Overline } from '@/components/ui/overline';
 import { JOURNAL_ICONS } from '@/constants/journal-icons';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
@@ -17,7 +18,7 @@ interface CreateJournalProps {
 export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JSX.Element {
 	const [name, setName] = useState('');
 	const [selectedIcon, setSelectedIcon] = useState('book-open');
-	const { accentForeground, foreground, muted } = useThemeColors();
+	const { foreground, muted } = useThemeColors();
 
 	const isValid = name.trim().length > 0;
 
@@ -32,27 +33,11 @@ export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JS
 
 						<View className="gap-2">
 							<Overline>ICON</Overline>
-							<View className="flex-row flex-wrap gap-2">
-								{JOURNAL_ICONS.map(({ key, Icon }) => {
-									const isSelected = selectedIcon === key;
-									return (
-										<Pressable
-											key={key}
-											onPress={() => setSelectedIcon(key)}
-											className={`w-11 h-11 rounded-xl items-center justify-center border ${
-												isSelected
-													? 'bg-accent border-accent'
-													: 'bg-transparent border-border'
-											}`}
-										>
-											<Icon
-												size={20}
-												color={isSelected ? accentForeground : muted}
-											/>
-										</Pressable>
-									);
-								})}
-							</View>
+							<IconPicker
+								icons={JOURNAL_ICONS}
+								selectedKey={selectedIcon}
+								onSelect={setSelectedIcon}
+							/>
 						</View>
 
 						<View className="gap-2">
