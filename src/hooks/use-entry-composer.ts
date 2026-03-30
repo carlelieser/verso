@@ -103,9 +103,11 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 				}
 				setIsLoading(false);
 			})
-			.catch(() => {
+			.catch((err: unknown) => {
+				console.error('Failed to load entry:', err instanceof Error ? err.message : err);
 				if (isActive) {
 					setIsLoading(false);
+					onError?.('Load Error', err instanceof Error ? err.message : 'Failed to load entry');
 				}
 			});
 
@@ -175,7 +177,7 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		});
 
 		onFinish?.(entryId);
-	}, [entryId, selectedJournalId, updateEntry, saveEmotions, onFinish]);
+	}, [entryId, selectedJournalId, updateEntry, saveEmotions, onFinish, onError]);
 
 	const handleCreateJournal = useCallback(
 		async (name: string, icon: string) => {

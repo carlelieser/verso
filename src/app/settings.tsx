@@ -1,20 +1,22 @@
-import { router } from 'expo-router';
+import {router} from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { ControlField, Description, Label, ListGroup } from 'heroui-native';
-import React, { useCallback, useState } from 'react';
-import { Linking, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {ControlField, Description, Label, ListGroup} from 'heroui-native';
+import React, {useCallback, useState} from 'react';
+import {Linking, ScrollView, View} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-import { ScreenLayout } from '@/components/layout/screen-layout';
-import { LibrariesDialog } from '@/components/settings/libraries-dialog';
-import { Overline } from '@/components/ui/overline';
+import {ScreenLayout} from '@/components/layout/screen-layout';
+import {LibrariesDialog} from '@/components/settings/libraries-dialog';
+import {RemindersSheet} from '@/components/settings/reminders-sheet';
+import {Overline} from '@/components/ui/overline';
 import {
 	SETTINGS_AUTO_LOCATION_KEY,
 	SETTINGS_ONBOARDING_COMPLETE_KEY,
 	SETTINGS_TRANSCRIPTION_KEY,
 } from '@/constants/settings';
-import { type PermissionStatus, usePermissions } from '@/hooks/use-permissions';
-import { useSettings } from '@/hooks/use-settings';
+import {useBottomSheet} from '@/hooks/use-bottom-sheet';
+import {type PermissionStatus, usePermissions} from '@/hooks/use-permissions';
+import {useSettings} from '@/hooks/use-settings';
 
 import packageJson from '../../package.json';
 
@@ -34,16 +36,21 @@ function getPermissionDescription(
 }
 
 function restartOnboarding(): void {
-	SecureStore.deleteItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY).then(() => {
-		router.replace('/onboarding');
-	});
+	SecureStore.deleteItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY)
+		.then(() => {
+			router.replace('/onboarding');
+		})
+		.catch((err: unknown) => {
+			console.error('Failed to restart onboarding:', err instanceof Error ? err.message : err);
+		});
 }
 
 export default function SettingsScreen(): React.JSX.Element {
 	const [isAboutOpen, setIsAboutOpen] = useState(false);
-	const { isAutoLocation, isTranscriptionEnabled, theme, setSetting, setTheme } = useSettings();
+	const remindersSheet = useBottomSheet();
+	const {isAutoLocation, isTranscriptionEnabled, theme, setSetting, setTheme} = useSettings();
 	const permissions = usePermissions();
-	const { bottom } = useSafeAreaInsets();
+	const {bottom} = useSafeAreaInsets();
 	const isSystemTheme = theme === 'system';
 	const isDark = theme === 'dark';
 
@@ -72,33 +79,16 @@ export default function SettingsScreen(): React.JSX.Element {
 			<ScrollView
 				className="rounded-t-4xl overflow-hidden"
 				contentContainerClassName="px-6 gap-6"
-				contentContainerStyle={{ paddingBottom: bottom }}
+				contentContainerStyle={{paddingBottom: bottom}}
 			>
-				<View className="gap-3">
-					<Overline>GENERAL</Overline>
-
-					<ControlField
-						isSelected={isAutoLocation}
-						onSelectedChange={handleAutoLocationToggle}
-					>
-						<View className="flex-1">
-							<Label>Location tagging</Label>
-							<Description>Automatically tag entries with your location</Description>
-						</View>
-						<ControlField.Indicator />
-					</ControlField>
-
-					<ControlField
-						isSelected={isTranscriptionEnabled}
-						onSelectedChange={handleTranscriptionToggle}
-					>
-						<View className="flex-1">
-							<Label>Voice input</Label>
-							<Description>Enable speech-to-text (STT)</Description>
-						</View>
-						<ControlField.Indicator />
-					</ControlField>
-				</View>
+				<ListGroup>
+					<ListGroup.Item onPress={remindersSheet.open}>
+						<ListGroup.ItemContent>
+							<ListGroup.ItemTitle>Reminders</ListGroup.ItemTitle>
+						</ListGroup.ItemContent>
+						<ListGroup.ItemSuffix/>
+					</ListGroup.Item>
+				</ListGroup>
 
 				<View className="gap-3">
 					<Overline>APPEARANCE</Overline>
@@ -110,7 +100,7 @@ export default function SettingsScreen(): React.JSX.Element {
 						<View className="flex-1">
 							<Label>Follow system theme</Label>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 
 					<ControlField
@@ -122,7 +112,33 @@ export default function SettingsScreen(): React.JSX.Element {
 							<Label>Dark mode</Label>
 							<Description>Switch between light and dark theme</Description>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
+					</ControlField>
+				</View>
+
+				<View className="gap-3">
+					<Overline>GENERAL</Overline>
+
+					<ControlField
+						isSelected={isAutoLocation}
+						onSelectedChange={handleAutoLocationToggle}
+					>
+						<View className="flex-1">
+							<Label>Location tagging</Label>
+							<Description>Automatically tag entries with your location</Description>
+						</View>
+						<ControlField.Indicator/>
+					</ControlField>
+
+					<ControlField
+						isSelected={isTranscriptionEnabled}
+						onSelectedChange={handleTranscriptionToggle}
+					>
+						<View className="flex-1">
+							<Label>Voice input</Label>
+							<Description>Enable speech-to-text (STT)</Description>
+						</View>
+						<ControlField.Indicator/>
 					</ControlField>
 				</View>
 
@@ -143,7 +159,7 @@ export default function SettingsScreen(): React.JSX.Element {
 								)}
 							</Description>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 
 					<ControlField
@@ -160,7 +176,7 @@ export default function SettingsScreen(): React.JSX.Element {
 								)}
 							</Description>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 
 					<ControlField
@@ -177,7 +193,7 @@ export default function SettingsScreen(): React.JSX.Element {
 								)}
 							</Description>
 						</View>
-						<ControlField.Indicator />
+						<ControlField.Indicator/>
 					</ControlField>
 				</View>
 
@@ -198,13 +214,13 @@ export default function SettingsScreen(): React.JSX.Element {
 									{packageJson.author.name}
 								</ListGroup.ItemDescription>
 							</ListGroup.ItemContent>
-							<ListGroup.ItemSuffix />
+							<ListGroup.ItemSuffix/>
 						</ListGroup.Item>
 						<ListGroup.Item onPress={() => setIsAboutOpen(true)}>
 							<ListGroup.ItemContent>
 								<ListGroup.ItemTitle>Open source libraries</ListGroup.ItemTitle>
 							</ListGroup.ItemContent>
-							<ListGroup.ItemSuffix />
+							<ListGroup.ItemSuffix/>
 						</ListGroup.Item>
 						<ListGroup.Item onPress={restartOnboarding}>
 							<ListGroup.ItemContent>
@@ -213,13 +229,15 @@ export default function SettingsScreen(): React.JSX.Element {
 									Go through the welcome flow again
 								</ListGroup.ItemDescription>
 							</ListGroup.ItemContent>
-							<ListGroup.ItemSuffix />
+							<ListGroup.ItemSuffix/>
 						</ListGroup.Item>
 					</ListGroup>
 				</View>
 			</ScrollView>
 
-			<LibrariesDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+			<LibrariesDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)}/>
+
+			{remindersSheet.isOpen ? <RemindersSheet sheet={remindersSheet}/> : null}
 		</ScreenLayout>
 	);
 }

@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 import { Uniwind } from 'uniwind';
 
@@ -49,8 +49,8 @@ const DEFAULT_REMINDER_TIME = '21:00';
 const DEFAULT_REMINDER_DAYS: readonly number[] = [0, 1, 2, 3, 4, 5, 6];
 
 function parseReminderTime(raw: string | null): { hour: number; minute: number } {
-	if (raw === null) raw = DEFAULT_REMINDER_TIME;
-	const [h, m] = raw.split(':');
+	const value = raw ?? DEFAULT_REMINDER_TIME;
+	const [h, m] = value.split(':');
 	const hour = Number(h);
 	const minute = Number(m);
 	if (Number.isNaN(hour) || Number.isNaN(minute)) return { hour: 21, minute: 0 };
@@ -61,7 +61,9 @@ function parseReminderDays(raw: string | null): readonly number[] {
 	if (raw === null) return DEFAULT_REMINDER_DAYS;
 	try {
 		const parsed: unknown = JSON.parse(raw);
-		if (Array.isArray(parsed)) return parsed as number[];
+		if (Array.isArray(parsed) && parsed.every((v) => typeof v === 'number')) {
+			return parsed;
+		}
 	} catch {
 		// fall through
 	}
@@ -74,7 +76,7 @@ function loadInitialBooleans(): Record<string, boolean> {
 	const values: Record<string, boolean> = {};
 	for (const key of BOOLEAN_KEYS) {
 		const raw = SecureStore.getItem(key);
-		values[key] = raw === null ? BOOLEAN_DEFAULTS[key]! : raw === 'true';
+		values[key] = raw === null ? (BOOLEAN_DEFAULTS[key] ?? false) : raw === 'true';
 	}
 	return values;
 }
@@ -100,9 +102,10 @@ export function useSettings(): UseSettingsResult {
 			.then((results) => {
 				const loaded: Record<string, boolean> = {};
 				for (let i = 0; i < BOOLEAN_KEYS.length; i++) {
-					const key = BOOLEAN_KEYS[i]!;
+					const key = BOOLEAN_KEYS[i];
+					if (!key) continue;
 					const raw = results[i];
-					loaded[key] = raw === null ? BOOLEAN_DEFAULTS[key]! : raw === 'true';
+					loaded[key] = raw === null ? (BOOLEAN_DEFAULTS[key] ?? false) : raw === 'true';
 				}
 				setBoolValues(loaded);
 
@@ -156,15 +159,21 @@ export function useSettings(): UseSettingsResult {
 		);
 	}, []);
 
-	return {
-		isAutoLocation: boolValues[SETTINGS_AUTO_LOCATION_KEY] ?? false,
-		isTranscriptionEnabled: boolValues[SETTINGS_TRANSCRIPTION_KEY] ?? true,
-		reminders: {
-			isEnabled: boolValues[SETTINGS_REMINDERS_ENABLED_KEY] ?? false,
+	const isRemindersEnabled = boolValues[SETTINGS_REMINDERS_ENABLED_KEY] ?? false;
+	const reminders = useMemo<ReminderSettings>(
+		() => ({
+			isEnabled: isRemindersEnabled,
 			hour: reminderTime.hour,
 			minute: reminderTime.minute,
 			days: reminderDays,
-		},
+		}),
+		[isRemindersEnabled, reminderTime.hour, reminderTime.minute, reminderDays],
+	);
+
+	return {
+		isAutoLocation: boolValues[SETTINGS_AUTO_LOCATION_KEY] ?? false,
+		isTranscriptionEnabled: boolValues[SETTINGS_TRANSCRIPTION_KEY] ?? true,
+		reminders,
 		theme,
 		setSetting,
 		setReminderTime,

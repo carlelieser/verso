@@ -63,7 +63,9 @@ export function EntryProvider({
 			.then((entry) => {
 				setCurrentEntryId(entry.id);
 				if (isAutoLocation) {
-					captureLocationAndWeather(db, entry.id).catch(() => {});
+					captureLocationAndWeather(db, entry.id).catch((err: unknown) => {
+				console.warn('Silent failure:', err instanceof Error ? err.message : err);
+			});
 				}
 			})
 			.finally(() => {
@@ -102,10 +104,14 @@ export function EntryProvider({
 						const hasEmotions = entry.emotions.length > 0;
 
 						if (!hasContent && !hasAttachments && !hasEmotions) {
-							deleteEntry(id).catch(() => {});
+							deleteEntry(id).catch((err: unknown) => {
+				console.warn('Silent failure:', err instanceof Error ? err.message : err);
+			});
 						}
 					})
-					.catch(() => {});
+					.catch((err: unknown) => {
+				console.warn('Silent failure:', err instanceof Error ? err.message : err);
+			});
 			}, 100);
 		};
 	}, [isEditMode, deleteEntry]);
@@ -119,7 +125,9 @@ export function EntryProvider({
 		setCurrentEntryId(entry.id);
 
 		if (isAutoLocation) {
-			captureLocationAndWeather(db, entry.id).catch(() => {});
+			captureLocationAndWeather(db, entry.id).catch((err: unknown) => {
+				console.warn('Silent failure:', err instanceof Error ? err.message : err);
+			});
 		}
 	}, [resolveJournalId, createEntry, isAutoLocation, db]);
 
