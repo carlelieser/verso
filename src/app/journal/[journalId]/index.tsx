@@ -3,6 +3,7 @@ import {
 	ArrowUpRight,
 	EllipsisVertical,
 	Maximize,
+	Palette,
 	Pencil,
 	Plus,
 	ScrollText,
@@ -15,7 +16,9 @@ import { FlatList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EntryCard } from '@/components/entry/entry-card';
+import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
+import { JournalColorBanner } from '@/components/journal/journal-color-banner';
 import { RenameJournal } from '@/components/journal/rename-journal';
 import { ScreenLayout } from '@/components/layout/screen-layout';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
@@ -23,38 +26,59 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu } from '@/components/ui/fab-menu';
 import { SearchInput } from '@/components/ui/search-input';
-import { getJournalIcon } from '@/constants/journal-icons';
-import { useBottomSheet } from '@/hooks/use-bottom-sheet';
+import { DEFAULT_JOURNAL_COLOR, getJournalIcon } from '@/constants/journal-icons';
+import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
+import { useDeleteEntry } from '@/hooks/use-delete-entry';
 import { useEntries } from '@/hooks/use-entries';
+import { useJournalActions } from '@/hooks/use-journal-actions';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-import { useAppDialog } from '@/providers/dialog-provider';
-import type { EntryWithJournal } from '@/types/entry';
+import type { EntrySummaryWithJournal } from '@/types/entry';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
 
 export default function JournalDetailScreen(): React.JSX.Element {
 	const { journalId } = useLocalSearchParams<{ journalId: string }>();
 	const insets = useSafeAreaInsets();
 	const { muted, danger, foreground, accentForeground } = useThemeColors();
-	const { journals, entryCounts, updateJournal, setDefaultJournal, deleteJournal } =
-		useJournals();
+	const { journals, entryCounts, updateJournal, setDefaultJournal, deleteJournal } = useJournals();
 	const journal = journals.find((j) => j.id === journalId);
 	const isDefault = journal?.displayOrder === 0;
 	const entryCount = journalId ? (entryCounts.get(journalId) ?? 0) : 0;
 	const { entries, searchEntries, createEntry, deleteEntry } = useEntries(journalId);
 	const [searchQuery, setSearchQuery] = useState('');
-	const dialog = useAppDialog();
-	const renameSheet = useBottomSheet();
-	const iconSheet = useBottomSheet();
-	const { selectedItem: selectedEntry, handleLongPress: handleEntryLongPress, actionSheet: entryActionSheet } = useLongPressAction<EntryWithJournal>();
+	const { selectedItem: selectedEntry, handleLongPress: handleEntryLongPress, actionSheet: entryActionSheet } = useLongPressAction<EntrySummaryWithJournal>();
+
+	const handleJournalDeleted = useCallback(() => router.back(), []);
+
+	const {
+		renameSheet,
+		iconSheet,
+		colorSheet,
+		handleRename,
+		handleChangeIcon,
+		handleChangeColor,
+		handleSetDefault,
+		handleDelete: handleDeleteJournal,
+	} = useJournalActions({
+		journalId,
+		journalName: journal?.name,
+		updateJournal,
+		setDefaultJournal,
+		deleteJournal,
+		onDeleted: handleJournalDeleted,
+	});
+
+	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
+
+	const debouncedSearch = useDebouncedCallback(searchEntries);
 
 	const handleSearch = useCallback(
-		async (query: string) => {
+		(query: string) => {
 			setSearchQuery(query);
-			await searchEntries(query);
+			debouncedSearch(query);
 		},
-		[searchEntries],
+		[debouncedSearch],
 	);
 
 	const handleNewEntry = useCallback(async () => {
@@ -62,45 +86,6 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		const entry = await createEntry(journalId);
 		router.push(`/journal/${journalId}/entry/${entry.id}/edit`);
 	}, [journalId, createEntry]);
-
-	const handleRename = useCallback(
-		async (name: string) => {
-			if (!journalId) return;
-			await updateJournal(journalId, { name });
-			renameSheet.close();
-		},
-		[journalId, updateJournal, renameSheet],
-	);
-
-	const handleChangeIcon = useCallback(
-		async (icon: string) => {
-			if (!journalId) return;
-			await updateJournal(journalId, { icon });
-			iconSheet.close();
-		},
-		[journalId, updateJournal, iconSheet],
-	);
-
-	const handleSetDefault = useCallback(async () => {
-		if (!journalId) return;
-		await setDefaultJournal(journalId);
-	}, [journalId, setDefaultJournal]);
-
-	const handleDelete = useCallback(async () => {
-		if (!journalId) return;
-
-		const confirmed = await dialog.confirm({
-			title: 'Delete Journal',
-			description: `All entries in "${journal?.name ?? 'this journal'}" will be permanently deleted. This cannot be undone.`,
-			confirmLabel: 'Delete',
-			variant: 'danger',
-		});
-
-		if (!confirmed) return;
-
-		await deleteJournal(journalId);
-		router.back();
-	}, [journalId, journal?.name, deleteJournal, dialog]);
 
 	const menuItems = useMemo(
 		() => [
@@ -116,6 +101,12 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				icon: <Maximize size={16} color={muted} />,
 				onPress: iconSheet.open,
 			},
+			{
+				id: 'change-color',
+				label: 'Change color',
+				icon: <Palette size={16} color={muted} />,
+				onPress: colorSheet.open,
+			},
 			...(!isDefault
 				? [
 						{
@@ -129,30 +120,18 @@ export default function JournalDetailScreen(): React.JSX.Element {
 							label: 'Delete',
 							icon: <Trash2 size={16} color={danger} />,
 							variant: 'danger' as const,
-							onPress: handleDelete,
+							onPress: handleDeleteJournal,
 						},
 					]
 				: []),
 		],
-		[muted, danger, isDefault, renameSheet, iconSheet, handleSetDefault, handleDelete],
+		[muted, danger, isDefault, renameSheet, iconSheet, colorSheet, handleSetDefault, handleDeleteJournal],
 	);
-
-
 
 	const handleDeleteEntry = useCallback(async () => {
 		if (!selectedEntry) return;
-
-		const confirmed = await dialog.confirm({
-			title: 'Delete Entry',
-			description: 'This entry will be permanently deleted. This cannot be undone.',
-			confirmLabel: 'Delete',
-			variant: 'danger',
-		});
-
-		if (!confirmed) return;
-
-		await deleteEntry(selectedEntry.id);
-	}, [selectedEntry, deleteEntry, dialog]);
+		await confirmDeleteEntry(selectedEntry.id);
+	}, [selectedEntry, confirmDeleteEntry]);
 
 	const handleViewEntry = useCallback(() => {
 		if (!selectedEntry || !journalId) return;
@@ -184,7 +163,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 
 	const titleContent = (
 		<View className="flex-row items-center gap-4">
-			{Icon ? <Icon size={28} color={muted} /> : null}
+			{Icon ? <Icon size={28} color={journal?.color ?? muted} /> : null}
 			<View>
 				<Text className="text-5xl font-heading text-foreground pb-2">
 					{journal?.name ?? 'Journal'}
@@ -194,8 +173,12 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		</View>
 	);
 
+	const banner = journal ? (
+		<JournalColorBanner color={journal.color} seed={journal.id} height={75} />
+	) : null;
+
 	return (
-		<ScreenLayout title={titleContent}>
+		<ScreenLayout title={titleContent} headerAbove={banner} disableTopInset={true}>
 			<SearchInput
 				value={searchQuery}
 				onChangeText={handleSearch}
@@ -267,6 +250,14 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					sheet={iconSheet}
 					currentIcon={journal?.icon ?? 'book-open'}
 					onChangeIcon={handleChangeIcon}
+				/>
+			) : null}
+
+			{colorSheet.isOpen ? (
+				<ChangeJournalColor
+					sheet={colorSheet}
+					currentColor={journal?.color ?? DEFAULT_JOURNAL_COLOR}
+					onChangeColor={handleChangeColor}
 				/>
 			) : null}
 

@@ -3,6 +3,7 @@ import {
 	ArrowUpRight,
 	BookOpen,
 	Maximize,
+	Palette,
 	Pencil,
 	Plus,
 	Search,
@@ -13,6 +14,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
 import { CreateJournal } from '@/components/journal/create-journal';
 import { JournalCard } from '@/components/journal/journal-card';
@@ -22,30 +24,38 @@ import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet'
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
 import { SearchInput } from '@/components/ui/search-input';
+import { DEFAULT_JOURNAL_COLOR } from '@/constants/journal-icons';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
+import { useJournalActions } from '@/hooks/use-journal-actions';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-import { useAppDialog } from '@/providers/dialog-provider';
 import type { Journal } from '@/types/journal';
 
 export default function JournalsScreen(): React.JSX.Element {
 	const insets = useSafeAreaInsets();
 	const { muted, accentForeground } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
+	const { journals, entryCounts, createJournal, updateJournal, setDefaultJournal, deleteJournal } = useJournals();
+	const createSheet = useBottomSheet();
+	const { selectedItem: selectedJournal, handleLongPress, actionSheet } = useLongPressAction<Journal>();
+
 	const {
-		journals,
-		entryCounts,
-		createJournal,
+		renameSheet,
+		iconSheet,
+		colorSheet,
+		handleRename,
+		handleChangeIcon,
+		handleChangeColor,
+		handleSetDefault,
+		handleDelete,
+	} = useJournalActions({
+		journalId: selectedJournal?.id,
+		journalName: selectedJournal?.name,
 		updateJournal,
 		setDefaultJournal,
 		deleteJournal,
-	} = useJournals();
-	const createSheet = useBottomSheet();
-	const renameSheet = useBottomSheet();
-	const iconSheet = useBottomSheet();
-	const { selectedItem: selectedJournal, handleLongPress, actionSheet } = useLongPressAction<Journal>();
-	const dialog = useAppDialog();
+	});
 
 	const filteredJournals = useMemo(() => {
 		if (searchQuery.trim().length === 0) return journals;
@@ -54,51 +64,12 @@ export default function JournalsScreen(): React.JSX.Element {
 	}, [journals, searchQuery]);
 
 	const handleCreate = useCallback(
-		async (name: string, icon: string) => {
-			await createJournal(name, icon);
+		async (name: string, icon: string, color: string) => {
+			await createJournal(name, icon, color);
 			createSheet.close();
 		},
 		[createJournal, createSheet],
 	);
-
-
-	const handleRename = useCallback(
-		async (name: string) => {
-			if (!selectedJournal) return;
-			await updateJournal(selectedJournal.id, { name });
-			renameSheet.close();
-		},
-		[selectedJournal, updateJournal, renameSheet],
-	);
-
-	const handleChangeIcon = useCallback(
-		async (icon: string) => {
-			if (!selectedJournal) return;
-			await updateJournal(selectedJournal.id, { icon });
-			iconSheet.close();
-		},
-		[selectedJournal, updateJournal, iconSheet],
-	);
-
-	const handleSetDefault = useCallback(async () => {
-		if (!selectedJournal) return;
-		await setDefaultJournal(selectedJournal.id);
-	}, [selectedJournal, setDefaultJournal]);
-
-	const handleDelete = useCallback(async () => {
-		if (!selectedJournal) return;
-
-		const confirmed = await dialog.confirm({
-			title: 'Delete Journal',
-			description: `All entries in "${selectedJournal.name}" will be permanently deleted. This cannot be undone.`,
-			confirmLabel: 'Delete',
-			variant: 'danger',
-		});
-
-		if (!confirmed) return;
-
-		await deleteJournal(selectedJournal.id);
-	}, [selectedJournal, deleteJournal, dialog]);
 
 	const isSelectedDefault = selectedJournal?.displayOrder === 0;
 
@@ -127,6 +98,12 @@ export default function JournalsScreen(): React.JSX.Element {
 				icon: Maximize,
 				onPress: iconSheet.open,
 			},
+			{
+				id: 'change-color',
+				label: 'Change color',
+				icon: Palette,
+				onPress: colorSheet.open,
+			},
 			...(!isSelectedDefault
 				? [
 						{
@@ -145,7 +122,7 @@ export default function JournalsScreen(): React.JSX.Element {
 					]
 				: []),
 		],
-		[isSelectedDefault, renameSheet, iconSheet, handleView, handleSetDefault, handleDelete],
+		[isSelectedDefault, renameSheet, iconSheet, colorSheet, handleView, handleSetDefault, handleDelete],
 	);
 
 	return (
@@ -203,6 +180,7 @@ export default function JournalsScreen(): React.JSX.Element {
 				header={
 					selectedJournal ? (
 						<JournalCard
+							className={"rounded-none"}
 							journal={selectedJournal}
 							entryCount={entryCounts.get(selectedJournal.id) ?? 0}
 							isDefault={selectedJournal.displayOrder === 0}
@@ -227,6 +205,14 @@ export default function JournalsScreen(): React.JSX.Element {
 					sheet={iconSheet}
 					currentIcon={selectedJournal?.icon ?? 'book-open'}
 					onChangeIcon={handleChangeIcon}
+				/>
+			) : null}
+
+			{colorSheet.isOpen ? (
+				<ChangeJournalColor
+					sheet={colorSheet}
+					currentColor={selectedJournal?.color ?? DEFAULT_JOURNAL_COLOR}
+					onChangeColor={handleChangeColor}
 				/>
 			) : null}
 

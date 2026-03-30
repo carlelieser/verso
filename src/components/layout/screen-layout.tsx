@@ -8,18 +8,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
 interface ScreenLayoutProps {
+	/** Content rendered above the header row (e.g. a color banner). */
+	readonly headerAbove?: React.ReactNode;
 	/** Heading content — string for plain text, ReactNode for custom layout (e.g. icon + text). */
 	readonly title?: React.ReactNode;
 	/** Show back button with ChevronLeft icon. Defaults to true. */
 	readonly showBackButton?: boolean;
+	/** Disable the top safe area inset. Useful when content bleeds to the screen edge. */
+	readonly disableTopInset?: boolean;
 	/** Slot for right-side header actions. */
 	readonly headerRight?: React.ReactNode;
 	readonly children: React.ReactNode;
 }
 
 export function ScreenLayout({
+	headerAbove,
 	title,
 	showBackButton = true,
+	disableTopInset = false,
 	headerRight,
 	children,
 }: ScreenLayoutProps): React.JSX.Element {
@@ -27,7 +33,8 @@ export function ScreenLayout({
 	const { muted } = useThemeColors();
 
 	return (
-		<View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+		<View className="flex-1 bg-background" style={{ paddingTop: disableTopInset ? 0 : insets.top }}>
+			{headerAbove ?? null}
 			<View className="p-3 gap-1">
 				<View className="flex-row items-center justify-between">
 					{showBackButton ? (
