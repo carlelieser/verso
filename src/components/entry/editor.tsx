@@ -12,7 +12,7 @@ import {
 	Strikethrough,
 	Underline,
 } from 'lucide-react-native';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
 import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import {
@@ -27,8 +27,10 @@ import {
 	TranscriptionLiveText,
 	useEditorTranscription,
 } from '@/components/entry/transcription-button';
+import { buildHtmlStyle } from '@/constants/editor-styles';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { appendHtmlParagraph } from '@/utils/html';
 
 interface FormatAction {
 	readonly key: string;
@@ -82,8 +84,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 	const [styleState, setStyleState] = useState<OnChangeStateEvent | null>(null);
 	const keyboardProgress = useKeyboardVisible();
 
-	const { foreground, accent, muted, surface, editorFont } = useThemeColors();
+	const { foreground, accent, muted, selection, surface, editorFont } = useThemeColors();
 	const transcription = useEditorTranscription({ editorRef: ref });
+	const htmlStyle = useMemo(
+		() => buildHtmlStyle({ foreground, accent, muted, surface }),
+		[foreground, accent, muted, surface],
+	);
 
 	const formatBarAnimatedStyle = useAnimatedStyle(() => ({
 		opacity: keyboardProgress.value,
@@ -99,8 +105,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 		appendText: async (text: string) => {
 			if (!ref.current) return;
 			const html = await ref.current.getHTML();
-			const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-			ref.current.setValue(html.replace(/<\/html>\s*$/, `<p>${escaped}</p>\n</html>`));
+			ref.current.setValue(appendHtmlParagraph(html, text));
 		},
 	}));
 
@@ -116,7 +121,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 				placeholder={placeholder ?? `What's on your mind?`}
 				placeholderTextColor={muted}
 				cursorColor={accent}
-				selectionColor={accent}
+				selectionColor={selection}
 				onChangeState={handleStateChange}
 				onChangeHtml={(e) => onChangeHtml?.(e.nativeEvent.value)}
 				onChangeText={(e) => onChangeText?.(e.nativeEvent.value)}
@@ -128,38 +133,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 					padding: 24,
 					paddingTop: 0,
 				}}
-				htmlStyle={{
-					h1: { fontSize: 28, bold: true },
-					h2: { fontSize: 22, bold: true },
-					blockquote: {
-						borderColor: accent,
-						borderWidth: 3,
-						gapWidth: 12,
-						color: muted,
-					},
-					codeblock: {
-						backgroundColor: surface,
-						borderRadius: 8,
-						color: foreground,
-					},
-					code: {
-						backgroundColor: surface,
-						color: foreground,
-					},
-					ul: {
-						bulletColor: foreground,
-					},
-					ol: {
-						markerColor: foreground,
-					},
-					ulCheckbox: {
-						boxColor: muted,
-					},
-					a: {
-						color: accent,
-						textDecorationLine: 'underline',
-					},
-				}}
+				htmlStyle={htmlStyle}
 			/>
 
 			<TranscriptionLiveText transcription={transcription} />

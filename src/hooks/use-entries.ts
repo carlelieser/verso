@@ -9,15 +9,13 @@ import {
 	deleteEntry as deleteEntryService,
 	getEntry,
 	searchEntries as searchEntriesService,
-	toEntry,
 	updateEntry as updateEntryService,
 } from '@/services/entry-service';
-import type { Entry, EntryDetail, EntryWithJournal } from '@/types/entry';
+import type { Entry, EntryDetail, EntrySummaryWithJournal } from '@/types/entry';
 
-const ENTRY_COLUMNS = {
+const ENTRY_LIST_COLUMNS = {
 	id: entries.id,
 	journalId: entries.journalId,
-	contentHtml: entries.contentHtml,
 	contentText: entries.contentText,
 	createdAt: entries.createdAt,
 	updatedAt: entries.updatedAt,
@@ -27,7 +25,7 @@ const ENTRY_COLUMNS = {
 const NON_EMPTY = ne(entries.contentText, '');
 
 interface UseEntriesResult {
-	readonly entries: readonly EntryWithJournal[];
+	readonly entries: readonly EntrySummaryWithJournal[];
 	readonly createEntry: (journalId: string, html?: string, text?: string) => Promise<Entry>;
 	readonly updateEntry: (
 		id: string,
@@ -42,11 +40,11 @@ interface UseEntriesResult {
 
 export function useEntries(journalId?: string): UseEntriesResult {
 	const { db } = useDatabaseContext();
-	const [searchResults, setSearchResults] = useState<readonly EntryWithJournal[] | null>(null);
+	const [searchResults, setSearchResults] = useState<readonly EntrySummaryWithJournal[] | null>(null);
 
 	const { data: rows } = useLiveQuery(
 		db
-			.select(ENTRY_COLUMNS)
+			.select(ENTRY_LIST_COLUMNS)
 			.from(entries)
 			.innerJoin(journals, eq(entries.journalId, journals.id))
 			.where(journalId ? and(NON_EMPTY, eq(entries.journalId, journalId)) : NON_EMPTY)
@@ -55,10 +53,14 @@ export function useEntries(journalId?: string): UseEntriesResult {
 		[journalId],
 	);
 
-	const liveEntries: readonly EntryWithJournal[] = useMemo(
+	const liveEntries: readonly EntrySummaryWithJournal[] = useMemo(
 		() =>
 			rows.map((row) => ({
-				...toEntry(row),
+				id: row.id,
+				journalId: row.journalId,
+				contentText: row.contentText,
+				createdAt: row.createdAt.getTime(),
+				updatedAt: row.updatedAt.getTime(),
 				journalName: row.journalName,
 			})),
 		[rows],

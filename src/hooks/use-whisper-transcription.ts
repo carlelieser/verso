@@ -1,5 +1,5 @@
 import { getRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { type SharedValue, useSharedValue } from 'react-native-reanimated';
 import { initWhisper, type WhisperContext } from 'whisper.rn';
@@ -51,7 +51,10 @@ export function useWhisperTranscription(
 	const amp1 = useSharedValue(0);
 	const amp2 = useSharedValue(0);
 	const amp3 = useSharedValue(0);
-	const amplitudes: readonly SharedValue<number>[] = [amp0, amp1, amp2, amp3];
+	const amplitudes = useMemo<readonly SharedValue<number>[]>(
+		() => [amp0, amp1, amp2, amp3],
+		[amp0, amp1, amp2, amp3],
+	);
 
 	useEffect(() => {
 		return () => {

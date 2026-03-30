@@ -4,12 +4,14 @@ import { AudioLines, FileText, Image, MapPin, Paperclip } from 'lucide-react-nat
 import React, { useCallback, useMemo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 
+import { getErrorMessage } from '@/utils/error';
+
 import { Fab } from '@/components/ui/fab';
 import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
 import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
-import { useAppDialog } from '@/providers/dialog-provider';
+import { useConfirmDialog } from '@/providers/dialog-provider';
 import { useEntryContext } from '@/providers/entry-provider';
 import { captureLocationAndWeather } from '@/services/location-weather-service';
 
@@ -33,7 +35,7 @@ export function AttachmentButton({
 	const { entryId } = useEntryContext();
 	const { db } = useDatabaseContext();
 	const { accent, accentForeground, muted } = useThemeColors();
-	const dialog = useAppDialog();
+	const dialog = useConfirmDialog();
 
 	const { attachments, pickImages, pickAudio, pickDocuments } = useAttachmentPicker(entryId, {
 		onError: dialog.showError,
@@ -43,7 +45,7 @@ export function AttachmentButton({
 		try {
 			await captureLocationAndWeather(db, entryId);
 		} catch (err: unknown) {
-			const message = err instanceof Error ? err.message : 'Failed to capture location';
+			const message = getErrorMessage(err, 'Failed to capture location');
 			dialog.showError('Location Error', message);
 		}
 	}, [db, entryId, dialog]);

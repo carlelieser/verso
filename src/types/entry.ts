@@ -12,7 +12,10 @@ export interface Entry {
 	readonly updatedAt: Timestamp;
 }
 
-export interface EntryWithJournal extends Entry {
+/** Slim projection for list views — omits contentHtml to reduce memory. */
+export type EntrySummary = Omit<Entry, 'contentHtml'>;
+
+export interface EntrySummaryWithJournal extends EntrySummary {
 	readonly journalName: string;
 }
 

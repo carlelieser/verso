@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useDatabaseContext } from '@/providers/database-provider';
+import { getErrorMessage } from '@/utils/error';
 import { addFileAttachment, listAttachments } from '@/services/attachment-service';
 import type { Attachment } from '@/types/attachment';
 
@@ -64,7 +65,7 @@ export function useAttachmentPicker(
 					});
 					added.push(attachment);
 				} catch (err: unknown) {
-					const message = err instanceof Error ? err.message : 'Failed to add attachment';
+					const message = getErrorMessage(err, 'Failed to add attachment');
 					onError?.('Attachment Error', message);
 				}
 			}

@@ -2,11 +2,11 @@ import { Card } from 'heroui-native';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 
-import type { EntryWithJournal } from '@/types/entry';
+import type { EntrySummaryWithJournal } from '@/types/entry';
 import { formatRelativeDate } from '@/utils/date';
 
 interface EntryCardProps {
-	readonly entry: EntryWithJournal;
+	readonly entry: EntrySummaryWithJournal;
 	readonly onPress: () => void;
 	readonly onLongPress?: () => void;
 	readonly showJournalName?: boolean;

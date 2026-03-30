@@ -1,6 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
+
+import { getErrorMessage } from '@/utils/error';
 import { Uniwind } from 'uniwind';
 
 import {
@@ -115,7 +117,7 @@ export function useSettings(): UseSettingsResult {
 				}
 			})
 			.catch((err: unknown) => {
-				console.error('Failed to load settings:', err instanceof Error ? err.message : err);
+				console.error('Failed to load settings:', getErrorMessage(err));
 			});
 	}, []);
 
@@ -129,7 +131,7 @@ export function useSettings(): UseSettingsResult {
 	const setSetting = useCallback((key: string, value: boolean) => {
 		setBoolValues((prev) => ({ ...prev, [key]: value }));
 		SecureStore.setItemAsync(key, String(value)).catch((err: unknown) => {
-			console.error('Failed to save setting:', err instanceof Error ? err.message : err);
+			console.error('Failed to save setting:', getErrorMessage(err));
 		});
 	}, []);
 
@@ -137,7 +139,7 @@ export function useSettings(): UseSettingsResult {
 		setThemeState(value);
 		Uniwind.setTheme(value);
 		SecureStore.setItemAsync(SETTINGS_THEME_KEY, value).catch((err: unknown) => {
-			console.error('Failed to save theme:', err instanceof Error ? err.message : err);
+			console.error('Failed to save theme:', getErrorMessage(err));
 		});
 	}, []);
 
@@ -145,7 +147,7 @@ export function useSettings(): UseSettingsResult {
 		setReminderTimeState({ hour, minute });
 		SecureStore.setItemAsync(SETTINGS_REMINDERS_TIME_KEY, `${hour}:${padTime(minute)}`).catch(
 			(err: unknown) => {
-				console.error('Failed to save reminder time:', err instanceof Error ? err.message : err);
+				console.error('Failed to save reminder time:', getErrorMessage(err));
 			},
 		);
 	}, []);
@@ -154,7 +156,7 @@ export function useSettings(): UseSettingsResult {
 		setReminderDaysState(days);
 		SecureStore.setItemAsync(SETTINGS_REMINDERS_DAYS_KEY, JSON.stringify(days)).catch(
 			(err: unknown) => {
-				console.error('Failed to save reminder days:', err instanceof Error ? err.message : err);
+				console.error('Failed to save reminder days:', getErrorMessage(err));
 			},
 		);
 	}, []);

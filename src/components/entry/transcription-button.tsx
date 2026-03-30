@@ -9,6 +9,7 @@ import { AudioWaveform } from '@/components/ui/audio-waveform';
 import { useSettings } from '@/hooks/use-settings';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useWhisperTranscription } from '@/hooks/use-whisper-transcription';
+import { appendHtmlParagraph } from '@/utils/html';
 
 interface UseEditorTranscriptionOptions {
 	readonly editorRef: React.RefObject<EnrichedTextInputInstance | null>;
@@ -32,8 +33,7 @@ export function useEditorTranscription({
 		async (text: string) => {
 			if (!editorRef.current) return;
 			const html = await editorRef.current.getHTML();
-			const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-			editorRef.current.setValue(html.replace(/<\/html>\s*$/, `<p>${escaped}</p>\n</html>`));
+			editorRef.current.setValue(appendHtmlParagraph(html, text));
 		},
 		[editorRef],
 	);

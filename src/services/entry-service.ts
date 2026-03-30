@@ -1,14 +1,13 @@
-import { and, desc, eq, ne } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import type { Db } from '@/db/client';
 import { getRawClient } from '@/db/client';
-import { emotionRecords, entries, journals } from '@/db/schema';
+import { entries } from '@/db/schema';
 import { EntryNotFoundError } from '@/errors/domain-errors';
 import { deleteAttachmentFiles, listAttachments } from '@/services/attachment-service';
+import { getEmotions } from '@/services/emotion-service';
 import { getWeather } from '@/services/weather-service';
-import { isEmotionCategory, isEmotionIntensity } from '@/types/common';
-import type { EmotionRecord } from '@/types/emotion';
-import type { Entry, EntryDetail, EntryWithJournal } from '@/types/entry';
+import type { Entry, EntryDetail, EntrySummaryWithJournal } from '@/types/entry';
 import { generateId } from '@/utils/id';
 
 interface CreateEntryInput {
@@ -24,13 +23,7 @@ interface UpdateEntryInput {
 	readonly contentText: string;
 }
 
-interface ListEntriesInput {
-	readonly journalId?: string;
-	readonly limit?: number;
-	readonly offset?: number;
-}
-
-export function toEntry(row: {
+function toEntry(row: {
 	id: string;
 	journalId: string;
 	contentHtml: string;
@@ -101,24 +94,11 @@ export async function getEntry(db: Db, id: string): Promise<EntryDetail> {
 
 	if (!row) throw new EntryNotFoundError(id);
 
-	const [emotions, entryAttachments, weather] = await Promise.all([
-		db.select().from(emotionRecords).where(eq(emotionRecords.entryId, id)),
+	const [validEmotions, entryAttachments, weather] = await Promise.all([
+		getEmotions(db, id),
 		listAttachments(db, id),
 		getWeather(db, id),
 	]);
-
-	const validEmotions: EmotionRecord[] = [];
-	for (const e of emotions) {
-		if (isEmotionCategory(e.category) && isEmotionIntensity(e.intensity)) {
-			validEmotions.push({
-				id: e.id,
-				entryId: e.entryId,
-				category: e.category,
-				intensity: e.intensity,
-				createdAt: e.createdAt.getTime(),
-			});
-		}
-	}
 
 	return {
 		...toEntry(row),
@@ -128,60 +108,22 @@ export async function getEntry(db: Db, id: string): Promise<EntryDetail> {
 	};
 }
 
-export async function listEntries(db: Db, input: ListEntriesInput): Promise<EntryWithJournal[]> {
-	const limit = input.limit ?? 50;
-	const offset = input.offset ?? 0;
-
-	const nonEmpty = ne(entries.contentText, '');
-	const filter = input.journalId
-		? and(nonEmpty, eq(entries.journalId, input.journalId))
-		: nonEmpty;
-
-	const rows = await db
-		.select({
-			id: entries.id,
-			journalId: entries.journalId,
-			contentHtml: entries.contentHtml,
-			contentText: entries.contentText,
-			createdAt: entries.createdAt,
-			updatedAt: entries.updatedAt,
-			journalName: journals.name,
-		})
-		.from(entries)
-		.innerJoin(journals, eq(entries.journalId, journals.id))
-		.where(filter)
-		.orderBy(desc(entries.createdAt))
-		.limit(limit)
-		.offset(offset);
-
-	return rows.map((row) => ({
-		id: row.id,
-		journalId: row.journalId,
-		contentHtml: row.contentHtml,
-		contentText: row.contentText,
-		createdAt: row.createdAt.getTime(),
-		updatedAt: row.updatedAt.getTime(),
-		journalName: row.journalName,
-	}));
-}
-
 interface FtsRow {
 	readonly id: string;
 	readonly journal_id: string;
-	readonly content_html: string;
 	readonly content_text: string;
 	readonly created_at: number;
 	readonly updated_at: number;
 	readonly journal_name: string;
 }
 
-export async function searchEntries(db: Db, query: string): Promise<EntryWithJournal[]> {
+export async function searchEntries(db: Db, query: string): Promise<EntrySummaryWithJournal[]> {
 	if (query.trim().length === 0) return [];
 
 	const rawDb = getRawClient(db);
 
 	const rows = (await rawDb.getAllAsync(
-		`SELECT e.id, e.journal_id, e.content_html, e.content_text, e.created_at, e.updated_at, j.name as journal_name
+		`SELECT e.id, e.journal_id, e.content_text, e.created_at, e.updated_at, j.name as journal_name
      FROM entry_fts fts
      JOIN entry e ON e.rowid = fts.rowid
      JOIN journal j ON j.id = e.journal_id
@@ -193,7 +135,6 @@ export async function searchEntries(db: Db, query: string): Promise<EntryWithJou
 	return rows.map((row) => ({
 		id: row.id,
 		journalId: row.journal_id,
-		contentHtml: row.content_html,
 		contentText: row.content_text,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,

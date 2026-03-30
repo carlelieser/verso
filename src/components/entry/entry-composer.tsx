@@ -13,7 +13,7 @@ import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-me
 import { useEntryComposer } from '@/hooks/use-entry-composer';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-import { useAppDialog } from '@/providers/dialog-provider';
+import { useConfirmDialog } from '@/providers/dialog-provider';
 import { EntryProvider } from '@/providers/entry-provider';
 
 export type { OverflowMenuItem } from '@/components/ui/overflow-menu';
@@ -74,7 +74,7 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 			height: keyboardProgress.value === 1 ? 0 : 'auto',
 			overflow: 'hidden' as const,
 		}));
-		const dialog = useAppDialog();
+		const dialog = useConfirmDialog();
 
 		const composer = useEntryComposer({
 			onFinish,

@@ -1,16 +1,16 @@
 import * as Sharing from 'expo-sharing';
-import { Button } from 'heroui-native';
-import { EllipsisVertical, MapPin, Paperclip, Share2, Trash2 } from 'lucide-react-native';
+import { MapPin, Paperclip, Share2, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { InfoCard } from '@/components/ui/info-card';
-import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
+import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
 import { ATTACHMENT_TYPE_ICONS } from '@/constants/attachment-icons';
+import { getErrorMessage } from '@/utils/error';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
-import { useAppDialog } from '@/providers/dialog-provider';
+import { useConfirmDialog } from '@/providers/dialog-provider';
 import { deleteAttachment } from '@/services/attachment-service';
 import type { Attachment, FileAttachment, LocationAttachment } from '@/types/attachment';
 import { formatFileSize } from '@/utils/format-file-size';
@@ -33,7 +33,7 @@ function FileCard({
 	const { muted } = useThemeColors();
 	const Icon = ATTACHMENT_TYPE_ICONS[attachment.type];
 
-	const menuItems: readonly PopoverMenuItem[] = useMemo(
+	const menuItems: readonly OverflowMenuItem[] = useMemo(
 		() => [
 			{ id: 'share', label: 'Share', icon: Share2, onPress: onShare },
 			{ id: 'delete', label: 'Delete', icon: Trash2, variant: 'danger' as const, onPress: onDelete },
@@ -52,15 +52,7 @@ function FileCard({
 					{formatFileSize(attachment.data.sizeBytes)}
 				</Text>
 			</View>
-			<PopoverMenu
-				trigger={
-					<Button variant="ghost" size="sm" isIconOnly>
-						<EllipsisVertical size={16} color={muted} />
-					</Button>
-				}
-				items={menuItems}
-				width={180}
-			/>
+			<OverflowMenu items={menuItems} />
 		</InfoCard>
 	);
 }
@@ -76,7 +68,7 @@ function LocationCard({
 }): React.JSX.Element {
 	const { muted } = useThemeColors();
 
-	const menuItems: readonly PopoverMenuItem[] = useMemo(
+	const menuItems: readonly OverflowMenuItem[] = useMemo(
 		() => [
 			{ id: 'delete', label: 'Delete', icon: Trash2, variant: 'danger' as const, onPress: onDelete },
 		],
@@ -97,15 +89,7 @@ function LocationCard({
 					</Text>
 				) : null}
 			</View>
-			<PopoverMenu
-				trigger={
-					<Button variant="ghost" size="sm" isIconOnly>
-						<EllipsisVertical size={16} color={muted} />
-					</Button>
-				}
-				items={menuItems}
-				width={180}
-			/>
+			<OverflowMenu items={menuItems} />
 		</InfoCard>
 	);
 }
@@ -114,14 +98,14 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 	const { db } = useDatabaseContext();
 	const { muted } = useThemeColors();
 	const [deletingId, setDeletingId] = useState<string | null>(null);
-	const dialog = useAppDialog();
+	const dialog = useConfirmDialog();
 
 	const handleShare = useCallback(
 		async (uri: string) => {
 			try {
 				await Sharing.shareAsync(uri);
 			} catch (err: unknown) {
-				const message = err instanceof Error ? err.message : 'Failed to share file';
+				const message = getErrorMessage(err, 'Failed to share file');
 				await dialog.alert({ title: 'Share Error', description: message });
 			}
 		},
@@ -148,7 +132,7 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 			try {
 				await deleteAttachment(db, attachment.id);
 			} catch (err: unknown) {
-				const message = err instanceof Error ? err.message : 'Failed to delete attachment';
+				const message = getErrorMessage(err, 'Failed to delete attachment');
 				await dialog.alert({ title: 'Delete Error', description: message });
 			} finally {
 				setDeletingId(null);

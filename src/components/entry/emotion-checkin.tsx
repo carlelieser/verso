@@ -1,5 +1,5 @@
 import { Button, Slider } from 'heroui-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -39,26 +39,33 @@ export function EmotionCheckin({
 		(emotion: EmotionCategory) => {
 			setSelections((prev) => {
 				const exists = prev.some((s) => s.emotion === emotion);
-				const next = exists
+				return exists
 					? prev.filter((s) => s.emotion !== emotion)
 					: [...prev, { emotion, intensity: DEFAULT_INTENSITY }];
-				emitChange(next);
-				return next;
 			});
 		},
-		[emitChange],
+		[],
 	);
 
 	const updateIntensity = useCallback(
 		(emotion: EmotionCategory, intensity: EmotionIntensity) => {
-			setSelections((prev) => {
-				const next = prev.map((s) => (s.emotion === emotion ? { ...s, intensity } : s));
-				emitChange(next);
-				return next;
-			});
+			setSelections((prev) =>
+				prev.map((s) => (s.emotion === emotion ? { ...s, intensity } : s)),
+			);
 		},
-		[emitChange],
+		[],
 	);
+
+	// Emit changes outside the state updater to avoid side effects in StrictMode.
+	// Skip the mount emission — the parent already knows the initial value.
+	const hasMountedRef = useRef(false);
+	useEffect(() => {
+		if (!hasMountedRef.current) {
+			hasMountedRef.current = true;
+			return;
+		}
+		emitChange(selections);
+	}, [selections, emitChange]);
 
 	const selectedSet = useMemo(
 		() => new Set(selections.map((s) => s.emotion)),
@@ -108,7 +115,7 @@ export function EmotionCheckin({
 
 			{selections.length > 0 ? (
 				<View className="gap-5 px-6">
-					<Overline>INTENSITY</Overline>
+					<Overline>Intensity</Overline>
 					{selections.map((selection) => (
 						<View key={selection.emotion} className="gap-2">
 							<View className="flex-row justify-between items-center">

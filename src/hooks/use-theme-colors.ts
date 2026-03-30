@@ -13,6 +13,7 @@ const THEME_VARIABLES = {
 	danger: '--color-danger',
 	foreground: '--color-foreground',
 	muted: '--color-muted',
+	selection: '--color-selection',
 	surface: '--color-surface',
 	editorFont: '--font-editor',
 } as const;
@@ -30,6 +31,7 @@ interface ThemeColors {
 	readonly danger: string;
 	readonly foreground: string;
 	readonly muted: string;
+	readonly selection: string;
 	readonly surface: string;
 	readonly editorFont: string;
 }
