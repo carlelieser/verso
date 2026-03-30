@@ -19,12 +19,11 @@ import { JournalCard } from '@/components/journal/journal-card';
 import { RenameJournal } from '@/components/journal/rename-journal';
 import { ScreenLayout } from '@/components/layout/screen-layout';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
-import { AppDialog } from '@/components/ui/app-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
 import { SearchInput } from '@/components/ui/search-input';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
-import { useDialog } from '@/hooks/use-dialog';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -46,7 +45,7 @@ export default function JournalsScreen(): React.JSX.Element {
 	const renameSheet = useBottomSheet();
 	const iconSheet = useBottomSheet();
 	const { selectedItem: selectedJournal, handleLongPress, actionSheet } = useLongPressAction<Journal>();
-	const dialog = useDialog();
+	const dialog = useAppDialog();
 
 	const filteredJournals = useMemo(() => {
 		if (searchQuery.trim().length === 0) return journals;
@@ -231,11 +230,6 @@ export default function JournalsScreen(): React.JSX.Element {
 				/>
 			) : null}
 
-			<AppDialog
-				{...dialog.state}
-				onConfirm={dialog.handleConfirm}
-				onCancel={dialog.handleCancel}
-			/>
 		</ScreenLayout>
 	);
 }

@@ -9,10 +9,9 @@ import { MoodCard } from '@/components/entry/mood-card';
 import { WeatherCard } from '@/components/entry/weather-card';
 import { ScreenLayout } from '@/components/layout/screen-layout';
 import { Section } from '@/components/layout/section';
-import { AppDialog } from '@/components/ui/app-dialog';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu, type FabMenuItem } from '@/components/ui/fab-menu';
-import { useDialog } from '@/hooks/use-dialog';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { useEntries } from '@/hooks/use-entries';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntryDetail } from '@/types/entry';
@@ -23,7 +22,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 	const insets = useSafeAreaInsets();
 	const { danger, foreground, accentForeground } = useThemeColors();
 	const { loadEntry, deleteEntry } = useEntries();
-	const dialog = useDialog();
+	const dialog = useAppDialog();
 	const [entry, setEntry] = useState<EntryDetail | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -147,11 +146,6 @@ export default function EntryViewScreen(): React.JSX.Element {
 				</>
 			)}
 
-			<AppDialog
-				{...dialog.state}
-				onConfirm={dialog.handleConfirm}
-				onCancel={dialog.handleCancel}
-			/>
 		</ScreenLayout>
 	);
 }

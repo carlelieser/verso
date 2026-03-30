@@ -4,12 +4,11 @@ import { EllipsisVertical, MapPin, Paperclip, Share2, Trash2 } from 'lucide-reac
 import React, { useCallback, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { AppDialog } from '@/components/ui/app-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { InfoCard } from '@/components/ui/info-card';
 import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
 import { ATTACHMENT_TYPE_ICONS } from '@/constants/attachment-icons';
-import { useDialog } from '@/hooks/use-dialog';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
 import { deleteAttachment } from '@/services/attachment-service';
@@ -115,7 +114,7 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 	const { db } = useDatabaseContext();
 	const { muted } = useThemeColors();
 	const [deletingId, setDeletingId] = useState<string | null>(null);
-	const dialog = useDialog();
+	const dialog = useAppDialog();
 
 	const handleShare = useCallback(
 		async (uri: string) => {
@@ -195,11 +194,6 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 				</View>
 			)}
 
-			<AppDialog
-				{...dialog.state}
-				onConfirm={dialog.handleConfirm}
-				onCancel={dialog.handleCancel}
-			/>
 		</View>
 	);
 }

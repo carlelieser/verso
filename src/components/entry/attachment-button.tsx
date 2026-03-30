@@ -4,11 +4,10 @@ import { AudioLines, FileText, Image, MapPin, Paperclip } from 'lucide-react-nat
 import React, { useCallback, useMemo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import { AppDialog } from '@/components/ui/app-dialog';
 import { Fab } from '@/components/ui/fab';
 import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
 import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
-import { useDialog } from '@/hooks/use-dialog';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
 import { useEntryContext } from '@/providers/entry-provider';
@@ -34,7 +33,7 @@ export function AttachmentButton({
 	const { entryId } = useEntryContext();
 	const { db } = useDatabaseContext();
 	const { accent, accentForeground, muted } = useThemeColors();
-	const dialog = useDialog();
+	const dialog = useAppDialog();
 
 	const { attachments, pickImages, pickAudio, pickDocuments } = useAttachmentPicker(entryId, {
 		onError: dialog.showError,
@@ -84,11 +83,6 @@ export function AttachmentButton({
 				alignOffset={alignOffset}
 			/>
 
-			<AppDialog
-				{...dialog.state}
-				onConfirm={dialog.handleConfirm}
-				onCancel={dialog.handleCancel}
-			/>
 		</>
 	);
 }

@@ -7,12 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EntryCard } from '@/components/entry/entry-card';
 import { ScreenLayout } from '@/components/layout/screen-layout';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
-import { AppDialog } from '@/components/ui/app-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
-import { useDialog } from '@/hooks/use-dialog';
 import { useEntries } from '@/hooks/use-entries';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntryWithJournal } from '@/types/entry';
 
@@ -22,7 +21,7 @@ export default function HistoryScreen(): React.JSX.Element {
 	const [searchQuery, setSearchQuery] = useState('');
 	const { entries, searchEntries, deleteEntry } = useEntries();
 	const { selectedItem: selectedEntry, handleLongPress, actionSheet } = useLongPressAction<EntryWithJournal>();
-	const dialog = useDialog();
+	const dialog = useAppDialog();
 
 	const handleSearch = useCallback(
 		async (query: string) => {
@@ -120,11 +119,6 @@ export default function HistoryScreen(): React.JSX.Element {
 				sheet={actionSheet}
 			/>
 
-			<AppDialog
-				{...dialog.state}
-				onConfirm={dialog.handleConfirm}
-				onCancel={dialog.handleCancel}
-			/>
 		</ScreenLayout>
 	);
 }

@@ -9,9 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Editor } from '@/components/entry/editor';
 import { EmotionButton } from '@/components/entry/emotion-button';
 import { JournalSelect } from '@/components/journal/journal-select';
-import { AppDialog } from '@/components/ui/app-dialog';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
-import { useDialog } from '@/hooks/use-dialog';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { useEntryComposer } from '@/hooks/use-entry-composer';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -75,7 +74,7 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 			height: keyboardProgress.value === 1 ? 0 : 'auto',
 			overflow: 'hidden' as const,
 		}));
-		const dialog = useDialog();
+		const dialog = useAppDialog();
 
 		const composer = useEntryComposer({
 			onFinish,
@@ -165,11 +164,6 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 					)}
 				</View>
 
-				<AppDialog
-					{...dialog.state}
-					onConfirm={dialog.handleConfirm}
-					onCancel={dialog.handleCancel}
-				/>
 			</>
 		);
 	},

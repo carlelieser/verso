@@ -19,14 +19,13 @@ import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
 import { RenameJournal } from '@/components/journal/rename-journal';
 import { ScreenLayout } from '@/components/layout/screen-layout';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
-import { AppDialog } from '@/components/ui/app-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu } from '@/components/ui/fab-menu';
 import { SearchInput } from '@/components/ui/search-input';
 import { getJournalIcon } from '@/constants/journal-icons';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
-import { useDialog } from '@/hooks/use-dialog';
+import { useAppDialog } from '@/providers/dialog-provider';
 import { useEntries } from '@/hooks/use-entries';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
@@ -45,7 +44,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const entryCount = journalId ? (entryCounts.get(journalId) ?? 0) : 0;
 	const { entries, searchEntries, createEntry, deleteEntry } = useEntries(journalId);
 	const [searchQuery, setSearchQuery] = useState('');
-	const dialog = useDialog();
+	const dialog = useAppDialog();
 	const renameSheet = useBottomSheet();
 	const iconSheet = useBottomSheet();
 	const { selectedItem: selectedEntry, handleLongPress: handleEntryLongPress, actionSheet: entryActionSheet } = useLongPressAction<EntryWithJournal>();
@@ -271,11 +270,6 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				/>
 			) : null}
 
-			<AppDialog
-				{...dialog.state}
-				onConfirm={dialog.handleConfirm}
-				onCancel={dialog.handleCancel}
-			/>
 		</ScreenLayout>
 	);
 }
