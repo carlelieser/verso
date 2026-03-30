@@ -3,10 +3,9 @@ import { Portal } from '@gorhom/portal';
 import { ControlField } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-
-import { SelectablePill } from '@/components/ui/selectable-pill';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SelectablePill } from '@/components/ui/selectable-pill';
 import { TimePickerDialog } from '@/components/ui/time-picker-dialog';
 import { SETTINGS_REMINDERS_ENABLED_KEY } from '@/constants/settings';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';

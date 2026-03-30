@@ -2,6 +2,9 @@ export const SETTINGS_AUTO_LOCATION_KEY = 'settings.autoLocation';
 export const SETTINGS_TRANSCRIPTION_KEY = 'settings.transcription';
 export const SETTINGS_THEME_KEY = 'settings.theme';
 export const SETTINGS_ONBOARDING_COMPLETE_KEY = 'settings.onboardingComplete';
+export const SETTINGS_REMINDERS_ENABLED_KEY = 'settings.remindersEnabled';
+export const SETTINGS_REMINDERS_TIME_KEY = 'settings.remindersTime';
+export const SETTINGS_REMINDERS_DAYS_KEY = 'settings.remindersDays';
 
 export type Theme = 'light' | 'dark' | 'system';
 
