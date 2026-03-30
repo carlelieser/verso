@@ -12,18 +12,9 @@ import { SETTINGS_REMINDERS_ENABLED_KEY } from '@/constants/settings';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useSettings } from '@/hooks/use-settings';
 import { scheduleReminders } from '@/services/reminder-service';
+import { formatTime12 } from '@/utils/format-time';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
-
-function padTime(value: number): string {
-	return value.toString().padStart(2, '0');
-}
-
-function formatTime(hour: number, minute: number): { time: string; period: string } {
-	const period = hour >= 12 ? 'PM' : 'AM';
-	const h = hour % 12 || 12;
-	return { time: `${h}:${padTime(minute)}`, period };
-}
 
 interface RemindersSheetProps {
 	readonly sheet: ReturnType<typeof useBottomSheet>;
@@ -61,7 +52,7 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 		[setReminderDays, reminders],
 	);
 
-	const formatted = formatTime(reminders.hour, reminders.minute);
+	const formatted = formatTime12(reminders.hour, reminders.minute);
 
 	return (
 		<Portal>
