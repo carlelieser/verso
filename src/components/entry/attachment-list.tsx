@@ -1,5 +1,5 @@
+import { Button } from 'heroui-native';
 import * as Sharing from 'expo-sharing';
-import { Button, Menu } from 'heroui-native';
 import {
 	AudioLines,
 	EllipsisVertical,
@@ -10,11 +10,12 @@ import {
 	Share2,
 	Trash2,
 } from 'lucide-react-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { AppDialog } from '@/components/ui/app-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
 import { useDialog } from '@/hooks/use-dialog';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
@@ -34,20 +35,25 @@ const FILE_TYPE_ICONS = {
 
 function FileCard({
 	attachment,
-	muted,
-	danger,
 	onShare,
 	onDelete,
 	isDeleting,
 }: {
 	readonly attachment: FileAttachment;
-	readonly muted: string;
-	readonly danger: string;
 	readonly onShare: () => void;
 	readonly onDelete: () => void;
 	readonly isDeleting: boolean;
 }): React.JSX.Element {
+	const { muted } = useThemeColors();
 	const Icon = FILE_TYPE_ICONS[attachment.type];
+
+	const menuItems: readonly PopoverMenuItem[] = useMemo(
+		() => [
+			{ id: 'share', label: 'Share', icon: Share2, onPress: onShare },
+			{ id: 'delete', label: 'Delete', icon: Trash2, variant: 'danger' as const, onPress: onDelete },
+		],
+		[onShare, onDelete],
+	);
 
 	return (
 		<View
@@ -63,48 +69,37 @@ function FileCard({
 					{formatFileSize(attachment.data.sizeBytes)}
 				</Text>
 			</View>
-			<Menu presentation="popover">
-				<Menu.Trigger asChild>
+			<PopoverMenu
+				trigger={
 					<Button variant="ghost" size="sm" isIconOnly>
 						<EllipsisVertical size={16} color={muted} />
 					</Button>
-				</Menu.Trigger>
-				<Menu.Portal>
-					<Menu.Overlay />
-					<Menu.Content presentation="popover" width={180}>
-						<Menu.Item id="share" shouldCloseOnSelect onPress={onShare}>
-							<Share2 size={16} color={muted} />
-							<Menu.ItemTitle>Share</Menu.ItemTitle>
-						</Menu.Item>
-						<Menu.Item
-							variant="danger"
-							id="delete"
-							shouldCloseOnSelect
-							onPress={onDelete}
-						>
-							<Trash2 size={16} color={danger} />
-							<Menu.ItemTitle>Delete</Menu.ItemTitle>
-						</Menu.Item>
-					</Menu.Content>
-				</Menu.Portal>
-			</Menu>
+				}
+				items={menuItems}
+				width={180}
+			/>
 		</View>
 	);
 }
 
 function LocationCard({
 	attachment,
-	muted,
-	danger,
 	onDelete,
 	isDeleting,
 }: {
 	readonly attachment: LocationAttachment;
-	readonly muted: string;
-	readonly danger: string;
 	readonly onDelete: () => void;
 	readonly isDeleting: boolean;
 }): React.JSX.Element {
+	const { muted } = useThemeColors();
+
+	const menuItems: readonly PopoverMenuItem[] = useMemo(
+		() => [
+			{ id: 'delete', label: 'Delete', icon: Trash2, variant: 'danger' as const, onPress: onDelete },
+		],
+		[onDelete],
+	);
+
 	return (
 		<View
 			className="flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border"
@@ -122,34 +117,22 @@ function LocationCard({
 					</Text>
 				) : null}
 			</View>
-			<Menu presentation="popover">
-				<Menu.Trigger asChild>
+			<PopoverMenu
+				trigger={
 					<Button variant="ghost" size="sm" isIconOnly>
 						<EllipsisVertical size={16} color={muted} />
 					</Button>
-				</Menu.Trigger>
-				<Menu.Portal>
-					<Menu.Overlay />
-					<Menu.Content presentation="popover" width={180}>
-						<Menu.Item
-							variant="danger"
-							id="delete"
-							shouldCloseOnSelect
-							onPress={onDelete}
-						>
-							<Trash2 size={16} color={danger} />
-							<Menu.ItemTitle>Delete</Menu.ItemTitle>
-						</Menu.Item>
-					</Menu.Content>
-				</Menu.Portal>
-			</Menu>
+				}
+				items={menuItems}
+				width={180}
+			/>
 		</View>
 	);
 }
 
 export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.Element {
 	const { db } = useDatabaseContext();
-	const { muted, danger } = useThemeColors();
+	const { muted } = useThemeColors();
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const dialog = useDialog();
 
@@ -212,8 +195,6 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 								<LocationCard
 									key={attachment.id}
 									attachment={attachment}
-									muted={muted}
-									danger={danger}
 									onDelete={() => handleDelete(attachment)}
 									isDeleting={isDeleting}
 								/>
@@ -224,8 +205,6 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 							<FileCard
 								key={attachment.id}
 								attachment={attachment}
-								muted={muted}
-								danger={danger}
 								onShare={() => handleShare(attachment.data.uri)}
 								onDelete={() => handleDelete(attachment)}
 								isDeleting={isDeleting}

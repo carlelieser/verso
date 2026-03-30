@@ -1,11 +1,12 @@
-import { Button, Menu } from 'heroui-native';
+import { Button } from 'heroui-native';
 import type { MenuContentPopoverProps } from 'heroui-native';
 import { AudioLines, FileText, Image, MapPin, Paperclip } from 'lucide-react-native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 import { AppDialog } from '@/components/ui/app-dialog';
 import { Fab } from '@/components/ui/fab';
+import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
 import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
 import { useDialog } from '@/hooks/use-dialog';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -48,52 +49,38 @@ export function AttachmentButton({
 		}
 	}, [db, entryId, dialog]);
 
+	const items: readonly PopoverMenuItem[] = useMemo(
+		() => [
+			{ id: 'location', label: 'Location', icon: MapPin, onPress: handleLocation },
+			{ id: 'images', label: 'Images', icon: Image, onPress: pickImages },
+			{ id: 'audio', label: 'Audio', icon: AudioLines, onPress: pickAudio },
+			{ id: 'documents', label: 'Documents', icon: FileText, onPress: pickDocuments },
+		],
+		[handleLocation, pickImages, pickAudio, pickDocuments],
+	);
+
 	const isFab = variant === 'fab';
+
+	const trigger = isFab ? (
+		<Fab
+			icon={<Paperclip size={24} color={accentForeground} />}
+			className={className}
+			style={style}
+		/>
+	) : (
+		<Button variant="ghost" isIconOnly>
+			<Paperclip size={18} color={attachments.length > 0 ? accent : muted} />
+		</Button>
+	);
 
 	return (
 		<>
-			<Menu presentation="popover">
-				<Menu.Trigger asChild>
-					{isFab ? (
-						<Fab
-							icon={<Paperclip size={24} color={accentForeground} />}
-							className={className}
-							style={style}
-						/>
-					) : (
-						<Button variant="ghost" isIconOnly>
-							<Paperclip size={18} color={attachments.length > 0 ? accent : muted} />
-						</Button>
-					)}
-				</Menu.Trigger>
-				<Menu.Portal>
-					<Menu.Overlay />
-					<Menu.Content
-						presentation="popover"
-						width={180}
-						placement={placement}
-						offset={offset}
-						alignOffset={alignOffset}
-					>
-						<Menu.Item id="location" shouldCloseOnSelect onPress={handleLocation}>
-							<MapPin size={16} color={muted} />
-							<Menu.ItemTitle>Location</Menu.ItemTitle>
-						</Menu.Item>
-						<Menu.Item id="images" shouldCloseOnSelect onPress={pickImages}>
-							<Image size={16} color={muted} />
-							<Menu.ItemTitle>Images</Menu.ItemTitle>
-						</Menu.Item>
-						<Menu.Item id="audio" shouldCloseOnSelect onPress={pickAudio}>
-							<AudioLines size={16} color={muted} />
-							<Menu.ItemTitle>Audio</Menu.ItemTitle>
-						</Menu.Item>
-						<Menu.Item id="documents" shouldCloseOnSelect onPress={pickDocuments}>
-							<FileText size={16} color={muted} />
-							<Menu.ItemTitle>Documents</Menu.ItemTitle>
-						</Menu.Item>
-					</Menu.Content>
-				</Menu.Portal>
-			</Menu>
+			<PopoverMenu
+				trigger={trigger}
+				items={items}
+				width={180}
+				placement={placement}
+			/>
 
 			<AppDialog
 				{...dialog.state}
