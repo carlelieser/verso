@@ -5,8 +5,8 @@ import { Text, View } from 'react-native';
 import { type SharedValue, useSharedValue } from 'react-native-reanimated';
 
 import { AudioWaveform } from '@/components/ui/audio-waveform';
-import { useVoicePlayer } from '@/hooks/use-voice-player';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useVoicePlayer } from '@/hooks/use-voice-player';
 
 function formatDuration(ms: number): string {
 	const totalSeconds = Math.floor(ms / 1000);
@@ -47,7 +47,11 @@ function EditVoiceNote({
 	return (
 		<View className="gap-3 p-3 rounded-xl bg-surface border border-border">
 			<View className="flex-row items-center gap-3">
-				<AudioWaveform amplitudes={[amplitude]} color={isRecording ? accent : muted} size={24} />
+				<AudioWaveform
+					amplitudes={[amplitude]}
+					color={isRecording ? accent : muted}
+					size={24}
+				/>
 				<Text className="text-sm text-foreground flex-1 text-right">
 					{formatDuration(durationMs)}
 				</Text>

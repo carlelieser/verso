@@ -1,8 +1,4 @@
-import {
-	RecordingPresets,
-	useAudioRecorder,
-	useAudioRecorderState,
-} from 'expo-audio';
+import { RecordingPresets, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
 import { useCallback, useRef } from 'react';
 import { type SharedValue, useSharedValue } from 'react-native-reanimated';
 
@@ -22,21 +18,16 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 	const amplitude = useSharedValue(0);
 	const statusRef = useRef<RecorderStatus>('idle');
 
-	const recorder = useAudioRecorder(
-		RecordingPresets.HIGH_QUALITY,
-		(status) => {
-			if (status.isFinished) {
-				statusRef.current = 'recorded';
-			}
-		},
-	);
+	const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY, (status) => {
+		if (status.isFinished) {
+			statusRef.current = 'recorded';
+		}
+	});
 
 	const recorderState = useAudioRecorderState(recorder, 100);
 
 	// Derive status from recorder state + our ref
-	const status: RecorderStatus = recorderState.isRecording
-		? 'recording'
-		: statusRef.current;
+	const status: RecorderStatus = recorderState.isRecording ? 'recording' : statusRef.current;
 
 	// Update amplitude from metering
 	if (recorderState.metering !== undefined && recorderState.isRecording) {

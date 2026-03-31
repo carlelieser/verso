@@ -8,12 +8,12 @@ import { InfoCard } from '@/components/ui/info-card';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
 import { VoiceNote } from '@/components/voice-note/voice-note';
 import { ATTACHMENT_TYPE_ICONS } from '@/constants/attachment-icons';
-import { getErrorMessage } from '@/utils/error';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
 import { useConfirmDialog } from '@/providers/dialog-provider';
 import { deleteAttachment } from '@/services/attachment-service';
 import type { Attachment, FileAttachment, LocationAttachment } from '@/types/attachment';
+import { getErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format-file-size';
 
 interface AttachmentListProps {
@@ -37,7 +37,13 @@ function FileCard({
 	const menuItems: readonly OverflowMenuItem[] = useMemo(
 		() => [
 			{ id: 'share', label: 'Share', icon: Share2, onPress: onShare },
-			{ id: 'delete', label: 'Delete', icon: Trash2, variant: 'danger' as const, onPress: onDelete },
+			{
+				id: 'delete',
+				label: 'Delete',
+				icon: Trash2,
+				variant: 'danger' as const,
+				onPress: onDelete,
+			},
 		],
 		[onShare, onDelete],
 	);
@@ -71,7 +77,13 @@ function LocationCard({
 
 	const menuItems: readonly OverflowMenuItem[] = useMemo(
 		() => [
-			{ id: 'delete', label: 'Delete', icon: Trash2, variant: 'danger' as const, onPress: onDelete },
+			{
+				id: 'delete',
+				label: 'Delete',
+				icon: Trash2,
+				variant: 'danger' as const,
+				onPress: onDelete,
+			},
 		],
 		[onDelete],
 	);
@@ -109,7 +121,13 @@ function VoiceNoteCard({
 	const menuItems: readonly OverflowMenuItem[] = useMemo(
 		() => [
 			{ id: 'share', label: 'Share', icon: Share2, onPress: onShare },
-			{ id: 'delete', label: 'Delete', icon: Trash2, variant: 'danger' as const, onPress: onDelete },
+			{
+				id: 'delete',
+				label: 'Delete',
+				icon: Trash2,
+				variant: 'danger' as const,
+				onPress: onDelete,
+			},
 		],
 		[onShare, onDelete],
 	);
@@ -222,7 +240,6 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 					})}
 				</View>
 			)}
-
 		</View>
 	);
 }

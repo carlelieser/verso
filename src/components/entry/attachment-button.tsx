@@ -1,22 +1,22 @@
-import {Button} from 'heroui-native';
-import type {MenuContentPopoverProps} from 'heroui-native';
-import {AudioLines, FileText, Image, MapPin, Music, Paperclip, Plus} from 'lucide-react-native';
-import React, {useCallback, useMemo} from 'react';
-import type {StyleProp, ViewStyle} from 'react-native';
+import { Button } from 'heroui-native';
+import type { MenuContentPopoverProps } from 'heroui-native';
+import { AudioLines, FileText, Image, MapPin, Music, Plus } from 'lucide-react-native';
+import React, { useCallback, useMemo } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 
-import {getErrorMessage} from '@/utils/error';
 
-import {Fab} from '@/components/ui/fab';
-import {PopoverMenu, type PopoverMenuItem} from '@/components/ui/popover-menu';
-import {VoiceNoteSheet} from '@/components/voice-note/voice-note-sheet';
-import {useAttachmentPicker} from '@/hooks/use-attachment-picker';
-import {useBottomSheet} from '@/hooks/use-bottom-sheet';
-import {useThemeColors} from '@/hooks/use-theme-colors';
-import {useDatabaseContext} from '@/providers/database-provider';
-import {useConfirmDialog} from '@/providers/dialog-provider';
-import {useEntryContext} from '@/providers/entry-provider';
-import {addFileAttachment} from '@/services/attachment-service';
-import {captureLocationAndWeather} from '@/services/location-weather-service';
+import { Fab } from '@/components/ui/fab';
+import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
+import { VoiceNoteSheet } from '@/components/voice-note/voice-note-sheet';
+import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
+import { useBottomSheet } from '@/hooks/use-bottom-sheet';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useDatabaseContext } from '@/providers/database-provider';
+import { useConfirmDialog } from '@/providers/dialog-provider';
+import { useEntryContext } from '@/providers/entry-provider';
+import { addFileAttachment } from '@/services/attachment-service';
+import { captureLocationAndWeather } from '@/services/location-weather-service';
+import { getErrorMessage } from '@/utils/error';
 
 interface AttachmentButtonProps {
 	readonly placement?: MenuContentPopoverProps['placement'];
@@ -28,21 +28,24 @@ interface AttachmentButtonProps {
 }
 
 export function AttachmentButton({
-									 placement,
-									 offset,
-									 alignOffset,
-									 variant = 'ghost',
-									 className,
-									 style,
-								 }: AttachmentButtonProps): React.JSX.Element {
-	const {entryId} = useEntryContext();
-	const {db} = useDatabaseContext();
-	const {accent, accentForeground, muted} = useThemeColors();
+	placement,
+	offset,
+	alignOffset,
+	variant = 'ghost',
+	className,
+	style,
+}: AttachmentButtonProps): React.JSX.Element {
+	const { entryId } = useEntryContext();
+	const { db } = useDatabaseContext();
+	const { accent, accentForeground, muted } = useThemeColors();
 	const dialog = useConfirmDialog();
 
-	const {attachments, pickImages, pickAudio, pickDocuments, refresh} = useAttachmentPicker(entryId, {
-		onError: dialog.showError,
-	});
+	const { attachments, pickImages, pickAudio, pickDocuments, refresh } = useAttachmentPicker(
+		entryId,
+		{
+			onError: dialog.showError,
+		},
+	);
 
 	const voiceNoteSheet = useBottomSheet();
 
@@ -72,11 +75,16 @@ export function AttachmentButton({
 
 	const items: readonly PopoverMenuItem[] = useMemo(
 		() => [
-			{id: 'location', label: 'Location', icon: MapPin, onPress: handleLocation},
-			{id: 'images', label: 'Images', icon: Image, onPress: pickImages},
-			{id: 'audio', label: 'Audio', icon: Music, onPress: pickAudio},
-			{id: 'documents', label: 'Documents', icon: FileText, onPress: pickDocuments},
-			{id: 'voice-note', label: 'Voice note', icon: AudioLines, onPress: voiceNoteSheet.open},
+			{ id: 'location', label: 'Location', icon: MapPin, onPress: handleLocation },
+			{ id: 'images', label: 'Images', icon: Image, onPress: pickImages },
+			{ id: 'audio', label: 'Audio', icon: Music, onPress: pickAudio },
+			{ id: 'documents', label: 'Documents', icon: FileText, onPress: pickDocuments },
+			{
+				id: 'voice-note',
+				label: 'Voice note',
+				icon: AudioLines,
+				onPress: voiceNoteSheet.open,
+			},
 		],
 		[handleLocation, pickImages, pickAudio, pickDocuments, voiceNoteSheet.open],
 	);
@@ -85,13 +93,13 @@ export function AttachmentButton({
 
 	const trigger = isFab ? (
 		<Fab
-			icon={<Plus size={24} color={accentForeground}/>}
+			icon={<Plus size={24} color={accentForeground} />}
 			className={className}
 			style={style}
 		/>
 	) : (
 		<Button variant="ghost" isIconOnly>
-			<Plus size={18} color={attachments.length > 0 ? accent : muted}/>
+			<Plus size={18} color={attachments.length > 0 ? accent : muted} />
 		</Button>
 	);
 
