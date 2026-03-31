@@ -1,6 +1,6 @@
 import {Button} from 'heroui-native';
 import type {MenuContentPopoverProps} from 'heroui-native';
-import {FileText, Image, MapPin, Music, Paperclip, Plus} from 'lucide-react-native';
+import {AudioLines, FileText, Image, MapPin, Music, Paperclip, Plus} from 'lucide-react-native';
 import React, {useCallback, useMemo} from 'react';
 import type {StyleProp, ViewStyle} from 'react-native';
 
@@ -8,11 +8,14 @@ import {getErrorMessage} from '@/utils/error';
 
 import {Fab} from '@/components/ui/fab';
 import {PopoverMenu, type PopoverMenuItem} from '@/components/ui/popover-menu';
+import {VoiceNoteSheet} from '@/components/voice-note/voice-note-sheet';
 import {useAttachmentPicker} from '@/hooks/use-attachment-picker';
+import {useBottomSheet} from '@/hooks/use-bottom-sheet';
 import {useThemeColors} from '@/hooks/use-theme-colors';
 import {useDatabaseContext} from '@/providers/database-provider';
 import {useConfirmDialog} from '@/providers/dialog-provider';
 import {useEntryContext} from '@/providers/entry-provider';
+import {addFileAttachment} from '@/services/attachment-service';
 import {captureLocationAndWeather} from '@/services/location-weather-service';
 
 interface AttachmentButtonProps {
@@ -37,9 +40,26 @@ export function AttachmentButton({
 	const {accent, accentForeground, muted} = useThemeColors();
 	const dialog = useConfirmDialog();
 
-	const {attachments, pickImages, pickAudio, pickDocuments} = useAttachmentPicker(entryId, {
+	const {attachments, pickImages, pickAudio, pickDocuments, refresh} = useAttachmentPicker(entryId, {
 		onError: dialog.showError,
 	});
+
+	const voiceNoteSheet = useBottomSheet();
+
+	const handleVoiceNoteAttach = useCallback(
+		async (uri: string, name: string | null) => {
+			await addFileAttachment(db, {
+				entryId,
+				type: 'voice-note',
+				sourceUri: uri,
+				mimeType: 'audio/m4a',
+				fileName: name,
+				sizeBytes: null,
+			});
+			await refresh();
+		},
+		[db, entryId, refresh],
+	);
 
 	const handleLocation = useCallback(async () => {
 		try {
@@ -56,8 +76,9 @@ export function AttachmentButton({
 			{id: 'images', label: 'Images', icon: Image, onPress: pickImages},
 			{id: 'audio', label: 'Audio', icon: Music, onPress: pickAudio},
 			{id: 'documents', label: 'Documents', icon: FileText, onPress: pickDocuments},
+			{id: 'voice-note', label: 'Voice note', icon: AudioLines, onPress: voiceNoteSheet.open},
 		],
-		[handleLocation, pickImages, pickAudio, pickDocuments],
+		[handleLocation, pickImages, pickAudio, pickDocuments, voiceNoteSheet.open],
 	);
 
 	const isFab = variant === 'fab';
@@ -75,13 +96,18 @@ export function AttachmentButton({
 	);
 
 	return (
-		<PopoverMenu
-			trigger={trigger}
-			items={items}
-			width={180}
-			placement={placement}
-			offset={offset}
-			alignOffset={alignOffset}
-		/>
+		<>
+			<PopoverMenu
+				trigger={trigger}
+				items={items}
+				width={180}
+				placement={placement}
+				offset={offset}
+				alignOffset={alignOffset}
+			/>
+			{voiceNoteSheet.isOpen ? (
+				<VoiceNoteSheet sheet={voiceNoteSheet} onAttach={handleVoiceNoteAttach} />
+			) : null}
+		</>
 	);
 }
