@@ -34,7 +34,7 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 	}, [dialog, recorder]);
 
 	const handleDiscard = useCallback(async () => {
-		if (hasRecording || recorder.status === 'recording') {
+		if (recorder.status !== 'idle') {
 			const confirmed = await dialog.confirm({
 				title: 'Discard Voice Note',
 				description: 'Your recording will be lost.',

@@ -20,6 +20,25 @@ interface AttachmentListProps {
 	readonly attachments: readonly Attachment[];
 }
 
+function useShareDeleteMenu(
+	onShare: () => void,
+	onDelete: () => void,
+): readonly OverflowMenuItem[] {
+	return useMemo(
+		() => [
+			{ id: 'share', label: 'Share', icon: Share2, onPress: onShare },
+			{
+				id: 'delete',
+				label: 'Delete',
+				icon: Trash2,
+				variant: 'danger' as const,
+				onPress: onDelete,
+			},
+		],
+		[onShare, onDelete],
+	);
+}
+
 function FileCard({
 	attachment,
 	onShare,
@@ -33,20 +52,7 @@ function FileCard({
 }): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const Icon = ATTACHMENT_TYPE_ICONS[attachment.type];
-
-	const menuItems: readonly OverflowMenuItem[] = useMemo(
-		() => [
-			{ id: 'share', label: 'Share', icon: Share2, onPress: onShare },
-			{
-				id: 'delete',
-				label: 'Delete',
-				icon: Trash2,
-				variant: 'danger' as const,
-				onPress: onDelete,
-			},
-		],
-		[onShare, onDelete],
-	);
+	const menuItems = useShareDeleteMenu(onShare, onDelete);
 
 	return (
 		<InfoCard style={isDeleting ? { opacity: 0.5 } : undefined}>
@@ -118,19 +124,7 @@ function VoiceNoteCard({
 	readonly onDelete: () => void;
 	readonly isDeleting: boolean;
 }): React.JSX.Element {
-	const menuItems: readonly OverflowMenuItem[] = useMemo(
-		() => [
-			{ id: 'share', label: 'Share', icon: Share2, onPress: onShare },
-			{
-				id: 'delete',
-				label: 'Delete',
-				icon: Trash2,
-				variant: 'danger' as const,
-				onPress: onDelete,
-			},
-		],
-		[onShare, onDelete],
-	);
+	const menuItems = useShareDeleteMenu(onShare, onDelete);
 
 	return (
 		<View style={isDeleting ? { opacity: 0.5 } : undefined} className="gap-2">

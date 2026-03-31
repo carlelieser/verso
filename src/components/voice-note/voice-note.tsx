@@ -1,8 +1,8 @@
 import { Button, Slider } from 'heroui-native';
 import { Circle, Pause, Play, Square, Trash2 } from 'lucide-react-native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Text, View } from 'react-native';
-import { type SharedValue, useSharedValue } from 'react-native-reanimated';
+import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { AudioWaveform } from '@/components/ui/audio-waveform';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -79,7 +79,11 @@ function EditVoiceNote({
 function ReadOnlyVoiceNote({ uri }: ReadOnlyModeProps): React.JSX.Element {
 	const { muted, accent, foreground } = useThemeColors();
 	const { isPlaying, currentTimeMs, durationMs, togglePlayback, seekTo } = useVoicePlayer(uri);
-	const staticAmplitude = useSharedValue(isPlaying ? 0.5 : 0);
+	const staticAmplitude = useSharedValue(0);
+
+	useEffect(() => {
+		staticAmplitude.value = withTiming(isPlaying ? 0.5 : 0);
+	}, [isPlaying, staticAmplitude]);
 
 	const handleSeek = useCallback(
 		(value: number | number[]) => {

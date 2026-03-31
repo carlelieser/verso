@@ -51,17 +51,22 @@ export function AttachmentButton({
 
 	const handleVoiceNoteAttach = useCallback(
 		async (uri: string, name: string | null) => {
-			await addFileAttachment(db, {
-				entryId,
-				type: 'voice-note',
-				sourceUri: uri,
-				mimeType: 'audio/m4a',
-				fileName: name,
-				sizeBytes: null,
-			});
-			await refresh();
+			try {
+				await addFileAttachment(db, {
+					entryId,
+					type: 'voice-note',
+					sourceUri: uri,
+					mimeType: 'audio/m4a',
+					fileName: name,
+					sizeBytes: null,
+				});
+				await refresh();
+			} catch (err: unknown) {
+				const message = getErrorMessage(err, 'Failed to attach voice note');
+				dialog.showError('Attachment Error', message);
+			}
 		},
-		[db, entryId, refresh],
+		[db, entryId, refresh, dialog],
 	);
 
 	const handleLocation = useCallback(async () => {

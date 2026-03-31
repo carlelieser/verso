@@ -26,16 +26,14 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 
 	const recorderState = useAudioRecorderState(recorder, 100);
 
-	// Derive status from recorder state + our ref
 	const status: RecorderStatus = recorderState.isRecording ? 'recording' : statusRef.current;
 
-	// Update amplitude from metering
 	if (recorderState.metering !== undefined && recorderState.isRecording) {
-		// metering is in dB (negative values), normalize to 0-1
+		// Normalize dB metering (-50..0) to 0-1 range
 		const db = recorderState.metering;
 		const normalized = Math.max(0, Math.min(1, (db + 50) / 50));
 		amplitude.value = normalized;
-	} else if (!recorderState.isRecording) {
+	} else if (!recorderState.isRecording && amplitude.value !== 0) {
 		amplitude.value = 0;
 	}
 
