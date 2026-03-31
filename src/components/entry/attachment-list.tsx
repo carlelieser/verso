@@ -6,6 +6,7 @@ import { Text, View } from 'react-native';
 import { EmptyState } from '@/components/ui/empty-state';
 import { InfoCard } from '@/components/ui/info-card';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
+import { VoiceNote } from '@/components/voice-note/voice-note';
 import { ATTACHMENT_TYPE_ICONS } from '@/constants/attachment-icons';
 import { getErrorMessage } from '@/utils/error';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -94,6 +95,38 @@ function LocationCard({
 	);
 }
 
+function VoiceNoteCard({
+	attachment,
+	onShare,
+	onDelete,
+	isDeleting,
+}: {
+	readonly attachment: FileAttachment;
+	readonly onShare: () => void;
+	readonly onDelete: () => void;
+	readonly isDeleting: boolean;
+}): React.JSX.Element {
+	const menuItems: readonly OverflowMenuItem[] = useMemo(
+		() => [
+			{ id: 'share', label: 'Share', icon: Share2, onPress: onShare },
+			{ id: 'delete', label: 'Delete', icon: Trash2, variant: 'danger' as const, onPress: onDelete },
+		],
+		[onShare, onDelete],
+	);
+
+	return (
+		<View style={isDeleting ? { opacity: 0.5 } : undefined} className="gap-2">
+			<View className="flex-row items-center justify-between">
+				<Text className="text-sm text-foreground" numberOfLines={1}>
+					{attachment.data.fileName ?? 'Voice note'}
+				</Text>
+				<OverflowMenu items={menuItems} />
+			</View>
+			<VoiceNote mode="read-only" uri={attachment.data.uri} />
+		</View>
+	);
+}
+
 export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.Element {
 	const { db } = useDatabaseContext();
 	const { muted } = useThemeColors();
@@ -159,6 +192,18 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 								<LocationCard
 									key={attachment.id}
 									attachment={attachment}
+									onDelete={() => handleDelete(attachment)}
+									isDeleting={isDeleting}
+								/>
+							);
+						}
+
+						if (attachment.type === 'voice-note') {
+							return (
+								<VoiceNoteCard
+									key={attachment.id}
+									attachment={attachment}
+									onShare={() => handleShare(attachment.data.uri)}
 									onDelete={() => handleDelete(attachment)}
 									isDeleting={isDeleting}
 								/>
