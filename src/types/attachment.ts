@@ -21,7 +21,7 @@ interface AttachmentBase {
 }
 
 export interface FileAttachment extends AttachmentBase {
-	readonly type: 'image' | 'audio' | 'document';
+	readonly type: 'image' | 'audio' | 'document' | 'voice-note';
 	readonly data: FileData;
 }
 
@@ -39,6 +39,7 @@ const ATTACHMENT_TYPES: ReadonlySet<string> = new Set<AttachmentType>([
 	'audio',
 	'document',
 	'location',
+	'voice-note',
 ]);
 
 export function isAttachmentType(value: string): value is AttachmentType {

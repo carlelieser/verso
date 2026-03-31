@@ -1,19 +1,19 @@
-import { Button } from 'heroui-native';
-import type { MenuContentPopoverProps } from 'heroui-native';
-import { AudioLines, FileText, Image, MapPin, Paperclip } from 'lucide-react-native';
-import React, { useCallback, useMemo } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import {Button} from 'heroui-native';
+import type {MenuContentPopoverProps} from 'heroui-native';
+import {FileText, Image, MapPin, Music, Paperclip, Plus} from 'lucide-react-native';
+import React, {useCallback, useMemo} from 'react';
+import type {StyleProp, ViewStyle} from 'react-native';
 
-import { getErrorMessage } from '@/utils/error';
+import {getErrorMessage} from '@/utils/error';
 
-import { Fab } from '@/components/ui/fab';
-import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
-import { useAttachmentPicker } from '@/hooks/use-attachment-picker';
-import { useThemeColors } from '@/hooks/use-theme-colors';
-import { useDatabaseContext } from '@/providers/database-provider';
-import { useConfirmDialog } from '@/providers/dialog-provider';
-import { useEntryContext } from '@/providers/entry-provider';
-import { captureLocationAndWeather } from '@/services/location-weather-service';
+import {Fab} from '@/components/ui/fab';
+import {PopoverMenu, type PopoverMenuItem} from '@/components/ui/popover-menu';
+import {useAttachmentPicker} from '@/hooks/use-attachment-picker';
+import {useThemeColors} from '@/hooks/use-theme-colors';
+import {useDatabaseContext} from '@/providers/database-provider';
+import {useConfirmDialog} from '@/providers/dialog-provider';
+import {useEntryContext} from '@/providers/entry-provider';
+import {captureLocationAndWeather} from '@/services/location-weather-service';
 
 interface AttachmentButtonProps {
 	readonly placement?: MenuContentPopoverProps['placement'];
@@ -25,19 +25,19 @@ interface AttachmentButtonProps {
 }
 
 export function AttachmentButton({
-	placement,
-	offset,
-	alignOffset,
-	variant = 'ghost',
-	className,
-	style,
-}: AttachmentButtonProps): React.JSX.Element {
-	const { entryId } = useEntryContext();
-	const { db } = useDatabaseContext();
-	const { accent, accentForeground, muted } = useThemeColors();
+									 placement,
+									 offset,
+									 alignOffset,
+									 variant = 'ghost',
+									 className,
+									 style,
+								 }: AttachmentButtonProps): React.JSX.Element {
+	const {entryId} = useEntryContext();
+	const {db} = useDatabaseContext();
+	const {accent, accentForeground, muted} = useThemeColors();
 	const dialog = useConfirmDialog();
 
-	const { attachments, pickImages, pickAudio, pickDocuments } = useAttachmentPicker(entryId, {
+	const {attachments, pickImages, pickAudio, pickDocuments} = useAttachmentPicker(entryId, {
 		onError: dialog.showError,
 	});
 
@@ -52,10 +52,10 @@ export function AttachmentButton({
 
 	const items: readonly PopoverMenuItem[] = useMemo(
 		() => [
-			{ id: 'location', label: 'Location', icon: MapPin, onPress: handleLocation },
-			{ id: 'images', label: 'Images', icon: Image, onPress: pickImages },
-			{ id: 'audio', label: 'Audio', icon: AudioLines, onPress: pickAudio },
-			{ id: 'documents', label: 'Documents', icon: FileText, onPress: pickDocuments },
+			{id: 'location', label: 'Location', icon: MapPin, onPress: handleLocation},
+			{id: 'images', label: 'Images', icon: Image, onPress: pickImages},
+			{id: 'audio', label: 'Audio', icon: Music, onPress: pickAudio},
+			{id: 'documents', label: 'Documents', icon: FileText, onPress: pickDocuments},
 		],
 		[handleLocation, pickImages, pickAudio, pickDocuments],
 	);
@@ -64,13 +64,13 @@ export function AttachmentButton({
 
 	const trigger = isFab ? (
 		<Fab
-			icon={<Paperclip size={24} color={accentForeground} />}
+			icon={<Plus size={24} color={accentForeground}/>}
 			className={className}
 			style={style}
 		/>
 	) : (
 		<Button variant="ghost" isIconOnly>
-			<Paperclip size={18} color={attachments.length > 0 ? accent : muted} />
+			<Plus size={18} color={attachments.length > 0 ? accent : muted}/>
 		</Button>
 	);
 

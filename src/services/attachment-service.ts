@@ -9,7 +9,7 @@ import { generateId } from '@/utils/id';
 
 interface AddFileAttachmentInput {
 	readonly entryId: string;
-	readonly type: 'image' | 'audio' | 'document';
+	readonly type: 'image' | 'audio' | 'document' | 'voice-note';
 	readonly sourceUri: string;
 	readonly mimeType: string | null;
 	readonly fileName: string | null;
