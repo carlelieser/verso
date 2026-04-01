@@ -5,7 +5,7 @@ import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EntryCard } from '@/components/entry/entry-card';
-import { ScreenLayout } from '@/components/layout/screen-layout';
+import { Screen } from '@/components/layout/screen';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
@@ -64,7 +64,7 @@ export default function HistoryScreen(): React.JSX.Element {
 	);
 
 	return (
-		<ScreenLayout title="History">
+		<Screen title="History">
 			<SearchInput
 				value={searchQuery}
 				onChangeText={handleSearch}
@@ -112,6 +112,6 @@ export default function HistoryScreen(): React.JSX.Element {
 				sheet={actionSheet}
 			/>
 
-		</ScreenLayout>
+		</Screen>
 	);
 }

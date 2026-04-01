@@ -19,7 +19,7 @@ import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
 import { CreateJournal } from '@/components/journal/create-journal';
 import { JournalCard } from '@/components/journal/journal-card';
 import { RenameJournal } from '@/components/journal/rename-journal';
-import { ScreenLayout } from '@/components/layout/screen-layout';
+import { Screen } from '@/components/layout/screen';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
@@ -126,7 +126,7 @@ export default function JournalsScreen(): React.JSX.Element {
 	);
 
 	return (
-		<ScreenLayout title="Journals">
+		<Screen title="Journals">
 			<SearchInput
 				value={searchQuery}
 				onChangeText={setSearchQuery}
@@ -216,6 +216,6 @@ export default function JournalsScreen(): React.JSX.Element {
 				/>
 			) : null}
 
-		</ScreenLayout>
+		</Screen>
 	);
 }

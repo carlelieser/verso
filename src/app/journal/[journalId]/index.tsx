@@ -20,7 +20,7 @@ import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
 import { JournalColorBanner } from '@/components/journal/journal-color-banner';
 import { RenameJournal } from '@/components/journal/rename-journal';
-import { ScreenLayout } from '@/components/layout/screen-layout';
+import { Screen } from '@/components/layout/screen';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
@@ -178,7 +178,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	) : null;
 
 	return (
-		<ScreenLayout title={titleContent} headerAbove={banner} disableTopInset={true}>
+		<Screen title={titleContent} headerAbove={banner} disableTopInset={true}>
 			<SearchInput
 				value={searchQuery}
 				onChangeText={handleSearch}
@@ -261,6 +261,6 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				/>
 			) : null}
 
-		</ScreenLayout>
+		</Screen>
 	);
 }

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AttachmentButton } from '@/components/entry/attachment-button';
 import { AttachmentList } from '@/components/entry/attachment-list';
-import { ScreenLayout } from '@/components/layout/screen-layout';
+import { Screen } from '@/components/layout/screen';
 import { useLiveAttachments } from '@/hooks/use-live-attachments';
 import { EntryProvider } from '@/providers/entry-provider';
 
@@ -15,7 +15,7 @@ function AttachmentsContent(): React.JSX.Element {
 	const attachments = useLiveAttachments(entryId);
 
 	return (
-		<ScreenLayout title="Attachments">
+		<Screen title="Attachments">
 			<ScrollView
 				className="rounded-t-4xl overflow-hidden"
 				contentContainerClassName="px-4"
@@ -31,7 +31,7 @@ function AttachmentsContent(): React.JSX.Element {
 				style={{ bottom: insets.bottom + 16 }}
 				offset={12}
 			/>
-		</ScreenLayout>
+		</Screen>
 	);
 }
 

@@ -8,7 +8,7 @@ import { AttachmentPreview } from '@/components/entry/attachment-preview';
 import { EntryViewer } from '@/components/entry/entry-viewer';
 import { MoodCard } from '@/components/entry/mood-card';
 import { WeatherCard } from '@/components/entry/weather-card';
-import { ScreenLayout } from '@/components/layout/screen-layout';
+import { Screen } from '@/components/layout/screen';
 import { Section } from '@/components/layout/section';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu, type FabMenuItem } from '@/components/ui/fab-menu';
@@ -73,7 +73,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 	);
 
 	return (
-		<ScreenLayout>
+		<Screen>
 			{isLoading || !entry ? (
 				<View className="flex-1 items-center justify-center">
 					<Text className="text-muted">
@@ -134,6 +134,6 @@ export default function EntryViewScreen(): React.JSX.Element {
 				</>
 			)}
 
-		</ScreenLayout>
+		</Screen>
 	);
 }
