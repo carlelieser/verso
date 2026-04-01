@@ -1,12 +1,13 @@
-import { Button, Menu, Separator } from 'heroui-native';
-import { BookOpen, ChevronDown, Plus } from 'lucide-react-native';
-import React, { useCallback } from 'react';
-import { Keyboard, Text, View } from 'react-native';
+import {Button, Menu, Separator} from 'heroui-native';
+import {ChevronDown, Plus} from 'lucide-react-native';
+import React, {useCallback} from 'react';
+import {Keyboard, Text, View} from 'react-native';
 
-import { CreateJournal } from '@/components/journal/create-journal';
-import { useBottomSheet } from '@/hooks/use-bottom-sheet';
-import { useThemeColors } from '@/hooks/use-theme-colors';
-import type { Journal } from '@/types/journal';
+import {CreateJournal} from '@/components/journal/create-journal';
+import {getJournalIcon} from '@/constants/journal-icons';
+import {useBottomSheet} from '@/hooks/use-bottom-sheet';
+import {useThemeColors} from '@/hooks/use-theme-colors';
+import type {Journal} from '@/types/journal';
 
 interface JournalSelectProps {
 	readonly journals: readonly Journal[];
@@ -16,14 +17,15 @@ interface JournalSelectProps {
 }
 
 export function JournalSelect({
-	journals,
-	selectedId,
-	onSelect,
-	onCreateJournal,
-}: JournalSelectProps): React.JSX.Element {
-	const { accent, muted } = useThemeColors();
+								  journals,
+								  selectedId,
+								  onSelect,
+								  onCreateJournal,
+							  }: JournalSelectProps): React.JSX.Element {
+	const {accent, muted} = useThemeColors();
 	const selected = journals.find((j) => j.id === selectedId);
 	const label = selected?.name ?? 'Select journal';
+	const TriggerIcon = getJournalIcon(selected?.icon ?? 'book-open');
 	const createSheet = useBottomSheet();
 
 	const handleCreate = useCallback(
@@ -44,13 +46,19 @@ export function JournalSelect({
 			<Menu presentation="popover">
 				<Menu.Trigger asChild>
 					<Button variant="ghost" size="sm">
-						<BookOpen size={16} color={muted} />
+						{selected ? (
+							<View
+								className="size-2 rounded-full mr-1"
+								style={{backgroundColor: selected.color}}
+							/>
+						) : null}
+						<TriggerIcon size={16} color={muted}/>
 						<Button.Label className={'text-muted'}>{label}</Button.Label>
-						<ChevronDown size={14} color={muted} />
+						<ChevronDown size={14} color={muted}/>
 					</Button>
 				</Menu.Trigger>
 				<Menu.Portal>
-					<Menu.Overlay />
+					<Menu.Overlay/>
 					<Menu.Content presentation="popover" width={250}>
 						{journals.length > 0 ? (
 							<Menu.Group
@@ -67,7 +75,7 @@ export function JournalSelect({
 								{journals.map((journal) => {
 									return (
 										<Menu.Item key={journal.id} id={journal.id}>
-											<Menu.ItemIndicator variant="dot" />
+											<Menu.ItemIndicator variant="dot"/>
 											<Menu.ItemTitle>{journal.name}</Menu.ItemTitle>
 										</Menu.Item>
 									);
@@ -78,17 +86,17 @@ export function JournalSelect({
 								<Text className="text-sm text-muted">No journals yet</Text>
 							</View>
 						)}
-						<Separator className="mx-2 my-2 opacity-75" />
+						<Separator className="mx-2 my-2 opacity-75"/>
 						<Menu.Item id="__create__" shouldCloseOnSelect onPress={handleOpenCreate}>
-							<Plus size={16} color={accent} />
-							<Menu.ItemTitle style={{ color: accent }}>New Journal</Menu.ItemTitle>
+							<Plus size={16} color={accent}/>
+							<Menu.ItemTitle style={{color: accent}}>New Journal</Menu.ItemTitle>
 						</Menu.Item>
 					</Menu.Content>
 				</Menu.Portal>
 			</Menu>
 
 			{createSheet.isOpen ? (
-				<CreateJournal sheet={createSheet} onCreate={handleCreate} />
+				<CreateJournal sheet={createSheet} onCreate={handleCreate}/>
 			) : null}
 		</>
 	);
