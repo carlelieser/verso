@@ -141,12 +141,7 @@ function VoiceNoteCard({
 				</View>
 				<OverflowMenu items={menuItems} />
 			</View>
-			<VoiceNote
-				className="p-0 rounded-none"
-				mode="read-only"
-				uri={attachment.data.uri}
-				waveform={attachment.data.waveform}
-			/>
+			<VoiceNote className="p-0 rounded-none" mode="read-only" uri={attachment.data.uri} />
 		</InfoCard>
 	);
 }

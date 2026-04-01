@@ -1,6 +1,6 @@
 import { Button, Card, Slider } from 'heroui-native';
-import { Pause, Play } from 'lucide-react-native';
-import React, { memo, useCallback } from 'react';
+import { Pause, Play, RotateCcw } from 'lucide-react-native';
+import React, { memo, useCallback, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
@@ -24,7 +24,6 @@ interface EditModeProps extends Omit<ElevatedCardProps, 'children'> {
 interface ReadOnlyModeProps extends Omit<ElevatedCardProps, 'children'> {
 	readonly mode: 'read-only';
 	readonly uri: string;
-	readonly waveform?: readonly number[];
 }
 
 type VoiceNoteProps = EditModeProps | ReadOnlyModeProps;
@@ -86,19 +85,30 @@ const PlaybackSlider = memo(function PlaybackSlider({
 	durationMs,
 	seekTo,
 }: PlaybackSliderProps): React.JSX.Element {
-	const handleSeekEnd = useCallback(
+	const isScrubbingRef = useRef(false);
+	const [scrubValue, setScrubValue] = useState(0);
+
+	const handleChange = useCallback((value: number | number[]) => {
+		isScrubbingRef.current = true;
+		setScrubValue(typeof value === 'number' ? value : value[0]!);
+	}, []);
+
+	const handleChangeEnd = useCallback(
 		(value: number | number[]) => {
-			seekTo(typeof value === 'number' ? value : value[0]!);
+			const ms = typeof value === 'number' ? value : value[0]!;
+			seekTo(ms);
+			isScrubbingRef.current = false;
 		},
 		[seekTo],
 	);
 
 	return (
 		<Slider
-			value={currentTimeMs}
+			value={isScrubbingRef.current ? scrubValue : currentTimeMs}
 			minValue={0}
 			maxValue={durationMs > 0 ? durationMs : 1}
-			onChangeEnd={handleSeekEnd}
+			onChange={handleChange}
+			onChangeEnd={handleChangeEnd}
 		>
 			<Slider.Track>
 				<Slider.Fill />
@@ -108,16 +118,13 @@ const PlaybackSlider = memo(function PlaybackSlider({
 	);
 });
 
-function ReadOnlyVoiceNote({
-	uri,
-	waveform,
-	mode,
-	...cardProps
-}: ReadOnlyModeProps): React.JSX.Element {
+function ReadOnlyVoiceNote({ uri, mode, ...cardProps }: ReadOnlyModeProps): React.JSX.Element {
 	void mode;
 	const { muted, accent, foreground } = useThemeColors();
-	const { isPlaying, currentTimeMs, durationMs, amplitudes, togglePlayback, seekTo } =
-		useVoicePlayer(uri, waveform);
+	const { isPlaying, isFinished, currentTimeMs, durationMs, amplitudes, togglePlayback, seekTo } =
+		useVoicePlayer(uri);
+
+	const PlaybackIcon = isFinished ? RotateCcw : isPlaying ? Pause : Play;
 
 	return (
 		<ElevatedCard {...cardProps}>
@@ -132,11 +139,7 @@ function ReadOnlyVoiceNote({
 						{formatDurationMs(currentTimeMs)}
 					</Text>
 					<Button variant="ghost" isIconOnly size="sm" onPress={togglePlayback}>
-						{isPlaying ? (
-							<Pause size={18} color={foreground} />
-						) : (
-							<Play size={18} color={foreground} />
-						)}
+						<PlaybackIcon size={18} color={foreground} />
 					</Button>
 				</View>
 				<PlaybackSlider
