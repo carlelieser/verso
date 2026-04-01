@@ -6,8 +6,9 @@ import { initWhisper, type WhisperContext } from 'whisper.rn';
 import { RealtimeTranscriber } from 'whisper.rn/src/realtime-transcription';
 import { AudioPcmStreamAdapter } from 'whisper.rn/src/realtime-transcription/adapters/AudioPcmStreamAdapter';
 
+import { WAVEFORM_BAR_COUNT } from '@/constants/audio';
+
 const MODEL_ASSET: number = require('../../assets/models/ggml-tiny.en.bin');
-const BAR_COUNT = 4;
 
 type TranscriptionStatus = 'idle' | 'loading' | 'recording' | 'error';
 
@@ -102,7 +103,7 @@ export function useWhisperTranscription(
 				originalOnData((data) => {
 					callback(data);
 					const level = computeAmplitude(data.data);
-					const idx = barIndexRef.current % BAR_COUNT;
+					const idx = barIndexRef.current % WAVEFORM_BAR_COUNT;
 					amplitudes[idx]!.value = level;
 					barIndexRef.current += 1;
 				});

@@ -7,3 +7,10 @@ export function formatTime12(hour: number, minute: number): { time: string; peri
 	const h = hour % 12 || 12;
 	return { time: `${h}:${padTime(minute)}`, period };
 }
+
+export function formatDurationMs(ms: number): string {
+	const totalSeconds = Math.floor(ms / 1000);
+	const minutes = Math.floor(totalSeconds / 60);
+	const seconds = totalSeconds % 60;
+	return `${minutes}:${padTime(seconds)}`;
+}
