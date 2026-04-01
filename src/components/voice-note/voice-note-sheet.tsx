@@ -1,21 +1,24 @@
-import { Button, Input, Label } from 'heroui-native';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { Button } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
 import { PortalSheet } from '@/components/ui/portal-sheet';
 import { VoiceNote } from '@/components/voice-note/voice-note';
 import type { useBottomSheet } from '@/hooks/use-bottom-sheet';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useVoiceRecorder } from '@/hooks/use-voice-recorder';
 import { useConfirmDialog } from '@/providers/dialog-provider';
 
 interface VoiceNoteSheetProps {
 	readonly sheet: ReturnType<typeof useBottomSheet>;
-	readonly onAttach: (uri: string, name: string | null) => void;
+	readonly onAttach: (uri: string, name: string | null, waveform: readonly number[]) => void;
 }
 
 export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.JSX.Element {
 	const dialog = useConfirmDialog();
 	const recorder = useVoiceRecorder();
+	const { foreground, muted } = useThemeColors();
 	const [name, setName] = useState('');
 
 	const hasRecording = recorder.status === 'recorded';
@@ -50,7 +53,7 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 
 	const handleAttach = useCallback(() => {
 		if (!recorder.uri) return;
-		onAttach(recorder.uri, name.trim().length > 0 ? name.trim() : null);
+		onAttach(recorder.uri, name.trim().length > 0 ? name.trim() : null, recorder.waveform);
 		recorder.clear();
 		setName('');
 		sheet.close();
@@ -73,16 +76,21 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 				mode="edit"
 				isRecording={recorder.status === 'recording'}
 				durationMs={recorder.durationMs}
-				amplitude={recorder.amplitude}
+				amplitudes={recorder.amplitudes}
 				hasRecording={hasRecording}
 				onRecord={recorder.record}
 				onStop={recorder.stop}
 				onClear={handleClear}
+				elevation={1}
 			/>
-			<View className="gap-2">
-				<Label>Name (optional)</Label>
-				<Input value={name} onChangeText={setName} placeholder="Untitled voice note" />
-			</View>
+			<BottomSheetTextInput
+				value={name}
+				onChangeText={setName}
+				placeholder="Name (optional)"
+				placeholderTextColor={muted}
+				className="bg-surface rounded-xl px-4 py-3 text-base border border-border"
+				style={{ color: foreground }}
+			/>
 		</PortalSheet>
 	);
 }

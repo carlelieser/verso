@@ -1,17 +1,16 @@
 import React from 'react';
 import { View } from 'react-native';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { ViewProps } from 'react-native';
 
-interface InfoCardProps {
+interface InfoCardProps extends ViewProps {
 	readonly children: React.ReactNode;
-	readonly style?: StyleProp<ViewStyle>;
 }
 
-export function InfoCard({ children, style }: InfoCardProps): React.JSX.Element {
+export function InfoCard({ children, className, ...rest }: InfoCardProps): React.JSX.Element {
 	return (
 		<View
-			className="flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border"
-			style={style}
+			className={`flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border ${className ?? ''}`}
+			{...rest}
 		>
 			{children}
 		</View>
