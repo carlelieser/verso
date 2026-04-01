@@ -1,6 +1,20 @@
-import { RecordingPresets, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
-import { useCallback, useRef } from 'react';
-import { type SharedValue, useSharedValue } from 'react-native-reanimated';
+import { VoiceProcessor } from '@picovoice/react-native-voice-processor';
+import {
+	getRecordingPermissionsAsync,
+	RecordingPresets,
+	setAudioModeAsync,
+	useAudioRecorder,
+	useAudioRecorderState,
+} from 'expo-audio';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
+import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+
+import { WAVEFORM_BAR_COUNT } from '@/constants/audio';
+
+const FRAME_LENGTH = 512;
+const SAMPLE_RATE = 16000;
+const PCM_16BIT_MAX = 32768;
 
 type RecorderStatus = 'idle' | 'recording' | 'recorded';
 
@@ -8,55 +22,124 @@ interface UseVoiceRecorderResult {
 	readonly status: RecorderStatus;
 	readonly durationMs: number;
 	readonly uri: string | null;
-	readonly amplitude: SharedValue<number>;
+	readonly amplitudes: readonly SharedValue<number>[];
+	readonly waveform: readonly number[];
 	readonly record: () => void;
 	readonly stop: () => void;
 	readonly clear: () => void;
 }
 
 export function useVoiceRecorder(): UseVoiceRecorderResult {
-	const amplitude = useSharedValue(0);
-	const statusRef = useRef<RecorderStatus>('idle');
+	const [manualStatus, setManualStatus] = useState<RecorderStatus>('idle');
+	const [durationMs, setDurationMs] = useState(0);
 
-	const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY, (status) => {
-		if (status.isFinished) {
-			statusRef.current = 'recorded';
-		}
-	});
+	const amp0 = useSharedValue(0);
+	const amp1 = useSharedValue(0);
+	const amp2 = useSharedValue(0);
+	const amp3 = useSharedValue(0);
+	const amplitudes = useRef([amp0, amp1, amp2, amp3]).current;
+	const waveformRef = useRef<number[]>([]);
+	const [waveform, setWaveform] = useState<readonly number[]>([]);
+
+	const recorder = useAudioRecorder(
+		{ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true },
+		(status) => {
+			if (status.isFinished) {
+				setManualStatus('recorded');
+			}
+		},
+	);
 
 	const recorderState = useAudioRecorderState(recorder, 100);
 
-	const status: RecorderStatus = recorderState.isRecording ? 'recording' : statusRef.current;
+	const status: RecorderStatus = recorderState.isRecording ? 'recording' : manualStatus;
 
-	if (recorderState.metering !== undefined && recorderState.isRecording) {
-		// Normalize dB metering (-50..0) to 0-1 range
-		const db = recorderState.metering;
-		const normalized = Math.max(0, Math.min(1, (db + 50) / 50));
-		amplitude.value = normalized;
-	} else if (!recorderState.isRecording && amplitude.value !== 0) {
-		amplitude.value = 0;
-	}
+	useEffect(() => {
+		if (!recorderState.isRecording) return;
+		if (recorderState.durationMillis > 0) {
+			setDurationMs(recorderState.durationMillis);
+		}
+	}, [recorderState.isRecording, recorderState.durationMillis]);
 
-	const record = useCallback(() => {
-		statusRef.current = 'recording';
+	useEffect(() => {
+		const voiceProcessor = VoiceProcessor.instance;
+
+		const frameListener = (frame: number[]) => {
+			if (frame.length < WAVEFORM_BAR_COUNT) return;
+			const chunkSize = Math.floor(frame.length / WAVEFORM_BAR_COUNT);
+			let frameRms = 0;
+			for (let i = 0; i < WAVEFORM_BAR_COUNT; i++) {
+				const start = i * chunkSize;
+				const end = i === WAVEFORM_BAR_COUNT - 1 ? frame.length : start + chunkSize;
+				let sum = 0;
+				for (let j = start; j < end; j++) {
+					sum += Math.abs(frame[j]!);
+				}
+				const barAmplitude = sum / (end - start) / PCM_16BIT_MAX;
+				amplitudes[i]!.value = barAmplitude;
+				frameRms += barAmplitude;
+			}
+			waveformRef.current.push(frameRms / WAVEFORM_BAR_COUNT);
+		};
+
+		voiceProcessor.addFrameListener(frameListener);
+
+		return () => {
+			voiceProcessor.removeFrameListener(frameListener);
+		};
+	}, [amplitudes]);
+
+	const record = useCallback(async () => {
+		const { granted } = await getRecordingPermissionsAsync();
+		if (!granted) return;
+
+		if (Platform.OS === 'ios') {
+			await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+		}
+
+		setDurationMs(0);
+		waveformRef.current = [];
+		setWaveform([]);
+		for (const amp of amplitudes) {
+			amp.value = 0;
+		}
+
+		await VoiceProcessor.instance.start(FRAME_LENGTH, SAMPLE_RATE);
+		await recorder.prepareToRecordAsync();
+		setManualStatus('recording');
 		recorder.record();
-	}, [recorder]);
+	}, [recorder, amplitudes]);
 
-	const stop = useCallback(() => {
+	const stop = useCallback(async () => {
 		recorder.stop();
-		statusRef.current = 'recorded';
-	}, [recorder]);
+		await VoiceProcessor.instance.stop();
+		setWaveform(waveformRef.current);
+		for (const amp of amplitudes) {
+			amp.value = withTiming(0, { duration: 150 });
+		}
+		setManualStatus('recorded');
+	}, [recorder, amplitudes]);
 
-	const clear = useCallback(() => {
-		statusRef.current = 'idle';
-		amplitude.value = 0;
-	}, [amplitude]);
+	const clear = useCallback(async () => {
+		const isProcessorRecording = await VoiceProcessor.instance.isRecording();
+		if (isProcessorRecording) {
+			await VoiceProcessor.instance.stop();
+		}
+		setManualStatus('idle');
+		setDurationMs(0);
+		waveformRef.current = [];
+		setWaveform([]);
+		for (const amp of amplitudes) {
+			amp.value = 0;
+		}
+	}, [amplitudes]);
 
 	return {
 		status,
-		durationMs: recorderState.durationMillis,
+		durationMs,
 		uri: recorder.uri,
-		amplitude,
+		amplitudes,
+		waveform,
 		record,
 		stop,
 		clear,
