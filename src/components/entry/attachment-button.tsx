@@ -4,7 +4,6 @@ import { AudioLines, FileText, Image, MapPin, Music, Plus } from 'lucide-react-n
 import React, { useCallback, useMemo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-
 import { Fab } from '@/components/ui/fab';
 import { PopoverMenu, type PopoverMenuItem } from '@/components/ui/popover-menu';
 import { VoiceNoteSheet } from '@/components/voice-note/voice-note-sheet';
@@ -50,7 +49,7 @@ export function AttachmentButton({
 	const voiceNoteSheet = useBottomSheet();
 
 	const handleVoiceNoteAttach = useCallback(
-		async (uri: string, name: string | null, waveform: readonly number[]) => {
+		async (uri: string, name: string | null) => {
 			try {
 				await addFileAttachment(db, {
 					entryId,
@@ -59,7 +58,6 @@ export function AttachmentButton({
 					mimeType: 'audio/m4a',
 					fileName: name,
 					sizeBytes: null,
-					waveform,
 				});
 				await refresh();
 			} catch (err: unknown) {

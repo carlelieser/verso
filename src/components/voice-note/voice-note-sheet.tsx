@@ -12,7 +12,7 @@ import { useConfirmDialog } from '@/providers/dialog-provider';
 
 interface VoiceNoteSheetProps {
 	readonly sheet: ReturnType<typeof useBottomSheet>;
-	readonly onAttach: (uri: string, name: string | null, waveform: readonly number[]) => void;
+	readonly onAttach: (uri: string, name: string | null) => void;
 }
 
 export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.JSX.Element {
@@ -53,7 +53,7 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 
 	const handleAttach = useCallback(() => {
 		if (!recorder.uri) return;
-		onAttach(recorder.uri, name.trim().length > 0 ? name.trim() : null, recorder.waveform);
+		onAttach(recorder.uri, name.trim().length > 0 ? name.trim() : null);
 		recorder.clear();
 		setName('');
 		sheet.close();

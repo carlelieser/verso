@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { WAVEFORM_BAR_COUNT } from '@/constants/audio';
+import { computeBarAmplitudes, WAVEFORM_BAR_COUNT } from '@/constants/audio';
 
 const FRAME_LENGTH = 512;
 const SAMPLE_RATE = 16000;
@@ -23,7 +23,6 @@ interface UseVoiceRecorderResult {
 	readonly durationMs: number;
 	readonly uri: string | null;
 	readonly amplitudes: readonly SharedValue<number>[];
-	readonly waveform: readonly number[];
 	readonly record: () => void;
 	readonly stop: () => void;
 	readonly clear: () => void;
@@ -38,9 +37,6 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 	const amp2 = useSharedValue(0);
 	const amp3 = useSharedValue(0);
 	const amplitudes = useRef([amp0, amp1, amp2, amp3]).current;
-	const waveformRef = useRef<number[]>([]);
-	const [waveform, setWaveform] = useState<readonly number[]>([]);
-
 	const recorder = useAudioRecorder(
 		{ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true },
 		(status) => {
@@ -66,20 +62,10 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 
 		const frameListener = (frame: number[]) => {
 			if (frame.length < WAVEFORM_BAR_COUNT) return;
-			const chunkSize = Math.floor(frame.length / WAVEFORM_BAR_COUNT);
-			let frameRms = 0;
+			const bars = computeBarAmplitudes(frame, PCM_16BIT_MAX);
 			for (let i = 0; i < WAVEFORM_BAR_COUNT; i++) {
-				const start = i * chunkSize;
-				const end = i === WAVEFORM_BAR_COUNT - 1 ? frame.length : start + chunkSize;
-				let sum = 0;
-				for (let j = start; j < end; j++) {
-					sum += Math.abs(frame[j]!);
-				}
-				const barAmplitude = sum / (end - start) / PCM_16BIT_MAX;
-				amplitudes[i]!.value = barAmplitude;
-				frameRms += barAmplitude;
+				amplitudes[i]!.value = bars[i]!;
 			}
-			waveformRef.current.push(frameRms / WAVEFORM_BAR_COUNT);
 		};
 
 		voiceProcessor.addFrameListener(frameListener);
@@ -98,8 +84,6 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 		}
 
 		setDurationMs(0);
-		waveformRef.current = [];
-		setWaveform([]);
 		for (const amp of amplitudes) {
 			amp.value = 0;
 		}
@@ -113,7 +97,6 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 	const stop = useCallback(async () => {
 		recorder.stop();
 		await VoiceProcessor.instance.stop();
-		setWaveform(waveformRef.current);
 		for (const amp of amplitudes) {
 			amp.value = withTiming(0, { duration: 150 });
 		}
@@ -127,8 +110,6 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 		}
 		setManualStatus('idle');
 		setDurationMs(0);
-		waveformRef.current = [];
-		setWaveform([]);
 		for (const amp of amplitudes) {
 			amp.value = 0;
 		}
@@ -139,7 +120,6 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 		durationMs,
 		uri: recorder.uri,
 		amplitudes,
-		waveform,
 		record,
 		stop,
 		clear,

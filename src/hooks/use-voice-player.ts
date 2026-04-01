@@ -1,11 +1,16 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAudioPlayer, useAudioPlayerStatus, useAudioSampleListener } from 'expo-audio';
+import { useCallback, useEffect, useRef } from 'react';
 import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { WAVEFORM_BAR_COUNT } from '@/constants/audio';
+import { computeBarAmplitudes, WAVEFORM_BAR_COUNT } from '@/constants/audio';
+
+interface UseVoicePlayerOptions {
+	readonly updateIntervalMs?: number;
+}
 
 interface UseVoicePlayerResult {
 	readonly isPlaying: boolean;
+	readonly isFinished: boolean;
 	readonly currentTimeMs: number;
 	readonly durationMs: number;
 	readonly amplitudes: readonly SharedValue<number>[];
@@ -13,11 +18,14 @@ interface UseVoicePlayerResult {
 	readonly seekTo: (positionMs: number) => void;
 }
 
+const DEFAULT_UPDATE_INTERVAL_MS = 1000;
+
 export function useVoicePlayer(
 	uri: string | null,
-	waveform?: readonly number[],
+	options: UseVoicePlayerOptions = {},
 ): UseVoicePlayerResult {
-	const player = useAudioPlayer(uri ?? undefined);
+	const { updateIntervalMs = DEFAULT_UPDATE_INTERVAL_MS } = options;
+	const player = useAudioPlayer(uri ?? undefined, { updateInterval: updateIntervalMs });
 	const status = useAudioPlayerStatus(player);
 
 	const amp0 = useSharedValue(0);
@@ -26,32 +34,38 @@ export function useVoicePlayer(
 	const amp3 = useSharedValue(0);
 	const amplitudes = useRef([amp0, amp1, amp2, amp3]).current;
 
-	useEffect(() => {
-		if (!status.playing || !waveform || waveform.length === 0 || status.duration <= 0) {
-			if (!status.playing) {
-				for (const amp of amplitudes) {
-					amp.value = withTiming(0, { duration: 150 });
-				}
-			}
-			return;
-		}
+	useAudioSampleListener(player, (sample) => {
+		const frames = sample.channels[0]?.frames;
+		if (!frames || frames.length < WAVEFORM_BAR_COUNT) return;
 
-		const progress = status.currentTime / status.duration;
-		const index = Math.min(Math.floor(progress * waveform.length), waveform.length - 1);
-
+		const bars = computeBarAmplitudes(frames);
 		for (let i = 0; i < WAVEFORM_BAR_COUNT; i++) {
-			const sampleIndex = Math.min(index + i, waveform.length - 1);
-			amplitudes[i]!.value = waveform[sampleIndex]!;
+			amplitudes[i]!.value = bars[i]!;
 		}
-	}, [status.playing, status.currentTime, status.duration, waveform, amplitudes]);
+	});
 
-	const togglePlayback = useCallback(() => {
+	useEffect(() => {
+		if (status.playing) return;
+		const hasNonZero = amplitudes.some((amp) => amp.value > 0);
+		if (!hasNonZero) return;
+		for (const amp of amplitudes) {
+			amp.value = withTiming(0, { duration: 150 });
+		}
+	}, [status.playing, amplitudes]);
+
+	const isFinished =
+		!status.playing && status.duration > 0 && status.currentTime >= status.duration;
+
+	const togglePlayback = useCallback(async () => {
 		if (status.playing) {
 			player.pause();
+		} else if (isFinished) {
+			await player.seekTo(0);
+			player.play();
 		} else {
 			player.play();
 		}
-	}, [player, status.playing]);
+	}, [player, status.playing, isFinished]);
 
 	const seekTo = useCallback(
 		async (positionMs: number) => {
@@ -60,28 +74,10 @@ export function useVoicePlayer(
 		[player],
 	);
 
-	const [throttledTimeMs, setThrottledTimeMs] = useState(0);
-	const lastUpdateRef = useRef(0);
-
-	useEffect(() => {
-		const nowMs = status.currentTime * 1000;
-		const now = Date.now();
-
-		if (now - lastUpdateRef.current >= 1000) {
-			lastUpdateRef.current = now;
-			setThrottledTimeMs(nowMs);
-		}
-	}, [status.currentTime]);
-
-	useEffect(() => {
-		if (!status.playing) {
-			setThrottledTimeMs(status.currentTime * 1000);
-		}
-	}, [status.playing, status.currentTime]);
-
 	return {
 		isPlaying: status.playing,
-		currentTimeMs: throttledTimeMs,
+		isFinished,
+		currentTimeMs: status.currentTime * 1000,
 		durationMs: status.duration * 1000,
 		amplitudes,
 		togglePlayback,
