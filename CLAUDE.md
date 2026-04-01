@@ -1,12 +1,12 @@
-# Code Standards
+# Constitution
 
-Synthesized from our TypeScript guide, React guide, and general coding principles. Every statement is classified as
-**MUST** (non-negotiable), **SHOULD** (strong default, break with documented reason), or **NEVER** (no exceptions in
-normal development).
+## Workflow
 
-Refer to documentation @docs/coding.
-
----
+1. You MUST read this document fully and thoroughly before starting ANY task.
+2. You MUST read the existing codebase to understand existing components for reusability.
+3. After implementation, you MUST run `/simplify` skill.
+4. You MUST run formatter and linter before committing.
+5. Human approval is required before committing ANY changes.
 
 ## Naming
 
@@ -173,7 +173,8 @@ Refer to documentation @docs/coding.
 ## React Components
 
 - **MUST** use function components exclusively — class components are legacy.
-- **MUST** give each component a single responsibility — if it handles data fetching, validation, layout, and business logic, split it.
+- **MUST** give each component a single responsibility — if it handles data fetching, validation, layout, and business
+  logic, split it.
 - **MUST** call hooks at the top level only — never inside loops, conditions, or nested functions.
 - **MUST** call hooks only from React functions (components or custom hooks), never from plain functions.
 - **MUST** be honest about `useEffect` dependencies — never suppress the `exhaustive-deps` lint rule.
@@ -183,35 +184,43 @@ Refer to documentation @docs/coding.
 - **MUST** use discriminated unions for variant props instead of optional props.
 - **SHOULD** keep components under 150–200 lines — look for extraction opportunities beyond that.
 - **SHOULD** separate presentational components (what it looks like) from container components (how it works).
-- **SHOULD** extract complex JSX logic into variables or helper functions — the return statement should read like a UI description.
+- **SHOULD** extract complex JSX logic into variables or helper functions — the return statement should read like a UI
+  description.
 - **SHOULD** use fragments (`<>`) to avoid unnecessary wrapper DOM nodes.
-- **SHOULD** destructure props explicitly and collect the rest deliberately — avoid indiscriminate `{...props}` spreading.
-- **SHOULD** derive state instead of syncing it — if a value can be computed from existing state, compute it during render.
+- **SHOULD** destructure props explicitly and collect the rest deliberately — avoid indiscriminate `{...props}`
+  spreading.
+- **SHOULD** derive state instead of syncing it — if a value can be computed from existing state, compute it during
+  render.
 - **SHOULD** use the functional updater form for `useState` when new state depends on previous state.
 - **SHOULD** use `useReducer` when state transitions involve multiple related values or conditional logic.
 - **SHOULD** use `useEffect` only for syncing with external systems — not for derivations or transformations.
 - **SHOULD** extract repeated `useState` + `useEffect` patterns into custom hooks (prefixed with `use`).
-- **SHOULD** prefer custom hooks over render props for logic reuse; use render props only when controlling render placement.
+- **SHOULD** prefer custom hooks over render props for logic reuse; use render props only when controlling render
+  placement.
 - **SHOULD** keep state local until it needs to be shared — don't make something global "just in case."
 - **SHOULD** use Context for low-frequency global state (theme, locale, auth) — not for high-frequency updates.
-- **SHOULD** measure before optimizing — use React DevTools Profiler to identify actual bottlenecks before adding `React.memo`, `useMemo`, or `useCallback`.
+- **SHOULD** measure before optimizing — use React DevTools Profiler to identify actual bottlenecks before adding
+  `React.memo`, `useMemo`, or `useCallback`.
 - **SHOULD** place error boundaries around risky UI sections, not a single boundary around the entire app.
 - **SHOULD** use `handle` prefix for handler definitions and `on` prefix for props that accept handlers.
 - **SHOULD** use early returns for guard clauses after all hook calls.
 - **SHOULD** use object lookups instead of ternary chains for multiple rendering variants.
-- **SHOULD** test user behavior (accessible roles, labels) not implementation details (internal state, re-render counts).
+- **SHOULD** test user behavior (accessible roles, labels) not implementation details (internal state, re-render
+  counts).
 - **SHOULD** use query priority: `getByRole` → `getByLabelText` → `getByPlaceholderText` → `getByText` → `getByTestId`.
 - **NEVER** use array index as key for dynamic lists — causes state bugs on reorder.
 - **NEVER** nest ternary operators in JSX.
 - **NEVER** store derived state in `useState` — compute it during render instead.
-- **NEVER** create objects or functions inline in JSX when passing to memoized children — define them outside or use `useMemo`/`useCallback`.
+- **NEVER** create objects or functions inline in JSX when passing to memoized children — define them outside or use
+  `useMemo`/`useCallback`.
 - **NEVER** use `forEach` with async callbacks in React effects or handlers — it doesn't await them.
 
 ---
 
 ## React State Management
 
-- **MUST** follow this decision framework: single component → `useState`; parent + children → lift state up; complex transitions → `useReducer`; distant tree access → Context or state library; server data → React Query/SWR.
+- **MUST** follow this decision framework: single component → `useState`; parent + children → lift state up; complex
+  transitions → `useReducer`; distant tree access → Context or state library; server data → React Query/SWR.
 - **SHOULD** treat server state differently from client UI state — use caching libraries (React Query) for server data.
 - **SHOULD** memoize Context values with `useMemo` to prevent unnecessary re-renders.
 - **SHOULD** throw from context hooks when used outside their provider.
@@ -222,7 +231,8 @@ Refer to documentation @docs/coding.
 ## React Performance
 
 - **MUST** measure before optimizing — profile first, then act.
-- **SHOULD** use `React.memo` only when a component re-renders frequently with unchanged props and rendering is expensive.
+- **SHOULD** use `React.memo` only when a component re-renders frequently with unchanged props and rendering is
+  expensive.
 - **SHOULD** stabilize object/function references with `useMemo`/`useCallback` when passing to `React.memo` children.
 - **SHOULD** use virtualization (`@tanstack/react-virtual` or `FlashList`) for lists with hundreds+ items.
 - **SHOULD** use lazy loading (`React.lazy` + `Suspense`) for route-level code splitting.
@@ -247,18 +257,12 @@ Refer to documentation @docs/coding.
 Refer to @docs/coding/DESIGN.md for the full design system.
 
 - **MUST** use Tailwind's 4pt grid for all spacing. No fractional values (`gap-1.5`, `px-2.5`).
-- **MUST** use Tailwind theme classes for color (`bg-surface`, `text-muted`, `border-border`). Reserve `useThemeColors()` for icon `color` props only.
-- **MUST** use Tailwind classes over inline `style={{}}` for any static layout property. Inline styles are for dynamic values only (safe area insets, animations).
+- **MUST** use Tailwind theme classes for color (`bg-surface`, `text-muted`, `border-border`). Reserve
+  `useThemeColors()` for icon `color` props only.
+- **MUST** use Tailwind classes over inline `style={{}}` for any static layout property. Inline styles are for dynamic
+  values only (safe area insets, animations).
 - **MUST** keep layout concerns (positioning, margins) in the consumer, not baked into reusable components.
 - **MUST** use the `Overline` component for uppercase section labels.
 - **NEVER** hardcode hex color values. Add missing colors to `global.css`.
 - **NEVER** introduce spacing, radius, or font size values outside the defined scales without documented justification.
 
----
-
-## Active Technologies
-- TypeScript 5.x, React Native 0.84+, Expo SDK 54+ + heroui-native, react-native-enriched, whisper.rn, drizzle-orm, expo-sqlite (SQLCipher), @supabase/supabase-js, @powersync/react-native, react-native-calendars, react-native-gifted-charts, expo-notifications, expo-prin (001-daily-journal-app)
-- SQLite (local, encrypted via SQLCipher) + Supabase Postgres (cloud sync for authenticated users) (001-daily-journal-app)
-
-## Recent Changes
-- 001-daily-journal-app: Added TypeScript 5.x, React Native 0.84+, Expo SDK 54+ + heroui-native, react-native-enriched, whisper.rn, drizzle-orm, expo-sqlite (SQLCipher), @supabase/supabase-js, @powersync/react-native, react-native-calendars, react-native-gifted-charts, expo-notifications, expo-prin
