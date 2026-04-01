@@ -31,7 +31,7 @@ export function ElevatedCard({
 	const tint = TINT_CLASSES[elevation];
 
 	return (
-		<Card className={`${tint} ${shadow} ${className ?? ''}`} {...rest}>
+		<Card className={`shadow-none ${tint} ${shadow} ${className ?? ''}`} {...rest}>
 			{children}
 		</Card>
 	);
