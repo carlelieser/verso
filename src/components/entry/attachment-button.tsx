@@ -50,7 +50,7 @@ export function AttachmentButton({
 	const voiceNoteSheet = useBottomSheet();
 
 	const handleVoiceNoteAttach = useCallback(
-		async (uri: string, name: string | null) => {
+		async (uri: string, name: string | null, waveform: readonly number[]) => {
 			try {
 				await addFileAttachment(db, {
 					entryId,
@@ -59,6 +59,7 @@ export function AttachmentButton({
 					mimeType: 'audio/m4a',
 					fileName: name,
 					sizeBytes: null,
+					waveform,
 				});
 				await refresh();
 			} catch (err: unknown) {

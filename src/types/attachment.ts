@@ -5,6 +5,7 @@ export interface FileData {
 	readonly mimeType: string | null;
 	readonly fileName: string | null;
 	readonly sizeBytes: number | null;
+	readonly waveform?: readonly number[];
 }
 
 export interface LocationData {

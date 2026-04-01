@@ -1,5 +1,5 @@
 import * as Sharing from 'expo-sharing';
-import { MapPin, Paperclip, Share2, Trash2 } from 'lucide-react-native';
+import { AudioLinesIcon, MapPin, Paperclip, Share2, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
@@ -124,18 +124,30 @@ function VoiceNoteCard({
 	readonly onDelete: () => void;
 	readonly isDeleting: boolean;
 }): React.JSX.Element {
+	const { muted } = useThemeColors();
 	const menuItems = useShareDeleteMenu(onShare, onDelete);
 
 	return (
-		<View style={isDeleting ? { opacity: 0.5 } : undefined} className="gap-2">
+		<InfoCard
+			style={isDeleting ? { opacity: 0.5 } : undefined}
+			className="flex-col items-stretch pb-4"
+		>
 			<View className="flex-row items-center justify-between">
-				<Text className="text-sm text-foreground" numberOfLines={1}>
-					{attachment.data.fileName ?? 'Voice note'}
-				</Text>
+				<View className="flex-row items-center gap-3">
+					<AudioLinesIcon size={20} color={muted} />
+					<Text className="text-sm text-foreground" numberOfLines={1}>
+						{attachment.data.fileName ?? 'Untitled'}
+					</Text>
+				</View>
 				<OverflowMenu items={menuItems} />
 			</View>
-			<VoiceNote mode="read-only" uri={attachment.data.uri} />
-		</View>
+			<VoiceNote
+				className="p-0 rounded-none"
+				mode="read-only"
+				uri={attachment.data.uri}
+				waveform={attachment.data.waveform}
+			/>
+		</InfoCard>
 	);
 }
 

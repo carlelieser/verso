@@ -14,6 +14,7 @@ interface AddFileAttachmentInput {
 	readonly mimeType: string | null;
 	readonly fileName: string | null;
 	readonly sizeBytes: number | null;
+	readonly waveform?: readonly number[];
 }
 
 interface AddLocationAttachmentInput {
@@ -105,6 +106,7 @@ export async function addFileAttachment(
 		mimeType: input.mimeType,
 		fileName: input.fileName,
 		sizeBytes: input.sizeBytes,
+		...(input.waveform ? { waveform: input.waveform } : {}),
 	};
 
 	try {
