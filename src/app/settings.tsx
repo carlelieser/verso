@@ -19,6 +19,7 @@ import {useBottomSheet} from '@/hooks/use-bottom-sheet';
 import {type PermissionStatus, usePermissions} from '@/hooks/use-permissions';
 import {useSettings} from '@/hooks/use-settings';
 
+
 import packageJson from '../../package.json';
 
 function getPermissionDescription(
@@ -52,6 +53,7 @@ export default function SettingsScreen(): React.JSX.Element {
 	const {isAutoLocation, isTranscriptionEnabled, theme, setSetting, setTheme} = useSettings();
 	const permissions = usePermissions();
 	const {bottom} = useSafeAreaInsets();
+
 	const isSystemTheme = theme === 'system';
 	const isDark = theme === 'dark';
 

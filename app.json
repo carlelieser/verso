@@ -36,7 +36,10 @@
         "READ_MEDIA_IMAGES"
       ],
       "predictiveBackGestureEnabled": false,
-      "package": "com.devplex.verso"
+      "package": "com.devplex.verso",
+      "notification": {
+        "icon": "./assets/images/android-icon-monochrome.png"
+      }
     },
     "web": {
       "bundler": "metro",

@@ -46,7 +46,7 @@ export function EntryCard({
 							{preview || 'Empty entry'}
 						</Card.Title>
 						<View className="flex-row items-center justify-between mt-1">
-							<Card.Description className="text-xs">
+							<Card.Description className="text-xs flex-1">
 								{leftParts.join(' \u00B7 ')}
 							</Card.Description>
 							<Card.Description className="text-xs">

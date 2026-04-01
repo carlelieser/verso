@@ -68,10 +68,10 @@ export default function OnboardingScreen(): React.JSX.Element {
 
 	const handleSetup = useCallback(async () => {
 		await permissions.notification.request();
-		await permissions.location.request();
-		await permissions.microphone.request();
-		handleComplete();
-	}, [permissions, handleComplete]);
+		const locationGranted = await permissions.location.request();
+		const microphoneGranted = await permissions.microphone.request();
+		completeOnboarding(locationGranted, microphoneGranted);
+	}, [permissions]);
 
 	const pages: readonly OnboardingPage[] = [
 		{

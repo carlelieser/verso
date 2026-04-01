@@ -69,7 +69,7 @@ export default function RootLayout(): React.JSX.Element {
 
 	return (
 		<GestureHandlerRootView className="flex-1 bg-background">
-			<HeroUINativeProvider>
+			<HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
 				<PortalProvider>
 					<DatabaseProvider>
 						<DialogProvider>
