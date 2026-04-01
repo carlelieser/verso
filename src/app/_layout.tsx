@@ -16,6 +16,7 @@ import { Uniwind } from 'uniwind';
 import { SETTINGS_THEME_KEY, isValidTheme } from '@/constants/settings';
 import { DatabaseProvider } from '@/providers/database-provider';
 import { DialogProvider } from '@/providers/dialog-provider';
+import { SettingsProvider } from '@/providers/settings-provider';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -71,22 +72,24 @@ export default function RootLayout(): React.JSX.Element {
 		<GestureHandlerRootView className="flex-1 bg-background">
 			<HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
 				<PortalProvider>
-					<DatabaseProvider>
-						<DialogProvider>
-							<Stack
-								screenOptions={{
-									headerShown: false,
-								}}
-							>
-								<Stack.Screen
-									name="onboarding"
-									options={{
-										gestureEnabled: false,
+					<SettingsProvider>
+						<DatabaseProvider>
+							<DialogProvider>
+								<Stack
+									screenOptions={{
+										headerShown: false,
 									}}
-								/>
-							</Stack>
-						</DialogProvider>
-					</DatabaseProvider>
+								>
+									<Stack.Screen
+										name="onboarding"
+										options={{
+											gestureEnabled: false,
+										}}
+									/>
+								</Stack>
+							</DialogProvider>
+						</DatabaseProvider>
+					</SettingsProvider>
 					<StatusBar style="auto" />
 				</PortalProvider>
 			</HeroUINativeProvider>

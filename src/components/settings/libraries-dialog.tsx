@@ -39,7 +39,7 @@ export function LibrariesDialog({ isOpen, onClose }: LibrariesDialogProps): Reac
 					</Dialog.Description>
 					<View className="h-[300px] -mx-3">
 						<ScrollView className={'my-2 rounded-2xl'}>
-							<ListGroup>
+							<ListGroup variant={"transparent"}>
 								{LIBRARIES.map((lib) => (
 									<ListGroup.Item
 										key={lib.name}
