@@ -18,7 +18,8 @@
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Used for voice dictation",
         "NSLocationWhenInUseUsageDescription": "Used to tag entries with your location",
-        "NSPhotoLibraryUsageDescription": "Used to embed photos in entries"
+        "NSPhotoLibraryUsageDescription": "Used to embed photos in entries",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.devplex.verso"
     },
@@ -33,7 +34,11 @@
         "RECORD_AUDIO",
         "ACCESS_FINE_LOCATION",
         "SCHEDULE_EXACT_ALARM",
-        "READ_MEDIA_IMAGES"
+        "READ_MEDIA_IMAGES",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
       "predictiveBackGestureEnabled": false,
       "package": "com.devplex.verso",
@@ -67,10 +72,32 @@
       ],
       "expo-sharing",
       "expo-secure-store",
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-updates",
+        {
+          "username": "devplex"
+        }
+      ]
     ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5a01d060-5875-400f-aebd-92d5ccfaea46",
+      "enabled": true,
+      "fallbackToCacheTimeout": 0
+    },
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "root": "./src/app"
+      },
+      "eas": {
+        "projectId": "5a01d060-5875-400f-aebd-92d5ccfaea46"
+      }
     }
   }
 }
