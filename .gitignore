@@ -49,8 +49,6 @@ yarn-error.*
 .env.*
 !.env.example
 
-# Drizzle migrations output
-drizzle/
 
 # Coverage
 coverage/
