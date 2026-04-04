@@ -1,126 +1,136 @@
 export type Timestamp = number;
 
 export const EMOTION_KEYS = [
-	// Joy
-	'contentment',
-	'amusement',
-	'happiness',
-	'delight',
-	'euphoria',
-	'ecstasy',
-	// Sadness
-	'disappointment',
-	'melancholy',
-	'sorrow',
-	'heartache',
-	'grief',
+	// Inner ring
+	'fearful',
+	'angry',
+	'disgusted',
+	'sad',
+	'happy',
+	'surprised',
+	'bad',
+	// Fearful — middle
+	'scared',
+	'anxious',
+	'insecure',
+	'weak',
+	'rejected',
+	'threatened',
+	// Fearful — outer
+	'helpless',
+	'frightened',
+	'overwhelmed',
+	'worried',
+	'inadequate',
+	'worthless',
+	'insignificant',
+	'excluded',
+	'persecuted',
+	'nervous',
+	'exposed',
+	'betrayed',
+	// Angry — middle
+	'let-down',
+	'humiliated',
+	'bitter',
+	'mad',
+	'aggressive',
+	'frustrated',
+	'distant',
+	'critical',
+	// Angry — outer
+	'resentful',
+	'disrespected',
+	'ridiculed',
+	'indignant',
+	'violated',
+	'furious',
+	'jealous',
+	'provoked',
+	'hostile',
+	'infuriated',
+	'annoyed',
+	'withdrawn',
+	'numb',
+	'skeptical',
+	'dismissive',
+	'judgmental',
+	// Disgusted — middle
+	'disapproving',
+	'hurt',
+	'repelled',
+	// Disgusted — outer
+	'disappointed',
+	'appalled',
+	'embarrassed',
+	'revolted',
+	'disgusted-deep',
+	'hesitant',
+	// Sad — middle
+	'guilty',
+	'depressed',
+	'lonely',
+	'vulnerable',
 	'despair',
-	// Anger
-	'annoyance',
-	'irritation',
-	'frustration',
-	'anger',
-	'fury',
-	'rage',
-	// Fear
-	'unease',
-	'apprehension',
-	'anxiety',
-	'fear',
-	'panic',
-	'terror',
-	// Surprise
-	'curiosity',
-	'interest',
-	'surprise',
-	'amazement',
-	'astonishment',
-	'shock',
-	// Disgust
-	'discomfort',
-	'distaste',
-	'aversion',
-	'disgust',
-	'revulsion',
-	'loathing',
-	// Love
-	'fondness',
-	'affection',
-	'tenderness',
-	'love',
-	'devotion',
-	'adoration',
-	// Shame
-	'self-consciousness',
-	'embarrassment',
-	'shame',
-	'disgrace',
-	'humiliation',
-	'mortification',
-	// Guilt
-	'regret',
-	'guilt',
-	'remorse',
-	'anguish',
-	'self-loathing',
-	// Envy
-	'wistfulness',
-	'longing',
-	'envy',
-	'jealousy',
-	'covetousness',
-	'resentment',
-	// Pride
-	'satisfaction',
-	'confidence',
-	'pride',
-	'triumph',
-	'hubris',
-	'grandiosity',
-	// Trust
-	'openness',
-	'acceptance',
-	'trust',
-	'reliance',
-	'faith',
-	'dependence',
-	// Contempt
-	'dismissiveness',
-	'scorn',
-	'contempt',
-	'disdain',
-	// Awe
-	'wonder',
+	// Sad — outer
+	'remorseful',
+	'ashamed',
+	'inferior',
+	'empty',
+	'abandoned',
+	'ignored',
+	'fragile',
+	'powerless',
+	'grief',
+	'distraught',
+	// Happy — middle
+	'proud',
+	'content',
+	'interested',
+	'playful',
+	'confident',
+	// Happy — outer
+	'accepted',
+	'respected',
+	'joyful',
+	'satisfied',
+	'inquisitive',
+	'successful',
+	'aroused',
+	'curious',
+	'courageous',
+	'compassionate',
+	// Surprised — middle
+	'amazed',
+	'confused',
+	'excited',
+	// Surprised — outer
 	'awe',
-	'reverence',
-	// Nostalgia
-	'reminiscence',
-	'nostalgia',
-	'homesickness',
-	'yearning',
-	// Empathy
-	'sympathy',
-	'compassion',
-	'overwhelm',
-	// Ambivalence
-	'indecision',
-	'conflict',
-	'paralysis',
-	// Ennui
-	'boredom',
-	'apathy',
-	// Schadenfreude
-	'smugness',
-	'vindictive-pleasure',
+	'energetic',
+	'startled',
+	'stunned',
+	'eager',
+	'free',
+	// Bad — middle
+	'bored',
+	'apathetic',
+	'out-of-control',
+	// Bad — outer
+	'busy',
+	'tired',
+	'indifferent',
+	'pressured',
+	'stressed',
+	'rushed',
 ] as const;
 
 export type EmotionCategory = (typeof EMOTION_KEYS)[number];
 
-export type EmotionIntensity = 1 | 2 | 3 | 4 | 5;
+export type EmotionIntensity = 0 | 1 | 2 | 3 | 4 | 5;
 
 const EMOTION_CATEGORIES_SET: ReadonlySet<string> = new Set<string>(EMOTION_KEYS);
 
-const EMOTION_INTENSITIES_SET: ReadonlySet<number> = new Set<EmotionIntensity>([1, 2, 3, 4, 5]);
+const EMOTION_INTENSITIES_SET: ReadonlySet<number> = new Set<EmotionIntensity>([0, 1, 2, 3, 4, 5]);
 
 export function isEmotionCategory(value: string): value is EmotionCategory {
 	return EMOTION_CATEGORIES_SET.has(value);
