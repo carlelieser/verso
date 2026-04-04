@@ -49,7 +49,7 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 		recorder.clear();
 		setName('');
 		sheet.close();
-	}, [dialog, hasRecording, recorder, sheet]);
+	}, [dialog, recorder, sheet]);
 
 	const handleAttach = useCallback(() => {
 		if (!recorder.uri) return;
@@ -62,7 +62,7 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 	const footer = (
 		<View className="flex-row gap-3">
 			<Button variant="ghost" onPress={handleDiscard}>
-				Discard
+				{recorder.status === 'idle' ? 'Close' : 'Discard'}
 			</Button>
 			<Button variant="primary" isDisabled={!hasRecording} onPress={handleAttach}>
 				Attach
