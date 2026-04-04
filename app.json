@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "verso",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -41,10 +40,7 @@
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
       "predictiveBackGestureEnabled": false,
-      "package": "com.devplex.verso",
-      "notification": {
-        "icon": "./assets/images/android-icon-monochrome.png"
-      }
+      "package": "com.devplex.verso"
     },
     "web": {
       "bundler": "metro",
@@ -67,7 +63,8 @@
       [
         "expo-notifications",
         {
-          "sounds": []
+          "sounds": [],
+          "icon": "./assets/images/android-icon-monochrome.png"
         }
       ],
       "expo-sharing",
@@ -78,7 +75,9 @@
         {
           "username": "devplex"
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-web-browser"
     ],
     "runtimeVersion": {
       "policy": "appVersion"
