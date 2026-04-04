@@ -1,6 +1,10 @@
 import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
-import { DEFAULT_JOURNAL_COLOR } from '@/constants/journal-icons';
+/**
+ * Duplicated here (instead of importing from journal-icons.ts) because
+ * drizzle-kit's esbuild pipeline chokes on transitive react-native imports.
+ */
+const DEFAULT_JOURNAL_COLOR = '#7A8A8C';
 
 export const journals = sqliteTable(
 	'journal',

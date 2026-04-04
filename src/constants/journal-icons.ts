@@ -19,6 +19,7 @@ interface IconDefinition {
 	readonly Icon: ComponentType<{ size?: number; color?: string }>;
 }
 
+/** Keep in sync with the duplicate in db/schema.ts (see comment there). */
 export const DEFAULT_JOURNAL_COLOR = '#7A8A8C';
 
 export const JOURNAL_ICONS: readonly IconDefinition[] = [

@@ -1,4 +1,4 @@
-import { migrate } from 'drizzle-orm/expo-sqlite/migrator';
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
@@ -7,7 +7,7 @@ import { createDatabase } from '@/db/client';
 import { setupFts } from '@/db/fts';
 import { ensureDefaultJournal } from '@/db/seed';
 
-import migrations from '../../drizzle/migrations.js';
+import migrations from '../../drizzle/migrations';
 
 interface DatabaseContextValue {
 	readonly db: Db;
@@ -27,6 +27,52 @@ interface DatabaseProviderProps {
 	readonly children: React.ReactNode;
 }
 
+function MigratedDatabase({
+	db,
+	children,
+}: {
+	readonly db: Db;
+	readonly children: React.ReactNode;
+}): React.JSX.Element {
+	const { success, error } = useMigrations(db, migrations);
+	const [ready, setReady] = useState(false);
+	const [seedError, setSeedError] = useState<Error | null>(null);
+
+	useEffect(() => {
+		if (!success) return;
+		try {
+			setupFts(db);
+			ensureDefaultJournal(db);
+			setReady(true);
+		} catch (err: unknown) {
+			setSeedError(err instanceof Error ? err : new Error(String(err)));
+		}
+	}, [success, db]);
+
+	if (error ?? seedError) {
+		const message = (error ?? seedError)!.message;
+		return (
+			<View className="flex-1 items-center justify-center bg-background">
+				<Text className="text-lg font-semibold text-danger">
+					Failed to initialize database
+				</Text>
+				<Text className="mt-2 px-8 text-center text-sm text-muted">{message}</Text>
+			</View>
+		);
+	}
+
+	if (!ready) {
+		return (
+			<View className="flex-1 items-center justify-center bg-background">
+				<ActivityIndicator size="large" />
+				<Text className="mt-3 text-base text-muted">Initializing...</Text>
+			</View>
+		);
+	}
+
+	return <DatabaseContext.Provider value={{ db }}>{children}</DatabaseContext.Provider>;
+}
+
 export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX.Element {
 	const [db, setDb] = useState<Db | null>(null);
 	const [error, setError] = useState<Error | null>(null);
@@ -35,12 +81,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX
 	useEffect(() => {
 		setError(null);
 		createDatabase()
-			.then(async (database) => {
-				await migrate(database, migrations);
-				setupFts(database);
-				ensureDefaultJournal(database);
-				setDb(database);
-			})
+			.then(setDb)
 			.catch((err: unknown) => {
 				setError(err instanceof Error ? err : new Error(String(err)));
 			});
@@ -72,5 +113,5 @@ export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX
 		);
 	}
 
-	return <DatabaseContext.Provider value={{ db }}>{children}</DatabaseContext.Provider>;
+	return <MigratedDatabase db={db}>{children}</MigratedDatabase>;
 }
