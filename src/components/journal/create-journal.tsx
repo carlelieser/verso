@@ -26,7 +26,6 @@ export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JS
 	return (
 		<PortalSheet
 			sheet={sheet}
-			title="New Journal"
 			keyboardPersist
 			footer={
 				<Button
@@ -34,7 +33,7 @@ export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JS
 					isDisabled={!isValid}
 					onPress={() => onCreate(name.trim(), selectedIcon, selectedColor)}
 				>
-					<Button.Label>Create</Button.Label>
+					<Button.Label>Create Journal</Button.Label>
 				</Button>
 			}
 		>

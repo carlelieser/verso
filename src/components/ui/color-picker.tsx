@@ -31,7 +31,7 @@ export function ColorPicker({
 	const { foreground } = useThemeColors();
 
 	return (
-		<View className="flex-row flex-wrap gap-3">
+		<View className="flex-row flex-wrap gap-2">
 			{colors.map((color) => {
 				const isSelected = value === color;
 				return (
@@ -42,7 +42,7 @@ export function ColorPicker({
 						style={{ backgroundColor: color }}
 					>
 						{isSelected && (
-							<View className="size-10 rounded-full items-center justify-center bg-black/30">
+							<View className="size-10 rounded-full items-center justify-center bg-background/30">
 								<Check size={18} color={foreground} strokeWidth={3} />
 							</View>
 						)}

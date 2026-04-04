@@ -25,7 +25,6 @@ export function RenameJournal({
 	return (
 		<PortalSheet
 			sheet={sheet}
-			title="Rename Journal"
 			keyboardPersist
 			footer={
 				<Button

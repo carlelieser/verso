@@ -24,7 +24,6 @@ export function ChangeJournalIcon({
 	return (
 		<PortalSheet
 			sheet={sheet}
-			title="Change Icon"
 			footer={
 				<Button
 					variant="primary"

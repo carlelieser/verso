@@ -27,7 +27,7 @@ export function TimePickerDialog({
 		>
 			<Dialog.Portal>
 				<Dialog.Overlay className="bg-background/50" />
-				<Dialog.Content isSwipeable={false}>
+				<Dialog.Content className={'pt-8'} isSwipeable={false}>
 					{isOpen ? (
 						<TimePicker
 							initialHour={initialHour}

@@ -9,11 +9,16 @@ interface SheetContentProps {
 	readonly children: React.ReactNode;
 }
 
-export function SheetContent({ title, footer, className, children }: SheetContentProps): React.JSX.Element {
+export function SheetContent({
+	title,
+	footer,
+	className,
+	children,
+}: SheetContentProps): React.JSX.Element {
 	const { bottom } = useSafeAreaInsets();
 
 	return (
-		<View className={`p-4 gap-6 ${className ?? ''}`} style={{ paddingBottom: bottom + 16 }}>
+		<View className={`p-4 gap-4 ${className ?? ''}`} style={{ paddingBottom: bottom + 16 }}>
 			{title ? (
 				<Text className="text-3xl font-heading text-foreground pb-1">{title}</Text>
 			) : null}

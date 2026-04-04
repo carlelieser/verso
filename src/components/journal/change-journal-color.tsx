@@ -23,7 +23,6 @@ export function ChangeJournalColor({
 	return (
 		<PortalSheet
 			sheet={sheet}
-			title="Change Color"
 			footer={
 				<Button
 					variant="primary"
