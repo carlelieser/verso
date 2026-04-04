@@ -28,7 +28,18 @@ function Bar({
 	});
 
 	return (
-		<Animated.View style={[{ width: 3, height: MIN_HEIGHT, borderRadius: 1.5, backgroundColor: color, transform: [{ translateY: (maxHeight - MIN_HEIGHT) / 2 }] }, style]} />
+		<Animated.View
+			style={[
+				{
+					width: 3,
+					height: MIN_HEIGHT,
+					borderRadius: 1.5,
+					backgroundColor: color,
+					transform: [{ translateY: (maxHeight - MIN_HEIGHT) / 2 }],
+				},
+				style,
+			]}
+		/>
 	);
 }
 
@@ -38,10 +49,7 @@ export function AudioWaveform({
 	size = 10,
 }: AudioWaveformProps): React.JSX.Element {
 	return (
-		<View
-			style={{ width: size, height: size }}
-			className="flex-row justify-center gap-0.5"
-		>
+		<View style={{ width: size, height: size }} className="flex-row justify-center gap-0.5">
 			{amplitudes.map((amp, i) => (
 				<Bar key={i} amplitude={amp} color={color} maxHeight={size} />
 			))}

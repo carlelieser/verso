@@ -133,7 +133,6 @@ export default function EntryViewScreen(): React.JSX.Element {
 					/>
 				</>
 			)}
-
 		</Screen>
 	);
 }

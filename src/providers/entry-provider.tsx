@@ -1,15 +1,23 @@
-import React, {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import React, {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 
-import {useSettings} from '@/hooks/use-settings';
-import {useDatabaseContext} from '@/providers/database-provider';
+import { useSettings } from '@/hooks/use-settings';
+import { useDatabaseContext } from '@/providers/database-provider';
 import {
 	createEntry as createEntryService,
 	deleteEntry as deleteEntryService,
 	getEntry,
 } from '@/services/entry-service';
-import {listJournals} from '@/services/journal-service';
-import {captureLocationAndWeather} from '@/services/location-weather-service';
-import {getErrorMessage} from '@/utils/error';
+import { listJournals } from '@/services/journal-service';
+import { captureLocationAndWeather } from '@/services/location-weather-service';
+import { getErrorMessage } from '@/utils/error';
 
 interface EntryContextValue {
 	readonly entryId: string;
@@ -37,13 +45,13 @@ interface EntryProviderProps {
 }
 
 export function EntryProvider({
-								  entryId: existingEntryId,
-								  journalId: initialJournalId,
-								  children,
-							  }: EntryProviderProps): React.JSX.Element | null {
+	entryId: existingEntryId,
+	journalId: initialJournalId,
+	children,
+}: EntryProviderProps): React.JSX.Element | null {
 	const isEditMode = existingEntryId !== null && existingEntryId !== undefined;
-	const {db} = useDatabaseContext();
-	const {isAutoLocation} = useSettings();
+	const { db } = useDatabaseContext();
+	const { isAutoLocation } = useSettings();
 
 	const [currentEntryId, setCurrentEntryId] = useState<string | null>(existingEntryId ?? null);
 	const isCreatingRef = useRef(false);
@@ -142,15 +150,11 @@ export function EntryProvider({
 	}, [resolveJournalId, isAutoLocation, db]);
 
 	const contextValue = useMemo(
-		() => currentEntryId ? {entryId: currentEntryId, isEditMode, cycle} : null,
+		() => (currentEntryId ? { entryId: currentEntryId, isEditMode, cycle } : null),
 		[currentEntryId, isEditMode, cycle],
 	);
 
 	if (!contextValue) return null;
 
-	return (
-		<EntryContext.Provider value={contextValue}>
-			{children}
-		</EntryContext.Provider>
-	);
+	return <EntryContext.Provider value={contextValue}>{children}</EntryContext.Provider>;
 }

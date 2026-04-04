@@ -3,14 +3,14 @@ import { ControlField } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { SelectablePill } from '@/components/ui/selectable-pill';
 import { PortalSheet } from '@/components/ui/portal-sheet';
+import { SelectablePill } from '@/components/ui/selectable-pill';
 import { TimePickerDialog } from '@/components/ui/time-picker-dialog';
-import { getErrorMessage } from '@/utils/error';
 import { SETTINGS_REMINDERS_ENABLED_KEY } from '@/constants/settings';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useSettings } from '@/hooks/use-settings';
 import { scheduleReminders } from '@/services/reminder-service';
+import { getErrorMessage } from '@/utils/error';
 import { formatTime12 } from '@/utils/format-time';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
@@ -24,7 +24,14 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 	const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
 
 	const reschedule = useCallback(
-		(overrides: { isEnabled?: boolean; hour?: number; minute?: number; days?: readonly number[] } = {}) => {
+		(
+			overrides: {
+				isEnabled?: boolean;
+				hour?: number;
+				minute?: number;
+				days?: readonly number[];
+			} = {},
+		) => {
 			scheduleReminders({
 				isEnabled: overrides.isEnabled ?? reminders.isEnabled,
 				hour: overrides.hour ?? reminders.hour,
@@ -74,12 +81,8 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 						onPress={() => setIsTimePickerOpen(true)}
 						className={`flex-row items-baseline gap-1 ${reminders.isEnabled ? '' : 'opacity-50 pointer-events-none'}`}
 					>
-						<Text className="text-5xl text-foreground">
-							{formatted.time}
-						</Text>
-						<Text className="text-base text-muted">
-							{formatted.period}
-						</Text>
+						<Text className="text-5xl text-foreground">{formatted.time}</Text>
+						<Text className="text-base text-muted">{formatted.period}</Text>
 					</Pressable>
 					<ControlField isSelected={reminders.isEnabled} onSelectedChange={handleToggle}>
 						<ControlField.Indicator />

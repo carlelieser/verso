@@ -107,4 +107,3 @@ export async function deleteJournal(db: Db, id: string): Promise<void> {
 	if (!existing) throw new JournalNotFoundError(id);
 	await db.delete(journals).where(eq(journals.id, id));
 }
-

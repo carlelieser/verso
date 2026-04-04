@@ -163,7 +163,6 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 						</>
 					)}
 				</View>
-
 			</>
 		);
 	},

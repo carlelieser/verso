@@ -32,7 +32,7 @@ export function ActionSheet({ header, items, sheet }: ActionSheetProps): React.J
 	return (
 		<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
 			<BottomSheetView>
-				<SheetContent className={"p-0 gap-1"}>
+				<SheetContent className={'p-0 gap-1'}>
 					{header ? <View pointerEvents="none">{header}</View> : null}
 					<Separator />
 					{items.map((item) => {

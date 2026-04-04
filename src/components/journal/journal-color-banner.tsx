@@ -79,12 +79,7 @@ interface PetalData {
  * Back petals are darker and more transparent, front petals are
  * lighter and more opaque — creating a sense of depth.
  */
-function generatePetals(
-	seed: string,
-	hex: string,
-	width: number,
-	height: number,
-): PetalData[] {
+function generatePetals(seed: string, hex: string, width: number, height: number): PetalData[] {
 	const [r, g, b] = parseHex(hex);
 	const [baseH, baseS, baseLightness] = rgbToHsl(r, g, b);
 	const count = 6 + Math.floor(seededRandom(seed, 60) * 5);
@@ -184,7 +179,11 @@ function buildPatch(seed: string, W: number, H: number): PatchTuple {
 	return [
 		{ pos: vec(0, 0), c1: vec(0, H / 3 + warpY(10)), c2: vec(W / 3 + warpX(11), 0) },
 		{ pos: vec(W, 0), c1: vec((W * 2) / 3 + warpX(12), 0), c2: vec(W, H / 3 + warpY(13)) },
-		{ pos: vec(W, H), c1: vec(W, (H * 2) / 3 + warpY(14)), c2: vec((W * 2) / 3 + warpX(15), H) },
+		{
+			pos: vec(W, H),
+			c1: vec(W, (H * 2) / 3 + warpY(14)),
+			c2: vec((W * 2) / 3 + warpX(15), H),
+		},
 		{ pos: vec(0, H), c1: vec(W / 3 + warpX(16), H), c2: vec(0, (H * 2) / 3 + warpY(17)) },
 	];
 }
@@ -217,7 +216,12 @@ export function JournalColorBanner({
 					<Patch patch={patch} colors={colors} />
 					{petals.map((petal, i) => (
 						<Group key={i} opacity={petal.opacity}>
-							<Shadow dx={petal.shadowDx} dy={petal.shadowDy} blur={petal.shadowBlur} color={petal.dropShadowColor} />
+							<Shadow
+								dx={petal.shadowDx}
+								dy={petal.shadowDy}
+								blur={petal.shadowBlur}
+								color={petal.dropShadowColor}
+							/>
 							<Blur blur={12} />
 							<Path path={petal.path}>
 								<LinearGradient

@@ -16,11 +16,7 @@ interface AttachmentPreviewProps {
 	readonly attachments: readonly Attachment[];
 }
 
-function AttachmentSummary({
-	attachment,
-}: {
-	readonly attachment: Attachment;
-}): React.JSX.Element {
+function AttachmentSummary({ attachment }: { readonly attachment: Attachment }): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const Icon = ATTACHMENT_TYPE_ICONS[attachment.type];
 

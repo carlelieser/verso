@@ -137,10 +137,13 @@ export function useEntryComposer(options?: UseEntryComposerOptions): UseEntryCom
 		[isAnimatedCheck, checkProgress, explicitJournalId, defaultJournalId, markDirty],
 	);
 
-	const handleHtmlChange = useCallback((html: string) => {
-		htmlRef.current = html;
-		markDirty();
-	}, [markDirty]);
+	const handleHtmlChange = useCallback(
+		(html: string) => {
+			htmlRef.current = html;
+			markDirty();
+		},
+		[markDirty],
+	);
 
 	const handleEmotionSave = useCallback(
 		(selections: readonly EmotionSelection[]) => {

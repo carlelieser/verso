@@ -42,7 +42,13 @@ export function PopoverMenu({
 			<Menu.Trigger asChild>{trigger}</Menu.Trigger>
 			<Menu.Portal>
 				<Menu.Overlay />
-				<Menu.Content presentation="popover" width={width} placement={placement} offset={offset} alignOffset={alignOffset}>
+				<Menu.Content
+					presentation="popover"
+					width={width}
+					placement={placement}
+					offset={offset}
+					alignOffset={alignOffset}
+				>
 					{items.map((item) => {
 						const color = item.variant === 'danger' ? danger : muted;
 						const icon = (() => {

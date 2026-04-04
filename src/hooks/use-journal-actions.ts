@@ -6,7 +6,10 @@ import { useConfirmDialog } from '@/providers/dialog-provider';
 interface UseJournalActionsOptions {
 	readonly journalId: string | undefined;
 	readonly journalName?: string;
-	readonly updateJournal: (id: string, updates: { name?: string; icon?: string; color?: string }) => Promise<void>;
+	readonly updateJournal: (
+		id: string,
+		updates: { name?: string; icon?: string; color?: string },
+	) => Promise<void>;
 	readonly setDefaultJournal: (id: string) => Promise<void>;
 	readonly deleteJournal: (id: string) => Promise<void>;
 	readonly onDeleted?: () => void;

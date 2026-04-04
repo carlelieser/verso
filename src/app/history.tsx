@@ -21,7 +21,11 @@ export default function HistoryScreen(): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
 	const { entries, searchEntries, deleteEntry } = useEntries();
-	const { selectedItem: selectedEntry, handleLongPress, actionSheet } = useLongPressAction<EntrySummaryWithJournal>();
+	const {
+		selectedItem: selectedEntry,
+		handleLongPress,
+		actionSheet,
+	} = useLongPressAction<EntrySummaryWithJournal>();
 	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
 
 	const debouncedSearch = useDebouncedCallback(searchEntries);
@@ -111,7 +115,6 @@ export default function HistoryScreen(): React.JSX.Element {
 				items={actionItems}
 				sheet={actionSheet}
 			/>
-
 		</Screen>
 	);
 }

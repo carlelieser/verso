@@ -11,9 +11,7 @@ interface UseDeleteEntryResult {
  * Shows a danger dialog and calls `onDelete` if confirmed.
  * Returns true if the entry was deleted.
  */
-export function useDeleteEntry(
-	onDelete: (id: string) => Promise<void>,
-): UseDeleteEntryResult {
+export function useDeleteEntry(onDelete: (id: string) => Promise<void>): UseDeleteEntryResult {
 	const dialog = useConfirmDialog();
 
 	const confirmDeleteEntry = useCallback(

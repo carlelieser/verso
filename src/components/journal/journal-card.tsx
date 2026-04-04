@@ -20,7 +20,7 @@ export function JournalCard({
 	journal,
 	entryCount,
 	isDefault,
-	className = "",
+	className = '',
 	onPress,
 	onLongPress,
 }: JournalCardProps): React.JSX.Element {
@@ -30,7 +30,7 @@ export function JournalCard({
 		<Pressable onPress={onPress} onLongPress={onLongPress}>
 			<Card className={`p-0 ${className}`}>
 				<JournalColorBanner color={journal.color} seed={journal.id} />
-				<Card.Body className={"p-4"}>
+				<Card.Body className={'p-4'}>
 					<View className="flex-row items-center gap-3">
 						<Icon size={20} color={journal.color} />
 						<View className="flex-1">

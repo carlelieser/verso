@@ -1,11 +1,11 @@
-import {router} from 'expo-router';
-import {Button} from 'heroui-native';
-import {ChevronLeft} from 'lucide-react-native';
+import { router } from 'expo-router';
+import { Button } from 'heroui-native';
+import { ChevronLeft } from 'lucide-react-native';
 import React from 'react';
-import {Text, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {useThemeColors} from '@/hooks/use-theme-colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 interface ScreenProps {
 	/** Content rendered above the header row (e.g. a color banner). */
@@ -22,24 +22,27 @@ interface ScreenProps {
 }
 
 export function Screen({
-						   headerAbove,
-						   title,
-						   showBackButton = true,
-						   disableTopInset = false,
-						   headerRight,
-						   children,
-					   }: ScreenProps): React.JSX.Element {
+	headerAbove,
+	title,
+	showBackButton = true,
+	disableTopInset = false,
+	headerRight,
+	children,
+}: ScreenProps): React.JSX.Element {
 	const insets = useSafeAreaInsets();
-	const {muted} = useThemeColors();
+	const { muted } = useThemeColors();
 
 	return (
-		<View className="flex-1 bg-background" style={{paddingTop: disableTopInset ? 0 : insets.top}}>
+		<View
+			className="flex-1 bg-background"
+			style={{ paddingTop: disableTopInset ? 0 : insets.top }}
+		>
 			{headerAbove ?? null}
 			<View className="p-3 gap-1">
 				<View className="flex-row items-center justify-between">
 					{showBackButton ? (
 						<Button variant="ghost" size="sm" isIconOnly onPress={() => router.back()}>
-							<ChevronLeft size={20} color={muted}/>
+							<ChevronLeft size={20} color={muted} />
 						</Button>
 					) : null}
 					{headerRight ?? null}

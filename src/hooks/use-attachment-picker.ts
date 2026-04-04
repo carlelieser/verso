@@ -3,9 +3,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useDatabaseContext } from '@/providers/database-provider';
-import { getErrorMessage } from '@/utils/error';
 import { addFileAttachment, listAttachments } from '@/services/attachment-service';
 import type { Attachment } from '@/types/attachment';
+import { getErrorMessage } from '@/utils/error';
 
 interface UseAttachmentPickerOptions {
 	readonly onError?: (title: string, message: string) => void;
@@ -116,7 +116,10 @@ export function useAttachmentPicker(
 
 	const pickAudio = useCallback(() => pickDocumentFiles('audio/*', 'audio'), [pickDocumentFiles]);
 
-	const pickDocuments = useCallback(() => pickDocumentFiles('*/*', 'document'), [pickDocumentFiles]);
+	const pickDocuments = useCallback(
+		() => pickDocumentFiles('*/*', 'document'),
+		[pickDocumentFiles],
+	);
 
 	return { attachments: attachmentList, pickImages, pickAudio, pickDocuments, refresh };
 }

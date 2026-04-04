@@ -41,13 +41,18 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const { journalId } = useLocalSearchParams<{ journalId: string }>();
 	const insets = useSafeAreaInsets();
 	const { muted, danger, foreground, accentForeground } = useThemeColors();
-	const { journals, entryCounts, updateJournal, setDefaultJournal, deleteJournal } = useJournals();
+	const { journals, entryCounts, updateJournal, setDefaultJournal, deleteJournal } =
+		useJournals();
 	const journal = journals.find((j) => j.id === journalId);
 	const isDefault = journal?.displayOrder === 0;
 	const entryCount = journalId ? (entryCounts.get(journalId) ?? 0) : 0;
 	const { entries, searchEntries, createEntry, deleteEntry } = useEntries(journalId);
 	const [searchQuery, setSearchQuery] = useState('');
-	const { selectedItem: selectedEntry, handleLongPress: handleEntryLongPress, actionSheet: entryActionSheet } = useLongPressAction<EntrySummaryWithJournal>();
+	const {
+		selectedItem: selectedEntry,
+		handleLongPress: handleEntryLongPress,
+		actionSheet: entryActionSheet,
+	} = useLongPressAction<EntrySummaryWithJournal>();
 
 	const handleJournalDeleted = useCallback(() => router.back(), []);
 
@@ -125,7 +130,16 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					]
 				: []),
 		],
-		[muted, danger, isDefault, renameSheet, iconSheet, colorSheet, handleSetDefault, handleDeleteJournal],
+		[
+			muted,
+			danger,
+			isDefault,
+			renameSheet,
+			iconSheet,
+			colorSheet,
+			handleSetDefault,
+			handleDeleteJournal,
+		],
 	);
 
 	const handleDeleteEntry = useCallback(async () => {
@@ -260,7 +274,6 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					onChangeColor={handleChangeColor}
 				/>
 			) : null}
-
 		</Screen>
 	);
 }

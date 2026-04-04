@@ -61,7 +61,10 @@ export function useJournals(): UseJournalsResult {
 	);
 
 	const updateJournal = useCallback(
-		async (id: string, updates: { name?: string; icon?: string; color?: string }): Promise<void> => {
+		async (
+			id: string,
+			updates: { name?: string; icon?: string; color?: string },
+		): Promise<void> => {
 			await updateJournalService(db, { id, ...updates });
 		},
 		[db],

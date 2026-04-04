@@ -1,14 +1,14 @@
 import MaskedView from '@react-native-masked-view/masked-view';
 import * as Haptics from 'expo-haptics';
-import {Button} from 'heroui-native';
-import React, {useCallback, useMemo, useRef, useState} from 'react';
-import {Pressable, Text, View} from 'react-native';
-import {Gesture, GestureDetector} from 'react-native-gesture-handler';
-import {runOnJS} from 'react-native-reanimated';
-import Svg, {Circle, Line} from 'react-native-svg';
+import { Button } from 'heroui-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
+import Svg, { Circle, Line } from 'react-native-svg';
 
-import {useThemeColors} from '@/hooks/use-theme-colors';
-import {padTime} from '@/utils/format-time';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import { padTime } from '@/utils/format-time';
 
 type Period = 'AM' | 'PM';
 type FocusedUnit = 'hour' | 'minute';
@@ -27,10 +27,10 @@ const INDICATOR_RADIUS = 24;
 const CENTER_DOT_RADIUS = 6;
 
 function to12Hour(hour24: number): { hour12: number; period: Period } {
-	if (hour24 === 0) return {hour12: 12, period: 'AM'};
-	if (hour24 === 12) return {hour12: 12, period: 'PM'};
-	if (hour24 > 12) return {hour12: hour24 - 12, period: 'PM'};
-	return {hour12: hour24, period: 'AM'};
+	if (hour24 === 0) return { hour12: 12, period: 'AM' };
+	if (hour24 === 12) return { hour12: 12, period: 'PM' };
+	if (hour24 > 12) return { hour12: hour24 - 12, period: 'PM' };
+	return { hour12: hour24, period: 'AM' };
 }
 
 function to24Hour(hour12: number, period: Period): number {
@@ -48,7 +48,7 @@ function getAngleForMinute(minute: number): number {
 
 function angleToPosition(angleDeg: number, radius: number): { x: number; y: number } {
 	const rad = (angleDeg * Math.PI) / 180;
-	return {x: DIAL_RADIUS + radius * Math.cos(rad), y: DIAL_RADIUS + radius * Math.sin(rad)};
+	return { x: DIAL_RADIUS + radius * Math.cos(rad), y: DIAL_RADIUS + radius * Math.sin(rad) };
 }
 
 function positionToValue(x: number, y: number, mode: FocusedUnit): number {
@@ -113,18 +113,18 @@ function DialNumbersLayer({ numbers, color }: DialNumbersLayerProps): React.JSX.
 }
 
 export function TimePicker({
-							   initialHour = 21,
-							   initialMinute = 0,
-							   onConfirm,
-							   onCancel,
-						   }: TimePickerProps): React.JSX.Element {
+	initialHour = 21,
+	initialMinute = 0,
+	onConfirm,
+	onCancel,
+}: TimePickerProps): React.JSX.Element {
 	const initial12 = to12Hour(initialHour);
 	const [hour12, setHour12] = useState(initial12.hour12);
 	const [minute, setMinute] = useState(initialMinute);
 	const [period, setPeriod] = useState<Period>(initial12.period);
 	const [focused, setFocused] = useState<FocusedUnit>('hour');
 
-	const {accent, accentForeground, foreground} = useThemeColors();
+	const { accent, accentForeground, foreground } = useThemeColors();
 
 	const currentAngle = focused === 'hour' ? getAngleForHour(hour12) : getAngleForMinute(minute);
 	const indicatorPos = angleToPosition(currentAngle, NUMBER_RADIUS);
@@ -167,7 +167,7 @@ export function TimePicker({
 					const y = e.y;
 					runOnJS(updateValue)(x, y);
 				})
-				.hitSlop({top: 10, bottom: 10, left: 10, right: 10}),
+				.hitSlop({ top: 10, bottom: 10, left: 10, right: 10 }),
 		[updateValue],
 	);
 
@@ -191,14 +191,15 @@ export function TimePicker({
 
 	const numbers = focused === 'hour' ? HOUR_NUMBERS : MINUTE_NUMBERS;
 
-
 	return (
 		<View className="gap-6 items-center">
-			<Text className={"text-accent font-heading self-start"}>Select time</Text>
-<View className="flex-row items-center gap-2">
+			<View className="flex-row items-center gap-2">
 				<View className="flex-row items-center">
 					<Pressable
-						onPress={() => { setFocused('hour'); prevValueRef.current = hour12; }}
+						onPress={() => {
+							setFocused('hour');
+							prevValueRef.current = hour12;
+						}}
 						className={`rounded-xl px-4 py-3 ${focused === 'hour' ? 'bg-accent' : 'bg-surface'}`}
 					>
 						<Text
@@ -211,7 +212,10 @@ export function TimePicker({
 					<Text className="text-6xl font-semibold text-foreground mx-1">:</Text>
 
 					<Pressable
-						onPress={() => { setFocused('minute'); prevValueRef.current = minute; }}
+						onPress={() => {
+							setFocused('minute');
+							prevValueRef.current = minute;
+						}}
 						className={`rounded-xl px-4 py-3 ${focused === 'minute' ? 'bg-accent' : 'bg-surface'}`}
 					>
 						<Text
@@ -239,17 +243,18 @@ export function TimePicker({
 				</View>
 			</View>
 
-<GestureDetector gesture={composedGesture}>
+			<GestureDetector gesture={composedGesture}>
 				<View
-					style={{width: DIAL_SIZE, height: DIAL_SIZE}}
+					style={{ width: DIAL_SIZE, height: DIAL_SIZE }}
 					className="rounded-full bg-surface items-center justify-center"
 				>
-<Svg
-						width={DIAL_SIZE}
-						height={DIAL_SIZE}
-						style={{position: 'absolute'}}
-					>
-						<Circle cx={DIAL_RADIUS} cy={DIAL_RADIUS} r={CENTER_DOT_RADIUS} fill={accent}/>
+					<Svg width={DIAL_SIZE} height={DIAL_SIZE} style={{ position: 'absolute' }}>
+						<Circle
+							cx={DIAL_RADIUS}
+							cy={DIAL_RADIUS}
+							r={CENTER_DOT_RADIUS}
+							fill={accent}
+						/>
 						<Line
 							x1={DIAL_RADIUS}
 							y1={DIAL_RADIUS}
@@ -260,21 +265,20 @@ export function TimePicker({
 						/>
 					</Svg>
 
-<DialNumbersLayer numbers={numbers} color={foreground} />
+					<DialNumbersLayer numbers={numbers} color={foreground} />
 
-<View style={indicatorStyle} />
+					<View style={indicatorStyle} />
 
-<MaskedView
+					<MaskedView
 						style={{ position: 'absolute', width: DIAL_SIZE, height: DIAL_SIZE }}
 						maskElement={<View style={indicatorStyle} />}
 					>
 						<DialNumbersLayer numbers={numbers} color={accentForeground} />
 					</MaskedView>
-
 				</View>
 			</GestureDetector>
 
-<View className="flex-row items-center justify-end gap-2 w-full">
+			<View className="flex-row items-center justify-end gap-2 w-full">
 				<Button variant="ghost" onPress={onCancel}>
 					<Button.Label>Cancel</Button.Label>
 				</Button>

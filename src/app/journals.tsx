@@ -36,9 +36,20 @@ export default function JournalsScreen(): React.JSX.Element {
 	const insets = useSafeAreaInsets();
 	const { muted, accentForeground } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
-	const { journals, entryCounts, createJournal, updateJournal, setDefaultJournal, deleteJournal } = useJournals();
+	const {
+		journals,
+		entryCounts,
+		createJournal,
+		updateJournal,
+		setDefaultJournal,
+		deleteJournal,
+	} = useJournals();
 	const createSheet = useBottomSheet();
-	const { selectedItem: selectedJournal, handleLongPress, actionSheet } = useLongPressAction<Journal>();
+	const {
+		selectedItem: selectedJournal,
+		handleLongPress,
+		actionSheet,
+	} = useLongPressAction<Journal>();
 
 	const {
 		renameSheet,
@@ -122,7 +133,15 @@ export default function JournalsScreen(): React.JSX.Element {
 					]
 				: []),
 		],
-		[isSelectedDefault, renameSheet, iconSheet, colorSheet, handleView, handleSetDefault, handleDelete],
+		[
+			isSelectedDefault,
+			renameSheet,
+			iconSheet,
+			colorSheet,
+			handleView,
+			handleSetDefault,
+			handleDelete,
+		],
 	);
 
 	return (
@@ -180,7 +199,7 @@ export default function JournalsScreen(): React.JSX.Element {
 				header={
 					selectedJournal ? (
 						<JournalCard
-							className={"rounded-none"}
+							className={'rounded-none'}
 							journal={selectedJournal}
 							entryCount={entryCounts.get(selectedJournal.id) ?? 0}
 							isDefault={selectedJournal.displayOrder === 0}
@@ -215,7 +234,6 @@ export default function JournalsScreen(): React.JSX.Element {
 					onChangeColor={handleChangeColor}
 				/>
 			) : null}
-
 		</Screen>
 	);
 }

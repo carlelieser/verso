@@ -40,7 +40,9 @@ interface UseEntriesResult {
 
 export function useEntries(journalId?: string): UseEntriesResult {
 	const { db } = useDatabaseContext();
-	const [searchResults, setSearchResults] = useState<readonly EntrySummaryWithJournal[] | null>(null);
+	const [searchResults, setSearchResults] = useState<readonly EntrySummaryWithJournal[] | null>(
+		null,
+	);
 
 	const { data: rows } = useLiveQuery(
 		db
