@@ -79,16 +79,16 @@ export function AttachmentButton({
 
 	const items: readonly PopoverMenuItem[] = useMemo(
 		() => [
-			{ id: 'location', label: 'Location', icon: MapPin, onPress: handleLocation },
-			{ id: 'images', label: 'Images', icon: Image, onPress: pickImages },
-			{ id: 'audio', label: 'Audio', icon: Music, onPress: pickAudio },
-			{ id: 'documents', label: 'Documents', icon: FileText, onPress: pickDocuments },
+			{ id: 'images', label: 'Photo', icon: Image, onPress: pickImages },
 			{
 				id: 'voice-note',
-				label: 'Voice note',
+				label: 'Voice Note',
 				icon: AudioLines,
 				onPress: voiceNoteSheet.open,
 			},
+			{ id: 'audio', label: 'Audio', icon: Music, onPress: pickAudio },
+			{ id: 'documents', label: 'Document', icon: FileText, onPress: pickDocuments },
+			{ id: 'location', label: 'Location', icon: MapPin, onPress: handleLocation },
 		],
 		[handleLocation, pickImages, pickAudio, pickDocuments, voiceNoteSheet.open],
 	);
