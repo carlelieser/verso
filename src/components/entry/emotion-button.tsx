@@ -89,8 +89,8 @@ export function EmotionButton({
 										How are you feeling?
 									</Text>
 									<Text className="text-xs text-muted leading-5">
-										Drag your finger to select. Tap to log an emotion.
-										Double-tap for specificity.
+										Drag your finger around to select. Double-tap to get more
+										specific. Tap to add.
 									</Text>
 								</View>
 
