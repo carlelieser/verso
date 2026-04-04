@@ -7,7 +7,7 @@ import { createDatabase } from '@/db/client';
 import { setupFts } from '@/db/fts';
 import { ensureDefaultJournal } from '@/db/seed';
 
-import migrations from '../../drizzle/migrations';
+import migrations from '../../drizzle/migrations.js';
 
 interface DatabaseContextValue {
 	readonly db: Db;
