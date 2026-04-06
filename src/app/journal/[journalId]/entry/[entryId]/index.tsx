@@ -2,7 +2,6 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { EllipsisVertical, Pencil, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AttachmentPreview } from '@/components/entry/attachment-preview';
 import { EntryViewer } from '@/components/entry/entry-viewer';
@@ -12,15 +11,65 @@ import { Screen } from '@/components/layout/screen';
 import { Section } from '@/components/layout/section';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu, type FabMenuItem } from '@/components/ui/fab-menu';
+import { useScreenInsets } from '@/contexts/screen-context';
 import { useDeleteEntry } from '@/hooks/use-delete-entry';
 import { useEntries } from '@/hooks/use-entries';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntryDetail } from '@/types/entry';
 import { formatRelativeDate } from '@/utils/date';
 
+function EntryContent({
+	entry,
+	journalId,
+	entryId,
+}: {
+	readonly entry: EntryDetail;
+	readonly journalId: string;
+	readonly entryId: string;
+}): React.JSX.Element {
+	const { contentInsetBottom } = useScreenInsets();
+
+	return (
+		<ScrollView
+			className="flex-1 rounded-t-4xl"
+			contentContainerClassName="px-5 gap-4"
+			contentContainerStyle={{ paddingBottom: contentInsetBottom }}
+		>
+			<Text className="text-4xl font-heading text-foreground mb-4 pb-2">
+				{formatRelativeDate(entry.createdAt)}
+			</Text>
+
+			{entry.emotions.length > 0 ? (
+				<Section label="Mood">
+					<MoodCard emotions={entry.emotions} />
+				</Section>
+			) : null}
+
+			{entry.weather ? (
+				<Section label="Weather">
+					<WeatherCard weather={entry.weather} />
+				</Section>
+			) : null}
+
+			{entry.attachments.length > 0 ? (
+				<Section label="Attachments">
+					<AttachmentPreview
+						journalId={journalId}
+						entryId={entryId}
+						attachments={entry.attachments}
+					/>
+				</Section>
+			) : null}
+
+			<View className="-mx-5">
+				<EntryViewer key={entry.updatedAt} html={entry.contentHtml} />
+			</View>
+		</ScrollView>
+	);
+}
+
 export default function EntryViewScreen(): React.JSX.Element {
 	const { journalId, entryId } = useLocalSearchParams<{ journalId: string; entryId: string }>();
-	const insets = useSafeAreaInsets();
 	const { danger, foreground, accentForeground } = useThemeColors();
 	const { loadEntry, deleteEntry } = useEntries();
 	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
@@ -73,7 +122,22 @@ export default function EntryViewScreen(): React.JSX.Element {
 	);
 
 	return (
-		<Screen>
+		<Screen
+			fab={
+				entry ? (
+					<View className="gap-3">
+						<FabMenu
+							icon={<EllipsisVertical size={24} color={foreground} />}
+							items={menuItems}
+						/>
+						<Fab
+							icon={<Pencil size={20} color={accentForeground} />}
+							onPress={() => router.push(`/journal/${journalId}/entry/${entryId}/edit`)}
+						/>
+					</View>
+				) : undefined
+			}
+		>
 			{isLoading || !entry ? (
 				<View className="flex-1 items-center justify-center">
 					<Text className="text-muted">
@@ -81,57 +145,11 @@ export default function EntryViewScreen(): React.JSX.Element {
 					</Text>
 				</View>
 			) : (
-				<>
-					<ScrollView
-						className="flex-1 rounded-t-4xl"
-						contentContainerClassName="px-5 gap-4"
-						contentContainerStyle={{ paddingBottom: insets.bottom + 188 }}
-					>
-						<Text className="text-4xl font-heading text-foreground mb-4 pb-2">
-							{formatRelativeDate(entry.createdAt)}
-						</Text>
-
-						{entry.emotions.length > 0 ? (
-							<Section label="Mood">
-								<MoodCard emotions={entry.emotions} />
-							</Section>
-						) : null}
-
-						{entry.weather ? (
-							<Section label="Weather">
-								<WeatherCard weather={entry.weather} />
-							</Section>
-						) : null}
-
-						{entry.attachments.length > 0 ? (
-							<Section label="Attachments">
-								<AttachmentPreview
-									journalId={journalId}
-									entryId={entryId}
-									attachments={entry.attachments}
-								/>
-							</Section>
-						) : null}
-
-						<View className="-mx-5">
-							<EntryViewer key={entry.updatedAt} html={entry.contentHtml} />
-						</View>
-					</ScrollView>
-
-					<Fab
-						icon={<Pencil size={20} color={accentForeground} />}
-						onPress={() => router.push(`/journal/${journalId}/entry/${entryId}/edit`)}
-						className="absolute right-4"
-						style={{ bottom: insets.bottom + 16 }}
-					/>
-
-					<FabMenu
-						icon={<EllipsisVertical size={24} color={foreground} />}
-						items={menuItems}
-						className="absolute right-4"
-						style={{ bottom: insets.bottom + 98 }}
-					/>
-				</>
+				<EntryContent
+					entry={entry}
+					journalId={journalId ?? ''}
+					entryId={entryId ?? ''}
+				/>
 			)}
 		</Screen>
 	);

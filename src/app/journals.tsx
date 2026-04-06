@@ -12,7 +12,6 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
@@ -25,6 +24,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
 import { SearchInput } from '@/components/ui/search-input';
 import { DEFAULT_JOURNAL_COLOR } from '@/constants/journal-icons';
+import { useScreenInsets } from '@/contexts/screen-context';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useJournalActions } from '@/hooks/use-journal-actions';
 import { useJournals } from '@/hooks/use-journals';
@@ -32,8 +32,67 @@ import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Journal } from '@/types/journal';
 
+function JournalList({
+	journals,
+	entryCounts,
+	searchQuery,
+	onSearchChange,
+	onLongPress,
+	muted,
+}: {
+	readonly journals: readonly Journal[];
+	readonly entryCounts: ReadonlyMap<string, number>;
+	readonly searchQuery: string;
+	readonly onSearchChange: (query: string) => void;
+	readonly onLongPress: (journal: Journal) => void;
+	readonly muted: string;
+}): React.JSX.Element {
+	const { contentInsetBottom } = useScreenInsets();
+
+	return (
+		<>
+			<SearchInput
+				value={searchQuery}
+				onChangeText={onSearchChange}
+				placeholder="Search journals..."
+			/>
+
+			<FlatList
+				className="rounded-t-4xl overflow-hidden"
+				data={journals}
+				keyExtractor={(item) => item.id}
+				renderItem={({ item }) => (
+					<JournalCard
+						journal={item}
+						entryCount={entryCounts.get(item.id) ?? 0}
+						isDefault={item.displayOrder === 0}
+						onPress={() => router.push(`/journal/${item.id}`)}
+						onLongPress={() => onLongPress(item)}
+					/>
+				)}
+				contentContainerClassName="pt-2 px-4 gap-3"
+				contentContainerStyle={{ flexGrow: 1, paddingBottom: contentInsetBottom }}
+				ListEmptyComponent={
+					searchQuery.length > 0 ? (
+						<EmptyState
+							icon={<Search size={48} color={muted} />}
+							title="No results"
+							description="Try a different search term."
+						/>
+					) : (
+						<EmptyState
+							icon={<BookOpen size={48} color={muted} />}
+							title="No journals yet"
+							description="Tap + to create your first journal."
+						/>
+					)
+				}
+			/>
+		</>
+	);
+}
+
 export default function JournalsScreen(): React.JSX.Element {
-	const insets = useSafeAreaInsets();
 	const { muted, accentForeground } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
 	const {
@@ -145,50 +204,22 @@ export default function JournalsScreen(): React.JSX.Element {
 	);
 
 	return (
-		<Screen title="Journals">
-			<SearchInput
-				value={searchQuery}
-				onChangeText={setSearchQuery}
-				placeholder="Search journals..."
-			/>
-
-			<FlatList
-				className="rounded-t-4xl overflow-hidden"
-				data={filteredJournals}
-				keyExtractor={(item) => item.id}
-				renderItem={({ item }) => (
-					<JournalCard
-						journal={item}
-						entryCount={entryCounts.get(item.id) ?? 0}
-						isDefault={item.displayOrder === 0}
-						onPress={() => router.push(`/journal/${item.id}`)}
-						onLongPress={() => handleLongPress(item)}
-					/>
-				)}
-				contentContainerClassName="pt-2 px-4 gap-3"
-				contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 80 }}
-				ListEmptyComponent={
-					searchQuery.length > 0 ? (
-						<EmptyState
-							icon={<Search size={48} color={muted} />}
-							title="No results"
-							description="Try a different search term."
-						/>
-					) : (
-						<EmptyState
-							icon={<BookOpen size={48} color={muted} />}
-							title="No journals yet"
-							description="Tap + to create your first journal."
-						/>
-					)
-				}
-			/>
-
-			<Fab
-				icon={<Plus size={24} color={accentForeground} />}
-				onPress={createSheet.open}
-				className="absolute right-4"
-				style={{ bottom: insets.bottom + 16 }}
+		<Screen
+			title="Journals"
+			fab={
+				<Fab
+					icon={<Plus size={24} color={accentForeground} />}
+					onPress={createSheet.open}
+				/>
+			}
+		>
+			<JournalList
+				journals={filteredJournals}
+				entryCounts={entryCounts}
+				searchQuery={searchQuery}
+				onSearchChange={setSearchQuery}
+				onLongPress={handleLongPress}
+				muted={muted}
 			/>
 
 			{createSheet.isOpen ? (

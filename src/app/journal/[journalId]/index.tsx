@@ -13,7 +13,6 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EntryCard } from '@/components/entry/entry-card';
 import { ChangeJournalColor } from '@/components/journal/change-journal-color';
@@ -27,6 +26,7 @@ import { Fab } from '@/components/ui/fab';
 import { FabMenu } from '@/components/ui/fab-menu';
 import { SearchInput } from '@/components/ui/search-input';
 import { DEFAULT_JOURNAL_COLOR, getJournalIcon } from '@/constants/journal-icons';
+import { useScreenInsets } from '@/contexts/screen-context';
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
 import { useDeleteEntry } from '@/hooks/use-delete-entry';
 import { useEntries } from '@/hooks/use-entries';
@@ -37,9 +37,66 @@ import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntrySummaryWithJournal } from '@/types/entry';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
 
+function EntryList({
+	entries,
+	journalId,
+	searchQuery,
+	onSearchChange,
+	onLongPress,
+	muted,
+}: {
+	readonly entries: readonly EntrySummaryWithJournal[];
+	readonly journalId: string;
+	readonly searchQuery: string;
+	readonly onSearchChange: (query: string) => void;
+	readonly onLongPress: (entry: EntrySummaryWithJournal) => void;
+	readonly muted: string;
+}): React.JSX.Element {
+	const { contentInsetBottom } = useScreenInsets();
+
+	return (
+		<>
+			<SearchInput
+				value={searchQuery}
+				onChangeText={onSearchChange}
+				placeholder="Search entries..."
+			/>
+
+			<FlatList
+				className="rounded-t-4xl overflow-hidden"
+				data={entries}
+				keyExtractor={(item) => item.id}
+				renderItem={({ item }) => (
+					<EntryCard
+						entry={item}
+						onPress={() => router.push(`/journal/${journalId}/entry/${item.id}`)}
+						onLongPress={() => onLongPress(item)}
+					/>
+				)}
+				contentContainerClassName="pt-2 px-4 gap-3"
+				contentContainerStyle={{ flexGrow: 1, paddingBottom: contentInsetBottom }}
+				ListEmptyComponent={
+					searchQuery.length > 0 ? (
+						<EmptyState
+							icon={<Search size={48} color={muted} />}
+							title="No results"
+							description="Try a different search term."
+						/>
+					) : (
+						<EmptyState
+							icon={<ScrollText size={48} color={muted} />}
+							title="No entries yet"
+							description="Tap + to write your first entry."
+						/>
+					)
+				}
+			/>
+		</>
+	);
+}
+
 export default function JournalDetailScreen(): React.JSX.Element {
 	const { journalId } = useLocalSearchParams<{ journalId: string }>();
-	const insets = useSafeAreaInsets();
 	const { muted, danger, foreground, accentForeground } = useThemeColors();
 	const { journals, entryCounts, updateJournal, setDefaultJournal, deleteJournal } =
 		useJournals();
@@ -192,55 +249,30 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	) : null;
 
 	return (
-		<Screen title={titleContent} headerAbove={banner} disableTopInset={true}>
-			<SearchInput
-				value={searchQuery}
-				onChangeText={handleSearch}
-				placeholder="Search entries..."
-			/>
-
-			<FlatList
-				className="rounded-t-4xl overflow-hidden"
-				data={entries}
-				keyExtractor={(item) => item.id}
-				renderItem={({ item }) => (
-					<EntryCard
-						entry={item}
-						onPress={() => router.push(`/journal/${journalId}/entry/${item.id}`)}
-						onLongPress={() => handleEntryLongPress(item)}
+		<Screen
+			title={titleContent}
+			headerAbove={banner}
+			disableTopInset={true}
+			fab={
+				<View className="gap-3">
+					<FabMenu
+						icon={<EllipsisVertical size={24} color={foreground} />}
+						items={menuItems}
 					/>
-				)}
-				contentContainerClassName="pt-2 px-4 gap-3"
-				contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 188 }}
-				ListEmptyComponent={
-					searchQuery.length > 0 ? (
-						<EmptyState
-							icon={<Search size={48} color={muted} />}
-							title="No results"
-							description="Try a different search term."
-						/>
-					) : (
-						<EmptyState
-							icon={<ScrollText size={48} color={muted} />}
-							title="No entries yet"
-							description="Tap + to write your first entry."
-						/>
-					)
-				}
-			/>
-
-			<Fab
-				icon={<Plus size={24} color={accentForeground} />}
-				onPress={handleNewEntry}
-				className="absolute right-4"
-				style={{ bottom: insets.bottom + 16 }}
-			/>
-
-			<FabMenu
-				icon={<EllipsisVertical size={24} color={foreground} />}
-				items={menuItems}
-				className="absolute right-4"
-				style={{ bottom: insets.bottom + 98 }}
+					<Fab
+						icon={<Plus size={24} color={accentForeground} />}
+						onPress={handleNewEntry}
+					/>
+				</View>
+			}
+		>
+			<EntryList
+				entries={entries}
+				journalId={journalId ?? ''}
+				searchQuery={searchQuery}
+				onSearchChange={handleSearch}
+				onLongPress={handleEntryLongPress}
+				muted={muted}
 			/>
 
 			<ActionSheet
