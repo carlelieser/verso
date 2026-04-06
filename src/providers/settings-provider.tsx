@@ -9,6 +9,7 @@ import {
 	SETTINGS_REMINDERS_DAYS_KEY,
 	SETTINGS_REMINDERS_ENABLED_KEY,
 	SETTINGS_REMINDERS_TIME_KEY,
+	SETTINGS_SHOW_DONATION_BANNER_KEY,
 	SETTINGS_THEME_KEY,
 	SETTINGS_TRANSCRIPTION_KEY,
 	isValidTheme,
@@ -26,6 +27,7 @@ export interface ReminderSettings {
 export interface SettingsContextValue {
 	readonly isAutoLocation: boolean;
 	readonly isTranscriptionEnabled: boolean;
+	readonly shouldShowDonationBanner: boolean;
 	readonly reminders: ReminderSettings;
 	readonly theme: Theme;
 	readonly setSetting: (key: string, value: boolean) => void;
@@ -40,12 +42,14 @@ const BOOLEAN_DEFAULTS: Record<string, boolean> = {
 	[SETTINGS_AUTO_LOCATION_KEY]: true,
 	[SETTINGS_TRANSCRIPTION_KEY]: true,
 	[SETTINGS_REMINDERS_ENABLED_KEY]: false,
+	[SETTINGS_SHOW_DONATION_BANNER_KEY]: true,
 };
 
 const BOOLEAN_KEYS = [
 	SETTINGS_AUTO_LOCATION_KEY,
 	SETTINGS_TRANSCRIPTION_KEY,
 	SETTINGS_REMINDERS_ENABLED_KEY,
+	SETTINGS_SHOW_DONATION_BANNER_KEY,
 ] as const;
 
 const DEFAULT_REMINDER_TIME = '21:00';
@@ -183,6 +187,7 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 		() => ({
 			isAutoLocation: boolValues[SETTINGS_AUTO_LOCATION_KEY] ?? false,
 			isTranscriptionEnabled: boolValues[SETTINGS_TRANSCRIPTION_KEY] ?? true,
+			shouldShowDonationBanner: boolValues[SETTINGS_SHOW_DONATION_BANNER_KEY] ?? true,
 			reminders,
 			theme,
 			setSetting,

@@ -1,10 +1,14 @@
 import { ControlField, ListGroup, Separator } from 'heroui-native';
-import { Bell, MapPin, Mic } from 'lucide-react-native';
+import { Bell, Heart, MapPin, Mic } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 
 import { Section } from '@/components/layout/section';
 import { RemindersSheet } from '@/components/settings/reminders-sheet';
-import { SETTINGS_AUTO_LOCATION_KEY, SETTINGS_TRANSCRIPTION_KEY } from '@/constants/settings';
+import {
+	SETTINGS_AUTO_LOCATION_KEY,
+	SETTINGS_SHOW_DONATION_BANNER_KEY,
+	SETTINGS_TRANSCRIPTION_KEY,
+} from '@/constants/settings';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useSettings } from '@/hooks/use-settings';
@@ -37,7 +41,13 @@ function formatReminderDescription(reminders: {
 
 export function GeneralSection(): React.JSX.Element {
 	const { muted } = useThemeColors();
-	const { isAutoLocation, isTranscriptionEnabled, reminders, setSetting } = useSettings();
+	const {
+		isAutoLocation,
+		isTranscriptionEnabled,
+		shouldShowDonationBanner,
+		reminders,
+		setSetting,
+	} = useSettings();
 	const { location: locationPermission, microphone: microphonePermission } = usePermissions();
 	const remindersSheet = useBottomSheet();
 
@@ -59,6 +69,13 @@ export function GeneralSection(): React.JSX.Element {
 			}
 		},
 		[microphonePermission, setSetting],
+	);
+
+	const handleDonationBannerToggle = useCallback(
+		(enabled: boolean) => {
+			setSetting(SETTINGS_SHOW_DONATION_BANNER_KEY, enabled);
+		},
+		[setSetting],
 	);
 
 	return (
@@ -116,6 +133,26 @@ export function GeneralSection(): React.JSX.Element {
 					</ListGroup.ItemContent>
 					<ListGroup.ItemSuffix />
 				</ListGroup.Item>
+				<Separator className="mx-4" />
+				<ControlField
+					isSelected={shouldShowDonationBanner}
+					onSelectedChange={handleDonationBannerToggle}
+				>
+					<ListGroup.Item>
+						<ListGroup.ItemPrefix>
+							<Heart size={20} color={muted} />
+						</ListGroup.ItemPrefix>
+						<ListGroup.ItemContent>
+							<ListGroup.ItemTitle>Donation banner</ListGroup.ItemTitle>
+							<ListGroup.ItemDescription>
+								{shouldShowDonationBanner ? 'Visible' : 'Hidden'}
+							</ListGroup.ItemDescription>
+						</ListGroup.ItemContent>
+						<ListGroup.ItemSuffix>
+							<ControlField.Indicator />
+						</ListGroup.ItemSuffix>
+					</ListGroup.Item>
+				</ControlField>
 			</ListGroup>
 
 			{remindersSheet.isOpen ? <RemindersSheet sheet={remindersSheet} /> : null}

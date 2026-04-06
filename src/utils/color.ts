@@ -36,6 +36,13 @@ export function hslToRgb(h: number, s: number, l: number): [number, number, numb
 	return [hue2rgb(p, q, h + 1 / 3), hue2rgb(p, q, h), hue2rgb(p, q, h - 1 / 3)];
 }
 
+/** Returns true when the given hex color is perceptually light. */
+export function isLightColor(hex: string): boolean {
+	const [r, g, b] = parseHex(hex);
+	const [, , lightness] = rgbToHsl(r, g, b);
+	return lightness > 0.55;
+}
+
 /** Convert a normalized 0–1 channel value to a 2-char hex string. */
 export function toHex(n: number): string {
 	return Math.max(0, Math.min(255, Math.round(n * 255)))

@@ -5,6 +5,7 @@ export const SETTINGS_ONBOARDING_COMPLETE_KEY = 'settings.onboardingComplete';
 export const SETTINGS_REMINDERS_ENABLED_KEY = 'settings.remindersEnabled';
 export const SETTINGS_REMINDERS_TIME_KEY = 'settings.remindersTime';
 export const SETTINGS_REMINDERS_DAYS_KEY = 'settings.remindersDays';
+export const SETTINGS_SHOW_DONATION_BANNER_KEY = 'settings.showDonationBanner';
 
 export type Theme = 'light' | 'dark' | 'system';
 

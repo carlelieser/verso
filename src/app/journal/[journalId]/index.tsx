@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import {
 	ArrowUpRight,
 	EllipsisVertical,
@@ -35,6 +36,7 @@ import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntrySummaryWithJournal } from '@/types/entry';
+import { isLightColor } from '@/utils/color';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
 
 function EntryList({
@@ -248,64 +250,71 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		<JournalColorBanner color={journal.color} seed={journal.id} height={75} />
 	) : null;
 
+	const statusBarStyle = journal ? (isLightColor(journal.color) ? 'dark' : 'light') : 'auto';
+
 	return (
-		<Screen
-			title={titleContent}
-			headerAbove={banner}
-			disableTopInset={true}
-			fab={
-				<View className="gap-3">
-					<FabMenu
-						icon={<EllipsisVertical size={24} color={foreground} />}
-						items={menuItems}
-					/>
-					<Fab
-						icon={<Plus size={24} color={accentForeground} />}
-						onPress={handleNewEntry}
-					/>
-				</View>
-			}
-		>
-			<EntryList
-				entries={entries}
-				journalId={journalId ?? ''}
-				searchQuery={searchQuery}
-				onSearchChange={handleSearch}
-				onLongPress={handleEntryLongPress}
-				muted={muted}
-			/>
-
-			<ActionSheet
-				header={
-					selectedEntry ? <EntryCard entry={selectedEntry} onPress={() => {}} /> : null
+		<>
+			<StatusBar style={statusBarStyle} />
+			<Screen
+				title={titleContent}
+				headerAbove={banner}
+				disableTopInset={true}
+				fab={
+					<View className="gap-3">
+						<FabMenu
+							icon={<EllipsisVertical size={24} color={foreground} />}
+							items={menuItems}
+						/>
+						<Fab
+							icon={<Plus size={24} color={accentForeground} />}
+							onPress={handleNewEntry}
+						/>
+					</View>
 				}
-				items={entryActionItems}
-				sheet={entryActionSheet}
-			/>
-
-			{renameSheet.isOpen ? (
-				<RenameJournal
-					sheet={renameSheet}
-					currentName={journal?.name ?? ''}
-					onRename={handleRename}
+			>
+				<EntryList
+					entries={entries}
+					journalId={journalId ?? ''}
+					searchQuery={searchQuery}
+					onSearchChange={handleSearch}
+					onLongPress={handleEntryLongPress}
+					muted={muted}
 				/>
-			) : null}
 
-			{iconSheet.isOpen ? (
-				<ChangeJournalIcon
-					sheet={iconSheet}
-					currentIcon={journal?.icon ?? 'book-open'}
-					onChangeIcon={handleChangeIcon}
+				<ActionSheet
+					header={
+						selectedEntry ? (
+							<EntryCard entry={selectedEntry} onPress={() => {}} />
+						) : null
+					}
+					items={entryActionItems}
+					sheet={entryActionSheet}
 				/>
-			) : null}
 
-			{colorSheet.isOpen ? (
-				<ChangeJournalColor
-					sheet={colorSheet}
-					currentColor={journal?.color ?? DEFAULT_JOURNAL_COLOR}
-					onChangeColor={handleChangeColor}
-				/>
-			) : null}
-		</Screen>
+				{renameSheet.isOpen ? (
+					<RenameJournal
+						sheet={renameSheet}
+						currentName={journal?.name ?? ''}
+						onRename={handleRename}
+					/>
+				) : null}
+
+				{iconSheet.isOpen ? (
+					<ChangeJournalIcon
+						sheet={iconSheet}
+						currentIcon={journal?.icon ?? 'book-open'}
+						onChangeIcon={handleChangeIcon}
+					/>
+				) : null}
+
+				{colorSheet.isOpen ? (
+					<ChangeJournalColor
+						sheet={colorSheet}
+						currentColor={journal?.color ?? DEFAULT_JOURNAL_COLOR}
+						onChangeColor={handleChangeColor}
+					/>
+				) : null}
+			</Screen>
+		</>
 	);
 }
