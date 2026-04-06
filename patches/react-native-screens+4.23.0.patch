@@ -1,0 +1,18 @@
+diff --git a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/stack/anim/ScreensAnimation.kt b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/stack/anim/ScreensAnimation.kt
+index 7194ae8..7556c40 100644
+--- a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/stack/anim/ScreensAnimation.kt
++++ b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/stack/anim/ScreensAnimation.kt
+@@ -12,7 +12,11 @@ internal class ScreensAnimation(
+         t: Transformation,
+     ) {
+         super.applyTransformation(interpolatedTime, t)
+-        // interpolated time should be the progress of the current transition
+-        mFragment.dispatchTransitionProgressEvent(interpolatedTime, !mFragment.isResumed)
++        // Post the event dispatch off the draw stack to avoid reanimated synchronously
++        // mutating the view hierarchy during dispatchGetDisplayList, which causes a crash
++        // on Android 16+ (API 36).
++        mFragment.view?.post {
++            mFragment.dispatchTransitionProgressEvent(interpolatedTime, !mFragment.isResumed)
++        }
+     }
+ }

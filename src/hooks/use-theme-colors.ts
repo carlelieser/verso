@@ -13,7 +13,7 @@ const THEME_VARIABLES = {
 	danger: '--color-danger',
 	foreground: '--color-foreground',
 	muted: '--color-muted',
-	selection: '--color-selection',
+	selection: '--selection',
 	surface: '--color-surface',
 	editorFont: '--font-editor',
 } as const;

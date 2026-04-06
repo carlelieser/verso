@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/common/parser/EnrichedParser.java b/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/common/parser/EnrichedParser.java
+index 9a03613..c2c3b1a 100644
+--- a/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/common/parser/EnrichedParser.java
++++ b/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/common/parser/EnrichedParser.java
+@@ -621,8 +621,6 @@ class HtmlToSpannedConverter<T> implements ContentHandler {
+         setParagraphSpanFromMark(text, l, spanFactory.createUnorderedListSpan(style));
+       }
+     }
+-
+-    endBlockElement(text);
+   }
+ 
+   private void startBlockquote(Editable text) {
