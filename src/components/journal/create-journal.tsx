@@ -3,10 +3,10 @@ import { Button } from 'heroui-native';
 import React, { useState } from 'react';
 
 import { Section } from '@/components/layout/section';
-import { ColorPicker } from '@/components/ui/color-picker';
+import { ColorPicker, getRandomSwatch } from '@/components/ui/color-picker';
 import { IconPicker } from '@/components/ui/icon-picker';
 import { PortalSheet } from '@/components/ui/portal-sheet';
-import { DEFAULT_JOURNAL_COLOR, JOURNAL_ICONS } from '@/constants/journal-icons';
+import { JOURNAL_ICONS } from '@/constants/journal-icons';
 import type { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
@@ -18,7 +18,7 @@ interface CreateJournalProps {
 export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JSX.Element {
 	const [name, setName] = useState('');
 	const [selectedIcon, setSelectedIcon] = useState('book-open');
-	const [selectedColor, setSelectedColor] = useState(DEFAULT_JOURNAL_COLOR);
+	const [selectedColor, setSelectedColor] = useState(getRandomSwatch);
 	const { foreground, muted } = useThemeColors();
 
 	const isValid = name.trim().length > 0;

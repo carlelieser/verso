@@ -17,6 +17,11 @@ const DEFAULT_SWATCHES = [
 	'#7A8A8C', // slate
 ] as const;
 
+export function getRandomSwatch(): string {
+	const index = Math.floor(Math.random() * DEFAULT_SWATCHES.length);
+	return DEFAULT_SWATCHES[index] ?? DEFAULT_SWATCHES[0];
+}
+
 interface ColorPickerProps {
 	readonly value: string;
 	readonly onChange: (color: string) => void;
