@@ -1,6 +1,7 @@
 import type BottomSheet from '@gorhom/bottom-sheet';
 import { BottomSheetBackdrop, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { Keyboard } from 'react-native';
 
 import { BOTTOM_SHEET_ANIMATION_CONFIG } from '@/constants/animation';
 import { useThemeColors } from '@/hooks/use-theme-colors';
@@ -35,6 +36,7 @@ export function useBottomSheet(options?: UseBottomSheetOptions): UseBottomSheetR
 	const open = useCallback(() => setIsOpen(true), []);
 	const dismiss = useCallback(() => setIsOpen(false), []);
 	const close = useCallback(() => {
+		Keyboard.dismiss();
 		ref.current?.close();
 	}, []);
 
