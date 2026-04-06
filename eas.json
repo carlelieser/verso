@@ -4,17 +4,31 @@
 		"appVersionSource": "remote"
 	},
 	"build": {
+		"base": {
+			"env": {
+				"EXPO_PUBLIC_DONATE_LIBERAPAY_URL": "https://liberapay.com/carlelieser/donate",
+				"EXPO_PUBLIC_DONATE_VENMO_URL": "https://venmo.com/devplex",
+				"EXPO_PUBLIC_DONATE_PAYPAL_URL": "https://www.paypal.com/ncp/payment/M9K2NN6KQBPJ6",
+				"EXPO_PUBLIC_DONATE_ETH_ADDRESS": "0x58ec9Ff0887Eb4168a8375868c12356947B1F8AE",
+				"EXPO_PUBLIC_DONATE_SOL_ADDRESS": "4BcuqGzTZBGyXjyPQrZEU7ojQLsdRyfsUNVn57SAWLEB",
+				"EXPO_PUBLIC_DONATE_BTC_ADDRESS": "bc1qmzlrftwvltz4t67cjyll4mlyyzg25tk8huwpxn",
+				"EXPO_PUBLIC_DONATE_DOGE_ADDRESS": "DS2qwSHyuKRC98sJn6dSejytGZmWN8Bqns"
+			}
+		},
 		"development": {
+			"extends": "base",
 			"developmentClient": true,
 			"distribution": "internal"
 		},
 		"preview": {
+			"extends": "base",
 			"distribution": "internal",
 			"android": {
 				"buildType": "apk"
 			}
 		},
 		"production": {
+			"extends": "base",
 			"autoIncrement": true,
 			"channel": "production",
 			"android": {
