@@ -91,7 +91,7 @@ export function TranscriptionButton({
 			onPress={transcription.toggle}
 		>
 			{transcription.isRecording ? (
-				<AudioWaveform amplitudes={transcription.amplitudes} color={accent} />
+				<AudioWaveform amplitudes={transcription.amplitudes} color={accent} size={18} />
 			) : (
 				<Mic size={18} color={muted} />
 			)}

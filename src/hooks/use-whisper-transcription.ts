@@ -1,14 +1,19 @@
+import { VoiceProcessor } from '@picovoice/react-native-voice-processor';
 import { getRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
-import { type SharedValue, useSharedValue } from 'react-native-reanimated';
+import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { initWhisper, type WhisperContext } from 'whisper.rn';
 import { RealtimeTranscriber } from 'whisper.rn/src/realtime-transcription';
 import { AudioPcmStreamAdapter } from 'whisper.rn/src/realtime-transcription/adapters/AudioPcmStreamAdapter';
 
-import { WAVEFORM_BAR_COUNT } from '@/constants/audio';
+import { computeBarAmplitudes, WAVEFORM_BAR_COUNT } from '@/constants/audio';
 
 const MODEL_ASSET: number = require('../../assets/models/ggml-tiny.en.bin');
+
+const FRAME_LENGTH = 512;
+const SAMPLE_RATE = 16000;
+const PCM_16BIT_MAX = 32768;
 
 type TranscriptionStatus = 'idle' | 'loading' | 'recording' | 'error';
 
@@ -18,20 +23,6 @@ interface UseWhisperTranscriptionResult {
 	readonly liveText: string;
 	readonly amplitudes: readonly SharedValue<number>[];
 	readonly toggle: () => void;
-}
-
-/** Compute normalized RMS amplitude (0–1) from 16-bit PCM samples. */
-function computeAmplitude(pcm: Uint8Array): number {
-	const sampleCount = Math.floor(pcm.length / 2);
-	if (sampleCount === 0) return 0;
-
-	let sum = 0;
-	for (let i = 0; i < pcm.length - 1; i += 2) {
-		const sample = ((pcm[i]! | (pcm[i + 1]! << 8)) << 16) >> 16; // Int16
-		sum += sample * sample;
-	}
-
-	return Math.min(1, Math.sqrt(sum / sampleCount) / 16000);
 }
 
 export function useWhisperTranscription(
@@ -44,7 +35,6 @@ export function useWhisperTranscription(
 	const completedSlicesRef = useRef('');
 	const fullTextRef = useRef('');
 	const lastSliceIndexRef = useRef(-1);
-	const barIndexRef = useRef(0);
 	const onFinishRef = useRef(onFinish);
 	onFinishRef.current = onFinish;
 
@@ -52,10 +42,25 @@ export function useWhisperTranscription(
 	const amp1 = useSharedValue(0);
 	const amp2 = useSharedValue(0);
 	const amp3 = useSharedValue(0);
-	const amplitudes = useMemo<readonly SharedValue<number>[]>(
-		() => [amp0, amp1, amp2, amp3],
-		[amp0, amp1, amp2, amp3],
-	);
+	const amplitudes = useRef([amp0, amp1, amp2, amp3]).current;
+
+	useEffect(() => {
+		const voiceProcessor = VoiceProcessor.instance;
+
+		const frameListener = (frame: number[]) => {
+			if (frame.length < WAVEFORM_BAR_COUNT) return;
+			const bars = computeBarAmplitudes(frame, PCM_16BIT_MAX);
+			for (let i = 0; i < WAVEFORM_BAR_COUNT; i++) {
+				amplitudes[i]!.value = bars[i]!;
+			}
+		};
+
+		voiceProcessor.addFrameListener(frameListener);
+
+		return () => {
+			voiceProcessor.removeFrameListener(frameListener);
+		};
+	}, [amplitudes]);
 
 	useEffect(() => {
 		return () => {
@@ -96,18 +101,6 @@ export function useWhisperTranscription(
 			const ctx = await ensureContext();
 			const audioStream = new AudioPcmStreamAdapter();
 			let currentSliceText = '';
-
-			// Intercept audio data for waveform visualization
-			const originalOnData = audioStream.onData.bind(audioStream);
-			audioStream.onData = (callback) => {
-				originalOnData((data) => {
-					callback(data);
-					const level = computeAmplitude(data.data);
-					const idx = barIndexRef.current % WAVEFORM_BAR_COUNT;
-					amplitudes[idx]!.value = level;
-					barIndexRef.current += 1;
-				});
-			};
 
 			const transcriber = new RealtimeTranscriber(
 				{ whisperContext: ctx, audioStream },
@@ -156,14 +149,16 @@ export function useWhisperTranscription(
 
 			transcriberRef.current = transcriber;
 			await transcriber.start();
+			await VoiceProcessor.instance.start(FRAME_LENGTH, SAMPLE_RATE);
 		} catch {
 			setStatus('error');
 		}
-	}, [ensureContext]);
+	}, [ensureContext, amplitudes]);
 
 	const stopRecording = useCallback(async () => {
 		await transcriberRef.current?.stop();
 		transcriberRef.current = null;
+		await VoiceProcessor.instance.stop();
 
 		const text = fullTextRef.current.trim();
 		if (text.length > 0) {
@@ -173,9 +168,8 @@ export function useWhisperTranscription(
 		completedSlicesRef.current = '';
 		fullTextRef.current = '';
 		lastSliceIndexRef.current = -1;
-		barIndexRef.current = 0;
 		for (const amp of amplitudes) {
-			amp.value = 0;
+			amp.value = withTiming(0, { duration: 150 });
 		}
 		setLiveText('');
 		setStatus('idle');
