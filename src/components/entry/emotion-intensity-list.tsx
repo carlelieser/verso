@@ -1,5 +1,5 @@
 import { Button, Slider } from 'heroui-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -9,46 +9,20 @@ import type { EmotionCategory, EmotionIntensity } from '@/types/common';
 import { isEmotionIntensity } from '@/types/common';
 import type { EmotionSelection } from '@/types/emotion';
 
-const DEFAULT_INTENSITY: EmotionIntensity = 3;
-
 interface EmotionIntensityListProps {
-	readonly additions: readonly EmotionCategory[];
-	readonly defaultSelections: readonly EmotionSelection[];
-	readonly onDone: (selections: readonly EmotionSelection[]) => void;
+	readonly selections: readonly EmotionSelection[];
+	readonly onIntensityChange: (emotion: EmotionCategory, intensity: EmotionIntensity) => void;
+	readonly onDone: () => void;
 	readonly onReset: () => void;
 }
 
 export function EmotionIntensityList({
-	additions,
-	defaultSelections,
+	selections,
+	onIntensityChange,
 	onDone,
 	onReset,
 }: EmotionIntensityListProps): React.JSX.Element | null {
-	const [intensities, setIntensities] = useState<ReadonlyMap<EmotionCategory, EmotionIntensity>>(
-		() => new Map(defaultSelections.map((s) => [s.emotion, s.intensity])),
-	);
-
-	const selections: readonly EmotionSelection[] = useMemo(
-		() =>
-			additions.map((emotion) => ({
-				emotion,
-				intensity: intensities.get(emotion) ?? DEFAULT_INTENSITY,
-			})),
-		[additions, intensities],
-	);
-
 	const reversedSelections = useMemo(() => [...selections].reverse(), [selections]);
-
-	const handleIntensityChange = useCallback(
-		(emotion: EmotionCategory, intensity: EmotionIntensity) => {
-			setIntensities((prev) => new Map(prev).set(emotion, intensity));
-		},
-		[],
-	);
-
-	const handleDone = useCallback(() => {
-		onDone(selections);
-	}, [selections, onDone]);
 
 	if (selections.length === 0) return null;
 
@@ -61,7 +35,7 @@ export function EmotionIntensityList({
 						key={selection.emotion}
 						emotion={selection.emotion}
 						intensity={selection.intensity}
-						onIntensityChange={handleIntensityChange}
+						onIntensityChange={onIntensityChange}
 					/>
 				))}
 			</View>
@@ -70,7 +44,7 @@ export function EmotionIntensityList({
 				<Button variant="ghost" onPress={onReset}>
 					<Button.Label>Reset</Button.Label>
 				</Button>
-				<Button variant="secondary" onPress={handleDone}>
+				<Button variant="secondary" onPress={onDone}>
 					<Button.Label>Done</Button.Label>
 				</Button>
 			</View>

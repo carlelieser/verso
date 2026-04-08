@@ -1,20 +1,19 @@
 import { router } from 'expo-router';
 import { Button } from 'heroui-native';
 import { Check, Paperclip } from 'lucide-react-native';
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle } from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Editor } from '@/components/entry/editor';
 import { EmotionButton } from '@/components/entry/emotion-button';
 import { JournalSelect } from '@/components/journal/journal-select';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
-import { useEntryComposer } from '@/hooks/use-entry-composer';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useConfirmDialog } from '@/providers/dialog-provider';
-import { EntryProvider } from '@/providers/entry-provider';
+import { EntryProvider, useEntryContext } from '@/providers/entry-provider';
 
 export type { OverflowMenuItem } from '@/components/ui/overflow-menu';
 
@@ -68,26 +67,52 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 		const insets = useSafeAreaInsets();
 		const { muted, accentForeground } = useThemeColors();
 		const keyboardProgress = useKeyboardVisible();
+		const dialog = useConfirmDialog();
+		const context = useEntryContext();
+
 		const headerAnimatedStyle = useAnimatedStyle(() => ({
 			opacity: 1 - keyboardProgress.value,
 			transform: [{ translateY: keyboardProgress.value * -10 }],
 			height: keyboardProgress.value === 1 ? 0 : 'auto',
 			overflow: 'hidden' as const,
 		}));
-		const dialog = useConfirmDialog();
 
-		const composer = useEntryComposer({
-			onFinish,
-			isAnimatedCheck,
-			onError: dialog.showError,
-		});
+		// Check button animation
+		const checkProgress = useSharedValue(context.isEditMode ? 1 : 0);
+
+		const checkButtonStyle = useAnimatedStyle(() => ({
+			opacity: checkProgress.value,
+			transform: [{ translateX: (1 - checkProgress.value) * -8 }],
+			pointerEvents: checkProgress.value === 0 ? 'none' : 'auto',
+		}));
+
+		const handleTextChange = useCallback(
+			(text: string) => {
+				context.setContent(context.contentHtmlRef.current, text);
+
+				if (isAnimatedCheck) {
+					checkProgress.value = withSpring(text.trim().length > 0 ? 1 : 0);
+				}
+			},
+			[context, isAnimatedCheck, checkProgress],
+		);
+
+		const handleFinish = useCallback(() => {
+			context.save();
+			onFinish?.(context.entryId);
+		}, [context, onFinish]);
 
 		useImperativeHandle(forwardedRef, () => ({
-			clear: () => composer.handleClear(),
+			clear: () => {
+				checkProgress.value = withSpring(0);
+				context.cycle().catch((err: unknown) => {
+					dialog.showError('Error', String(err));
+				});
+			},
 		}));
 
 		const checkButton = (
-			<Button variant="primary" size="sm" isIconOnly onPress={composer.handleFinish}>
+			<Button variant="primary" size="sm" isIconOnly onPress={handleFinish}>
 				<Check size={16} color={accentForeground} />
 			</Button>
 		);
@@ -98,7 +123,7 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 					className="flex-1 bg-background"
 					style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
 				>
-					{composer.isLoading ? (
+					{context.isLoading ? (
 						<View className="flex-1" />
 					) : (
 						<>
@@ -110,33 +135,30 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 									<View className="flex-row items-center">
 										{headerLeft}
 										<JournalSelect
-											journals={composer.journals}
-											selectedId={composer.selectedJournalId}
-											onSelect={composer.setSelectedJournalId}
-											onCreateJournal={composer.handleCreateJournal}
+											journals={context.journals}
+											selectedId={context.journalId}
+											onSelect={context.setJournalId}
+											onCreateJournal={context.createJournal}
 										/>
 									</View>
 									<View className="flex-row items-center">
 										{isAnimatedCheck ? (
-											<Animated.View style={composer.checkButtonStyle}>
+											<Animated.View style={checkButtonStyle}>
 												{checkButton}
 											</Animated.View>
 										) : (
 											<View>{checkButton}</View>
 										)}
-										<EmotionButton
-											defaultSelections={composer.defaultEmotions}
-											onSave={composer.handleEmotionSave}
-										/>
+										<EmotionButton />
 										<Button
 											variant="ghost"
 											size="sm"
 											isIconOnly
 											onPress={() => {
-												const journalId = composer.selectedJournalId;
-												if (journalId) {
+												const currentJournalId = context.journalId;
+												if (currentJournalId) {
 													router.push(
-														`/journal/${journalId}/entry/${composer.entryId}/attachments`,
+														`/journal/${currentJournalId}/entry/${context.entryId}/attachments`,
 													);
 												}
 											}}
@@ -152,13 +174,11 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 							</View>
 
 							<Editor
-								ref={composer.editorRef}
-								defaultValue={composer.defaultHtml}
+								ref={context.editorRef}
+								defaultValue={context.contentHtmlRef.current}
 								placeholder={placeholder}
-								onChangeText={(text) =>
-									composer.handleTextChange(text, composer.htmlRef.current)
-								}
-								onChangeHtml={composer.handleHtmlChange}
+								onChangeText={handleTextChange}
+								onChangeHtml={context.updateHtml}
 							/>
 						</>
 					)}
