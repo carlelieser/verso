@@ -130,24 +130,3 @@ declare module 'whisper.rn/src/realtime-transcription' {
 	}
 }
 
-declare module 'whisper.rn/src/realtime-transcription/adapters/AudioPcmStreamAdapter' {
-	import type { AudioStreamInterface } from 'whisper.rn/src/realtime-transcription';
-
-	export class AudioPcmStreamAdapter implements AudioStreamInterface {
-		initialize(config: unknown): Promise<void>;
-		start(): Promise<void>;
-		stop(): Promise<void>;
-		isRecording(): boolean;
-		onData(
-			callback: (data: {
-				data: Uint8Array;
-				sampleRate: number;
-				channels: number;
-				timestamp: number;
-			}) => void,
-		): void;
-		onError(callback: (error: string) => void): void;
-		onStatusChange(callback: (isRecording: boolean) => void): void;
-		release(): Promise<void>;
-	}
-}

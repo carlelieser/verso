@@ -1,19 +1,14 @@
-import { VoiceProcessor } from '@picovoice/react-native-voice-processor';
 import { getRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
-import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+import { type SharedValue, withTiming } from 'react-native-reanimated';
 import { initWhisper, type WhisperContext } from 'whisper.rn';
 import { RealtimeTranscriber } from 'whisper.rn/src/realtime-transcription';
-import { AudioPcmStreamAdapter } from 'whisper.rn/src/realtime-transcription/adapters/AudioPcmStreamAdapter';
 
-import { computeBarAmplitudes, WAVEFORM_BAR_COUNT } from '@/constants/audio';
+import { useAudioPcmStream } from '@/hooks/use-audio-pcm-stream';
+import { RealtimeAudioStreamAdapter } from '@/services/realtime-audio-stream-adapter';
 
 const MODEL_ASSET: number = require('../../assets/models/ggml-tiny.en.bin');
-
-const FRAME_LENGTH = 512;
-const SAMPLE_RATE = 16000;
-const PCM_16BIT_MAX = 32768;
 
 type TranscriptionStatus = 'idle' | 'loading' | 'recording' | 'error';
 
@@ -38,29 +33,7 @@ export function useWhisperTranscription(
 	const onFinishRef = useRef(onFinish);
 	onFinishRef.current = onFinish;
 
-	const amp0 = useSharedValue(0);
-	const amp1 = useSharedValue(0);
-	const amp2 = useSharedValue(0);
-	const amp3 = useSharedValue(0);
-	const amplitudes = useRef([amp0, amp1, amp2, amp3]).current;
-
-	useEffect(() => {
-		const voiceProcessor = VoiceProcessor.instance;
-
-		const frameListener = (frame: number[]) => {
-			if (frame.length < WAVEFORM_BAR_COUNT) return;
-			const bars = computeBarAmplitudes(frame, PCM_16BIT_MAX);
-			for (let i = 0; i < WAVEFORM_BAR_COUNT; i++) {
-				amplitudes[i]!.value = bars[i]!;
-			}
-		};
-
-		voiceProcessor.addFrameListener(frameListener);
-
-		return () => {
-			voiceProcessor.removeFrameListener(frameListener);
-		};
-	}, [amplitudes]);
+	const pcmStream = useAudioPcmStream();
 
 	useEffect(() => {
 		return () => {
@@ -99,7 +72,7 @@ export function useWhisperTranscription(
 			setLiveText('');
 
 			const ctx = await ensureContext();
-			const audioStream = new AudioPcmStreamAdapter();
+			const audioStream = new RealtimeAudioStreamAdapter();
 			let currentSliceText = '';
 
 			const transcriber = new RealtimeTranscriber(
@@ -113,7 +86,6 @@ export function useWhisperTranscription(
 					onTranscribe: (event) => {
 						if (event.type !== 'transcribe') return;
 
-						// When a new slice starts, commit the previous slice's text
 						if (
 							event.sliceIndex !== lastSliceIndexRef.current &&
 							lastSliceIndexRef.current >= 0
@@ -149,16 +121,16 @@ export function useWhisperTranscription(
 
 			transcriberRef.current = transcriber;
 			await transcriber.start();
-			await VoiceProcessor.instance.start(FRAME_LENGTH, SAMPLE_RATE);
+			await pcmStream.start();
 		} catch {
 			setStatus('error');
 		}
-	}, [ensureContext, amplitudes]);
+	}, [ensureContext, pcmStream]);
 
 	const stopRecording = useCallback(async () => {
 		await transcriberRef.current?.stop();
 		transcriberRef.current = null;
-		await VoiceProcessor.instance.stop();
+		await pcmStream.stop();
 
 		const text = fullTextRef.current.trim();
 		if (text.length > 0) {
@@ -168,12 +140,9 @@ export function useWhisperTranscription(
 		completedSlicesRef.current = '';
 		fullTextRef.current = '';
 		lastSliceIndexRef.current = -1;
-		for (const amp of amplitudes) {
-			amp.value = withTiming(0, { duration: 150 });
-		}
 		setLiveText('');
 		setStatus('idle');
-	}, [amplitudes]);
+	}, [pcmStream]);
 
 	const toggle = useCallback(() => {
 		if (status === 'recording') {
@@ -187,7 +156,7 @@ export function useWhisperTranscription(
 		status,
 		isRecording: status === 'recording',
 		liveText,
-		amplitudes,
+		amplitudes: pcmStream.amplitudes,
 		toggle,
 	};
 }

@@ -77,7 +77,8 @@
         }
       ],
       "expo-asset",
-      "expo-web-browser"
+      "expo-web-browser",
+      "react-native-realtime-audio"
     ],
     "runtimeVersion": {
       "policy": "appVersion"
