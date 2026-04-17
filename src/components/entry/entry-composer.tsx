@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { Button } from 'heroui-native';
 import { Check, Paperclip } from 'lucide-react-native';
-import React, { forwardRef, useCallback, useImperativeHandle } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -80,6 +80,12 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 		const dialog = useConfirmDialog();
 		const context = useEntryContext();
 		const attachments = useLiveAttachments(context.entryId);
+		// Capture the initial content once — when the editor first becomes ready to mount.
+		// Using a ref prevents re-renders from passing a new defaultValue and resetting the editor.
+		const initialContent = useRef<string | null>(null);
+		if (!context.isLoading && initialContent.current === null) {
+			initialContent.current = context.contentHtmlRef.current;
+		}
 
 		const headerAnimatedStyle = useAnimatedStyle(() => ({
 			opacity: 1 - keyboardProgress.value,
@@ -191,7 +197,7 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 
 							<Editor
 								ref={context.editorRef}
-								defaultValue={context.contentHtmlRef.current}
+								defaultValue={initialContent.current ?? ''}
 								placeholder={placeholder}
 								onChangeText={handleTextChange}
 								onChangeHtml={context.updateHtml}

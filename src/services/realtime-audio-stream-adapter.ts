@@ -1,9 +1,9 @@
+import type { EventSubscription } from 'expo-modules-core';
 import {
 	AudioEncoding,
 	type RealtimeAudioRecorder,
 	RealtimeAudioRecorderModule,
 } from 'react-native-realtime-audio';
-import type { EventSubscription } from 'expo-modules-core';
 
 import { decodeBase64ToBytes } from '@/utils/audio';
 
@@ -55,15 +55,15 @@ export class RealtimeAudioStreamAdapter implements AudioStreamInterface {
 		this.config = config;
 
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Expo native class accessed via module
-			this.recorder = new (RealtimeAudioRecorderModule as any).RealtimeAudioRecorder(
+			const RecorderClass = (RealtimeAudioRecorderModule as unknown as { RealtimeAudioRecorder: new (config: object, arg: boolean) => RealtimeAudioRecorder }).RealtimeAudioRecorder;
+			this.recorder = new RecorderClass(
 				{
 					sampleRate: config.sampleRate ?? 16000,
 					encoding: AudioEncoding.pcm16bitInteger,
 					channelCount: config.channels ?? 1,
 				},
 				false,
-			) as RealtimeAudioRecorder;
+			);
 
 			this.subscription = RealtimeAudioRecorderModule.addListener(
 				'onAudioCaptured',

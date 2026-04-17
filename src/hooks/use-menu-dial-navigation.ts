@@ -81,12 +81,6 @@ export function useMenuDialNavigation({
 		return segments;
 	}, [stack, pathValues]);
 
-	// The live segment is derived at render time — no memo needed.
-	const breadcrumbs: readonly BreadcrumbSegment[] = [
-		...historyBreadcrumbs,
-		{ label: currentLabel, depth: pathValues.length },
-	];
-
 	const animateTransition = useCallback(
 		(updateFn: () => void) => {
 			if (isTransitioning.current) return;
@@ -175,7 +169,10 @@ export function useMenuDialNavigation({
 			currentLabel,
 			currentValue,
 			currentColor,
-			breadcrumbs,
+			breadcrumbs: [
+				...historyBreadcrumbs,
+				{ label: currentLabel, depth: pathValues.length },
+			] as readonly BreadcrumbSegment[],
 			canGoBack,
 			highlightedIndex,
 			ringOpacity,
@@ -191,7 +188,8 @@ export function useMenuDialNavigation({
 			currentLabel,
 			currentValue,
 			currentColor,
-			breadcrumbs,
+			historyBreadcrumbs,
+			pathValues.length,
 			canGoBack,
 			highlightedIndex,
 			ringOpacity,

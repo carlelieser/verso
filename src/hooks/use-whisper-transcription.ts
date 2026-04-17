@@ -1,7 +1,7 @@
 import { getRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
-import { type SharedValue, withTiming } from 'react-native-reanimated';
+import { type SharedValue } from 'react-native-reanimated';
 import { initWhisper, type WhisperContext } from 'whisper.rn';
 import { RealtimeTranscriber } from 'whisper.rn/src/realtime-transcription';
 

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import {
 	AudioEncoding,
 	type RealtimeAudioRecorder,
 	RealtimeAudioRecorderModule,
 } from 'react-native-realtime-audio';
+import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { computeBarAmplitudes, WAVEFORM_BAR_COUNT } from '@/constants/audio';
 import { decodeBase64Pcm16 } from '@/utils/audio';
@@ -48,11 +48,11 @@ export function useAudioPcmStream(): UseAudioPcmStreamResult {
 	const start = useCallback(async () => {
 		if (recorderRef.current) return;
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Expo native class accessed via module
-		const recorder = new (RealtimeAudioRecorderModule as any).RealtimeAudioRecorder(
+		const RecorderClass = (RealtimeAudioRecorderModule as unknown as { RealtimeAudioRecorder: new (config: object, arg: boolean) => RealtimeAudioRecorder }).RealtimeAudioRecorder;
+		const recorder = new RecorderClass(
 			{ sampleRate: SAMPLE_RATE, encoding: AudioEncoding.pcm16bitInteger, channelCount: 1 },
 			false,
-		) as RealtimeAudioRecorder;
+		);
 		recorderRef.current = recorder;
 		await recorder.startRecording();
 	}, []);
