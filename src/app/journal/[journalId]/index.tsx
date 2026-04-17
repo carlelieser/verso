@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import {
 	ArrowUpRight,
 	EllipsisVertical,
+	FolderInput,
 	Maximize,
 	Palette,
 	Pencil,
@@ -16,6 +17,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 
 import { EntryCard } from '@/components/entry/entry-card';
+import { MoveToJournalSheet } from '@/components/entry/move-to-journal-sheet';
 import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
 import { JournalColorBanner } from '@/components/journal/journal-color-banner';
@@ -34,6 +36,7 @@ import { useEntries } from '@/hooks/use-entries';
 import { useJournalActions } from '@/hooks/use-journal-actions';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
+import { useMoveEntry } from '@/hooks/use-move-entry';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntrySummaryWithJournal } from '@/types/entry';
 import { isLightColor } from '@/utils/color';
@@ -134,6 +137,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	});
 
 	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
+	const { moveSheet, moveEntry } = useMoveEntry();
 
 	const debouncedSearch = useDebouncedCallback(searchEntries);
 
@@ -211,6 +215,14 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		router.push(`/journal/${journalId}/entry/${selectedEntry.id}`);
 	}, [selectedEntry, journalId]);
 
+	const handleMoveEntry = useCallback(
+		async (targetJournalId: string) => {
+			if (!selectedEntry) return;
+			await moveEntry(selectedEntry.id, targetJournalId);
+		},
+		[selectedEntry, moveEntry],
+	);
+
 	const entryActionItems: readonly ActionSheetItem[] = useMemo(
 		() => [
 			{
@@ -220,6 +232,12 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				onPress: handleViewEntry,
 			},
 			{
+				id: 'move',
+				label: 'Move',
+				icon: FolderInput,
+				onPress: moveSheet.open,
+			},
+			{
 				id: 'delete',
 				label: 'Delete',
 				icon: Trash2,
@@ -227,7 +245,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				onPress: handleDeleteEntry,
 			},
 		],
-		[handleViewEntry, handleDeleteEntry],
+		[handleViewEntry, handleDeleteEntry, moveSheet.open],
 	);
 
 	const Icon = journal ? getJournalIcon(journal.icon) : null;
@@ -289,6 +307,13 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					}
 					items={entryActionItems}
 					sheet={entryActionSheet}
+				/>
+
+				<MoveToJournalSheet
+					sheet={moveSheet}
+					journals={journals}
+					currentJournalId={selectedEntry?.journalId ?? journalId ?? ''}
+					onMove={handleMoveEntry}
 				/>
 
 				{renameSheet.isOpen ? (

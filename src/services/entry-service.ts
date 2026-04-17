@@ -78,6 +78,10 @@ export async function updateEntry(db: Db, input: UpdateEntryInput): Promise<void
 	await db.update(entries).set(updates).where(eq(entries.id, input.id));
 }
 
+export async function moveEntry(db: Db, id: string, journalId: string): Promise<void> {
+	await db.update(entries).set({ journalId, updatedAt: new Date() }).where(eq(entries.id, id));
+}
+
 export async function deleteEntry(db: Db, id: string): Promise<void> {
 	const [existing] = await db
 		.select({ id: entries.id })

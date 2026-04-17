@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
-import { ArrowUpRight, Clock, Search, Trash2 } from 'lucide-react-native';
+import { ArrowUpRight, Clock, FolderInput, Search, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 
 import { EntryCard } from '@/components/entry/entry-card';
+import { MoveToJournalSheet } from '@/components/entry/move-to-journal-sheet';
 import { Screen } from '@/components/layout/screen';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -12,7 +13,9 @@ import { useScreenInsets } from '@/contexts/screen-context';
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
 import { useDeleteEntry } from '@/hooks/use-delete-entry';
 import { useEntries } from '@/hooks/use-entries';
+import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
+import { useMoveEntry } from '@/hooks/use-move-entry';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntrySummaryWithJournal } from '@/types/entry';
 
@@ -77,12 +80,14 @@ export default function HistoryScreen(): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const [searchQuery, setSearchQuery] = useState('');
 	const { entries, searchEntries, deleteEntry } = useEntries();
+	const { journals } = useJournals();
 	const {
 		selectedItem: selectedEntry,
 		handleLongPress,
 		actionSheet,
 	} = useLongPressAction<EntrySummaryWithJournal>();
 	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
+	const { moveSheet, moveEntry } = useMoveEntry();
 
 	const debouncedSearch = useDebouncedCallback(searchEntries);
 
@@ -104,6 +109,14 @@ export default function HistoryScreen(): React.JSX.Element {
 		router.push(`/journal/${selectedEntry.journalId}/entry/${selectedEntry.id}`);
 	}, [selectedEntry]);
 
+	const handleMove = useCallback(
+		async (journalId: string) => {
+			if (!selectedEntry) return;
+			await moveEntry(selectedEntry.id, journalId);
+		},
+		[selectedEntry, moveEntry],
+	);
+
 	const actionItems: readonly ActionSheetItem[] = useMemo(
 		() => [
 			{
@@ -113,6 +126,12 @@ export default function HistoryScreen(): React.JSX.Element {
 				onPress: handleView,
 			},
 			{
+				id: 'move',
+				label: 'Move',
+				icon: FolderInput,
+				onPress: moveSheet.open,
+			},
+			{
 				id: 'delete',
 				label: 'Delete',
 				icon: Trash2,
@@ -120,7 +139,7 @@ export default function HistoryScreen(): React.JSX.Element {
 				onPress: handleDelete,
 			},
 		],
-		[handleView, handleDelete],
+		[handleView, handleDelete, moveSheet.open],
 	);
 
 	return (
@@ -141,6 +160,13 @@ export default function HistoryScreen(): React.JSX.Element {
 				}
 				items={actionItems}
 				sheet={actionSheet}
+			/>
+
+			<MoveToJournalSheet
+				sheet={moveSheet}
+				journals={journals}
+				currentJournalId={selectedEntry?.journalId ?? ''}
+				onMove={handleMove}
 			/>
 		</Screen>
 	);

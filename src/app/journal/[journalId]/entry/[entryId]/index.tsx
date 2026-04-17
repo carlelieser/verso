@@ -1,11 +1,12 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { EllipsisVertical, Pencil, Trash2 } from 'lucide-react-native';
+import { EllipsisVertical, FolderInput, Pencil, Trash2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { AttachmentPreview } from '@/components/entry/attachment-preview';
 import { EntryViewer } from '@/components/entry/entry-viewer';
 import { MoodCard } from '@/components/entry/mood-card';
+import { MoveToJournalSheet } from '@/components/entry/move-to-journal-sheet';
 import { WeatherCard } from '@/components/entry/weather-card';
 import { Screen } from '@/components/layout/screen';
 import { Section } from '@/components/layout/section';
@@ -14,6 +15,8 @@ import { FabMenu, type FabMenuItem } from '@/components/ui/fab-menu';
 import { useScreenInsets } from '@/contexts/screen-context';
 import { useDeleteEntry } from '@/hooks/use-delete-entry';
 import { useEntries } from '@/hooks/use-entries';
+import { useJournals } from '@/hooks/use-journals';
+import { useMoveEntry } from '@/hooks/use-move-entry';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntryDetail } from '@/types/entry';
 import { formatRelativeDate } from '@/utils/date';
@@ -73,6 +76,8 @@ export default function EntryViewScreen(): React.JSX.Element {
 	const { danger, foreground, accentForeground } = useThemeColors();
 	const { loadEntry, deleteEntry } = useEntries();
 	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
+	const { journals } = useJournals();
+	const { moveSheet, moveEntry } = useMoveEntry();
 	const [entry, setEntry] = useState<EntryDetail | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -82,8 +87,22 @@ export default function EntryViewScreen(): React.JSX.Element {
 		if (deleted) router.back();
 	}, [entryId, confirmDeleteEntry]);
 
+	const handleMove = useCallback(
+		async (targetJournalId: string) => {
+			if (!entryId) return;
+			await moveEntry(entryId, targetJournalId);
+		},
+		[entryId, moveEntry],
+	);
+
 	const menuItems: readonly FabMenuItem[] = useMemo(
 		() => [
+			{
+				id: 'move',
+				label: 'Move',
+				icon: <FolderInput size={16} color={foreground} />,
+				onPress: moveSheet.open,
+			},
 			{
 				id: 'delete',
 				label: 'Delete',
@@ -92,7 +111,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 				onPress: handleDelete,
 			},
 		],
-		[danger, handleDelete],
+		[danger, foreground, handleDelete, moveSheet.open],
 	);
 
 	useFocusEffect(
@@ -122,33 +141,46 @@ export default function EntryViewScreen(): React.JSX.Element {
 	);
 
 	return (
-		<Screen
-			fab={
-				entry ? (
-					<View className="gap-3">
-						<FabMenu
-							icon={<EllipsisVertical size={24} color={foreground} />}
-							items={menuItems}
-						/>
-						<Fab
-							icon={<Pencil size={20} color={accentForeground} />}
-							onPress={() =>
-								router.push(`/journal/${journalId}/entry/${entryId}/edit`)
-							}
-						/>
+		<>
+			<Screen
+				fab={
+					entry ? (
+						<View className="gap-3">
+							<FabMenu
+								icon={<EllipsisVertical size={24} color={foreground} />}
+								items={menuItems}
+							/>
+							<Fab
+								icon={<Pencil size={20} color={accentForeground} />}
+								onPress={() =>
+									router.push(`/journal/${journalId}/entry/${entryId}/edit`)
+								}
+							/>
+						</View>
+					) : undefined
+				}
+			>
+				{isLoading || !entry ? (
+					<View className="flex-1 items-center justify-center">
+						<Text className="text-muted">
+							{isLoading ? 'Loading...' : 'Entry not found'}
+						</Text>
 					</View>
-				) : undefined
-			}
-		>
-			{isLoading || !entry ? (
-				<View className="flex-1 items-center justify-center">
-					<Text className="text-muted">
-						{isLoading ? 'Loading...' : 'Entry not found'}
-					</Text>
-				</View>
-			) : (
-				<EntryContent entry={entry} journalId={journalId ?? ''} entryId={entryId ?? ''} />
-			)}
-		</Screen>
+				) : (
+					<EntryContent
+						entry={entry}
+						journalId={journalId ?? ''}
+						entryId={entryId ?? ''}
+					/>
+				)}
+			</Screen>
+
+			<MoveToJournalSheet
+				sheet={moveSheet}
+				journals={journals}
+				currentJournalId={journalId ?? ''}
+				onMove={handleMove}
+			/>
+		</>
 	);
 }
