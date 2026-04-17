@@ -1,13 +1,13 @@
 import { ControlField, ListGroup, Separator } from 'heroui-native';
-import { Bell, Heart, MapPin, Mic } from 'lucide-react-native';
+import { Bell, Heart, MapPin } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 
 import { Section } from '@/components/layout/section';
 import { RemindersSheet } from '@/components/settings/reminders-sheet';
+import { VoiceInputSetting } from '@/components/settings/voice-input-setting';
 import {
 	SETTINGS_AUTO_LOCATION_KEY,
 	SETTINGS_SHOW_DONATION_BANNER_KEY,
-	SETTINGS_TRANSCRIPTION_KEY,
 } from '@/constants/settings';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -41,14 +41,8 @@ function formatReminderDescription(reminders: {
 
 export function GeneralSection(): React.JSX.Element {
 	const { muted } = useThemeColors();
-	const {
-		isAutoLocation,
-		isTranscriptionEnabled,
-		shouldShowDonationBanner,
-		reminders,
-		setSetting,
-	} = useSettings();
-	const { location: locationPermission, microphone: microphonePermission } = usePermissions();
+	const { isAutoLocation, shouldShowDonationBanner, reminders, setSetting } = useSettings();
+	const { location: locationPermission } = usePermissions();
 	const remindersSheet = useBottomSheet();
 
 	const handleAutoLocationToggle = useCallback(
@@ -59,16 +53,6 @@ export function GeneralSection(): React.JSX.Element {
 			}
 		},
 		[locationPermission, setSetting],
-	);
-
-	const handleTranscriptionToggle = useCallback(
-		(enabled: boolean) => {
-			setSetting(SETTINGS_TRANSCRIPTION_KEY, enabled);
-			if (enabled && microphonePermission.status !== 'granted') {
-				microphonePermission.action();
-			}
-		},
-		[microphonePermission, setSetting],
 	);
 
 	const handleDonationBannerToggle = useCallback(
@@ -101,25 +85,7 @@ export function GeneralSection(): React.JSX.Element {
 					</ListGroup.Item>
 				</ControlField>
 				<Separator className="mx-4" />
-				<ControlField
-					isSelected={isTranscriptionEnabled}
-					onSelectedChange={handleTranscriptionToggle}
-				>
-					<ListGroup.Item>
-						<ListGroup.ItemPrefix>
-							<Mic size={20} color={muted} />
-						</ListGroup.ItemPrefix>
-						<ListGroup.ItemContent>
-							<ListGroup.ItemTitle>Voice input</ListGroup.ItemTitle>
-							<ListGroup.ItemDescription>
-								Enable speech-to-text (STT)
-							</ListGroup.ItemDescription>
-						</ListGroup.ItemContent>
-						<ListGroup.ItemSuffix>
-							<ControlField.Indicator />
-						</ListGroup.ItemSuffix>
-					</ListGroup.Item>
-				</ControlField>
+				<VoiceInputSetting />
 				<Separator className="mx-4" />
 				<ListGroup.Item onPress={remindersSheet.open}>
 					<ListGroup.ItemPrefix>

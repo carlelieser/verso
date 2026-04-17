@@ -27,7 +27,7 @@ interface UseEditorTranscriptionResult {
 export function useEditorTranscription({
 	editorRef,
 }: UseEditorTranscriptionOptions): UseEditorTranscriptionResult {
-	const { isTranscriptionEnabled } = useSettings();
+	const { isVoiceInputEnabled } = useSettings();
 
 	const handleFinish = useCallback(
 		async (text: string) => {
@@ -41,7 +41,7 @@ export function useEditorTranscription({
 	const transcription = useWhisperTranscription(handleFinish);
 
 	return {
-		isEnabled: isTranscriptionEnabled,
+		isEnabled: isVoiceInputEnabled && transcription.status !== 'unavailable',
 		isRecording: transcription.isRecording,
 		isLoading: transcription.status === 'loading',
 		liveText: transcription.liveText,
