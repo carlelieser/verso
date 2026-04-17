@@ -79,7 +79,9 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 				<View className="flex-row items-center justify-between">
 					<Pressable
 						onPress={() => setIsTimePickerOpen(true)}
-						className={`flex-row items-baseline gap-1 ${reminders.isEnabled ? '' : 'opacity-50 pointer-events-none'}`}
+						className={`flex-row items-baseline gap-1 ${
+							reminders.isEnabled ? '' : 'opacity-50 pointer-events-none'
+						}`}
 					>
 						<Text className="text-5xl text-foreground">{formatted.time}</Text>
 						<Text className="text-base text-muted">{formatted.period}</Text>

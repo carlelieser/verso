@@ -52,7 +52,9 @@ export function ActionSheet({ header, items, sheet }: ActionSheetProps): React.J
 							>
 								{Icon ? <Icon size={18} color={color} /> : null}
 								<Text
-									className={`text-base ${isDanger ? 'text-danger' : 'text-foreground'}`}
+									className={`text-base ${
+										isDanger ? 'text-danger' : 'text-foreground'
+									}`}
 								>
 									{item.label}
 								</Text>

@@ -9,11 +9,7 @@ import { useScreenInsets } from '@/contexts/screen-context';
 import { useLiveAttachments } from '@/hooks/use-live-attachments';
 import { EntryProvider } from '@/providers/entry-provider';
 
-function AttachmentsList({
-	entryId,
-}: {
-	readonly entryId: string;
-}): React.JSX.Element {
+function AttachmentsList({ entryId }: { readonly entryId: string }): React.JSX.Element {
 	const { contentInsetBottom } = useScreenInsets();
 	const attachments = useLiveAttachments(entryId);
 

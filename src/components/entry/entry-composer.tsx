@@ -11,14 +11,24 @@ import { EmotionButton } from '@/components/entry/emotion-button';
 import { JournalSelect } from '@/components/journal/journal-select';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
+import { useLiveAttachments } from '@/hooks/use-live-attachments';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useConfirmDialog } from '@/providers/dialog-provider';
 import { EntryProvider, useEntryContext } from '@/providers/entry-provider';
+import type { Attachment } from '@/types/attachment';
+import type { EmotionSelection } from '@/types/emotion';
 
 export type { OverflowMenuItem } from '@/components/ui/overflow-menu';
 
 export interface EntryComposerHandle {
 	clear: () => void;
+}
+
+export interface EntrySummary {
+	readonly entryId: string;
+	readonly journalId: string;
+	readonly emotions: readonly EmotionSelection[];
+	readonly attachments: readonly Attachment[];
 }
 
 interface EntryComposerProps {
@@ -33,7 +43,7 @@ interface EntryComposerProps {
 	/** Items to display in the overflow (three-dot) menu. */
 	readonly overflowMenuItems?: readonly OverflowMenuItem[];
 	/** Called after the entry is successfully saved. */
-	readonly onFinish?: (entryId: string) => void;
+	readonly onFinish?: (summary: EntrySummary) => void;
 	/** Whether the check button animates in/out with content (default: false). */
 	readonly isAnimatedCheck?: boolean;
 	/** Placeholder text for the editor. */
@@ -69,6 +79,7 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 		const keyboardProgress = useKeyboardVisible();
 		const dialog = useConfirmDialog();
 		const context = useEntryContext();
+		const attachments = useLiveAttachments(context.entryId);
 
 		const headerAnimatedStyle = useAnimatedStyle(() => ({
 			opacity: 1 - keyboardProgress.value,
@@ -99,8 +110,13 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 
 		const handleFinish = useCallback(() => {
 			context.save();
-			onFinish?.(context.entryId);
-		}, [context, onFinish]);
+			onFinish?.({
+				entryId: context.entryId,
+				journalId: context.journalId ?? '',
+				emotions: context.emotions,
+				attachments,
+			});
+		}, [context, onFinish, attachments]);
 
 		useImperativeHandle(forwardedRef, () => ({
 			clear: () => {

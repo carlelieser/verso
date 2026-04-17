@@ -200,10 +200,14 @@ export function TimePicker({
 							setFocused('hour');
 							prevValueRef.current = hour12;
 						}}
-						className={`rounded-xl px-4 py-3 ${focused === 'hour' ? 'bg-accent' : 'bg-surface'}`}
+						className={`rounded-xl px-4 py-3 ${
+							focused === 'hour' ? 'bg-accent' : 'bg-surface'
+						}`}
 					>
 						<Text
-							className={`text-6xl font-semibold ${focused === 'hour' ? 'text-accent-foreground' : 'text-foreground'}`}
+							className={`text-6xl font-semibold ${
+								focused === 'hour' ? 'text-accent-foreground' : 'text-foreground'
+							}`}
 						>
 							{padTime(hour12)}
 						</Text>
@@ -216,10 +220,14 @@ export function TimePicker({
 							setFocused('minute');
 							prevValueRef.current = minute;
 						}}
-						className={`rounded-xl px-4 py-3 ${focused === 'minute' ? 'bg-accent' : 'bg-surface'}`}
+						className={`rounded-xl px-4 py-3 ${
+							focused === 'minute' ? 'bg-accent' : 'bg-surface'
+						}`}
 					>
 						<Text
-							className={`text-6xl font-semibold ${focused === 'minute' ? 'text-accent-foreground' : 'text-foreground'}`}
+							className={`text-6xl font-semibold ${
+								focused === 'minute' ? 'text-accent-foreground' : 'text-foreground'
+							}`}
 						>
 							{padTime(minute)}
 						</Text>
@@ -231,10 +239,14 @@ export function TimePicker({
 						<Pressable
 							key={p}
 							onPress={() => setPeriod(p)}
-							className={`rounded-2xl px-3 py-2 ${period === p ? 'bg-accent' : 'bg-surface'}`}
+							className={`rounded-2xl px-3 py-2 ${
+								period === p ? 'bg-accent' : 'bg-surface'
+							}`}
 						>
 							<Text
-								className={`text-sm font-semibold ${period === p ? 'text-accent-foreground' : 'text-muted'}`}
+								className={`text-sm font-semibold ${
+									period === p ? 'text-accent-foreground' : 'text-muted'
+								}`}
 							>
 								{p}
 							</Text>

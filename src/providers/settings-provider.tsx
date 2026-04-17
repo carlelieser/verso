@@ -82,7 +82,7 @@ function loadInitialBooleans(): Record<string, boolean> {
 	const values: Record<string, boolean> = {};
 	for (const key of BOOLEAN_KEYS) {
 		const raw = SecureStore.getItem(key);
-		values[key] = raw === null ? (BOOLEAN_DEFAULTS[key] ?? false) : raw === 'true';
+		values[key] = raw === null ? BOOLEAN_DEFAULTS[key] ?? false : raw === 'true';
 	}
 	return values;
 }
@@ -115,7 +115,7 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 					const key = BOOLEAN_KEYS[i];
 					if (!key) continue;
 					const raw = results[i];
-					loaded[key] = raw === null ? (BOOLEAN_DEFAULTS[key] ?? false) : raw === 'true';
+					loaded[key] = raw === null ? BOOLEAN_DEFAULTS[key] ?? false : raw === 'true';
 				}
 				setBoolValues((prev) => {
 					const hasChanged = BOOLEAN_KEYS.some((key) => prev[key] !== loaded[key]);

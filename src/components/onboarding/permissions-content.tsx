@@ -35,21 +35,29 @@ export function PermissionsContent({ items }: PermissionsContentProps): React.JS
 						<Pressable
 							key={item.label}
 							onPress={() => !isGranted && item.permission.request()}
-							className={`flex-row items-center gap-4 rounded-xl px-4 py-4 ${isGranted ? 'bg-foreground' : 'bg-surface'}`}
+							className={`flex-row items-center gap-4 rounded-xl px-4 py-4 ${
+								isGranted ? 'bg-foreground' : 'bg-surface'
+							}`}
 						>
 							<View
-								className={`size-10 rounded-full items-center justify-center ${isGranted ? 'bg-background/5' : 'bg-foreground/5'}`}
+								className={`size-10 rounded-full items-center justify-center ${
+									isGranted ? 'bg-background/5' : 'bg-foreground/5'
+								}`}
 							>
 								<IconComponent size={20} color={isGranted ? background : muted} />
 							</View>
 							<View className="flex-1">
 								<Text
-									className={`text-base font-medium ${isGranted ? 'text-background' : 'text-foreground'}`}
+									className={`text-base font-medium ${
+										isGranted ? 'text-background' : 'text-foreground'
+									}`}
 								>
 									{item.label}
 								</Text>
 								<Text
-									className={`text-sm ${isGranted ? 'text-background/60' : 'text-muted'}`}
+									className={`text-sm ${
+										isGranted ? 'text-background/60' : 'text-muted'
+									}`}
 								>
 									{item.description}
 								</Text>

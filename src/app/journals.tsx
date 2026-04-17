@@ -189,7 +189,7 @@ export default function JournalsScreen(): React.JSX.Element {
 							variant: 'danger' as const,
 							onPress: handleDelete,
 						},
-					]
+				  ]
 				: []),
 		],
 		[

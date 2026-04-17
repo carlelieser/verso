@@ -66,7 +66,9 @@ export const MenuDial = React.memo(function MenuDial({
 								}
 							>
 								<Text
-									className={`text-sm ${isLast ? 'font-semibold text-foreground' : 'text-muted'}`}
+									className={`text-sm ${
+										isLast ? 'font-semibold text-foreground' : 'text-muted'
+									}`}
 								>
 									{segment.label}
 								</Text>

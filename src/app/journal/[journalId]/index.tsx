@@ -104,7 +104,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		useJournals();
 	const journal = journals.find((j) => j.id === journalId);
 	const isDefault = journal?.displayOrder === 0;
-	const entryCount = journalId ? (entryCounts.get(journalId) ?? 0) : 0;
+	const entryCount = journalId ? entryCounts.get(journalId) ?? 0 : 0;
 	const { entries, searchEntries, createEntry, deleteEntry } = useEntries(journalId);
 	const [searchQuery, setSearchQuery] = useState('');
 	const {
@@ -186,7 +186,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 							variant: 'danger' as const,
 							onPress: handleDeleteJournal,
 						},
-					]
+				  ]
 				: []),
 		],
 		[

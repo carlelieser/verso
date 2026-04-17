@@ -13,10 +13,7 @@ import { useAutoSave } from '@/hooks/use-auto-save';
 import { useJournals } from '@/hooks/use-journals';
 import { useSettings } from '@/hooks/use-settings';
 import { useDatabaseContext } from '@/providers/database-provider';
-import {
-	getEmotions,
-	saveEmotions as saveEmotionsService,
-} from '@/services/emotion-service';
+import { getEmotions, saveEmotions as saveEmotionsService } from '@/services/emotion-service';
 import {
 	createEntry as createEntryService,
 	deleteEntry as deleteEntryService,
@@ -359,7 +356,7 @@ export function EntryProvider({
 						editorRef,
 						save,
 						cycle,
-					}
+				  }
 				: null,
 		[
 			currentEntryId,

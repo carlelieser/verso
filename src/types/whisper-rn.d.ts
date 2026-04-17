@@ -129,4 +129,3 @@ declare module 'whisper.rn/src/realtime-transcription' {
 		release(): void;
 	}
 }
-

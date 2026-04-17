@@ -86,8 +86,7 @@ export class RealtimeAudioStreamAdapter implements AudioStreamInterface {
 				},
 			);
 		} catch (error: unknown) {
-			const message =
-				error instanceof Error ? error.message : 'Unknown initialization error';
+			const message = error instanceof Error ? error.message : 'Unknown initialization error';
 			this.errorCallback?.(message);
 			throw new Error(`Failed to initialize RealtimeAudioRecorder: ${message}`);
 		}

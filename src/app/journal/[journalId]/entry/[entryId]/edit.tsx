@@ -10,9 +10,7 @@ export default function EntryEditScreen(): React.JSX.Element {
 	const { entryId } = useLocalSearchParams<{ journalId: string; entryId: string }>();
 	const { muted } = useThemeColors();
 
-	const handleFinish = useCallback(() => {
-		router.back();
-	}, []);
+	const handleFinish = useCallback(() => router.back(), []);
 
 	return (
 		<EntryComposer

@@ -34,7 +34,9 @@ function DotIndicator({
 			{Array.from({ length: count }, (_, i) => (
 				<View
 					key={i}
-					className={`h-2 w-2 rounded-full ${i === activeIndex ? 'bg-foreground' : 'bg-foreground/20'}`}
+					className={`h-2 w-2 rounded-full ${
+						i === activeIndex ? 'bg-foreground' : 'bg-foreground/20'
+					}`}
 				/>
 			))}
 		</View>

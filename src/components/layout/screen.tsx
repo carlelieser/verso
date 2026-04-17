@@ -51,9 +51,7 @@ export function Screen({
 	const screenInsets = useMemo(
 		() => ({
 			contentInsetBottom:
-				fab && fabHeight > 0
-					? bottomBase + fabHeight + FAB_CONTENT_GAP
-					: bottomBase,
+				fab && fabHeight > 0 ? bottomBase + fabHeight + FAB_CONTENT_GAP : bottomBase,
 		}),
 		[fab, fabHeight, bottomBase],
 	);
@@ -68,7 +66,12 @@ export function Screen({
 				<View className="p-3 gap-1">
 					<View className="flex-row items-center justify-between">
 						{showBackButton ? (
-							<Button variant="ghost" size="sm" isIconOnly onPress={() => router.back()}>
+							<Button
+								variant="ghost"
+								size="sm"
+								isIconOnly
+								onPress={() => router.back()}
+							>
 								<ChevronLeft size={20} color={muted} />
 							</Button>
 						) : null}

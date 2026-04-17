@@ -9,7 +9,9 @@ interface InfoCardProps extends ViewProps {
 export function InfoCard({ children, className, ...rest }: InfoCardProps): React.JSX.Element {
 	return (
 		<View
-			className={`flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border ${className ?? ''}`}
+			className={`flex-row items-center gap-3 p-3 rounded-xl bg-surface border border-border ${
+				className ?? ''
+			}`}
 			{...rest}
 		>
 			{children}

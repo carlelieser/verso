@@ -76,7 +76,9 @@ export function useJournalActions({
 
 		const confirmed = await dialog.confirm({
 			title: 'Delete Journal',
-			description: `All entries in "${journalName ?? 'this journal'}" will be permanently deleted. This cannot be undone.`,
+			description: `All entries in "${
+				journalName ?? 'this journal'
+			}" will be permanently deleted. This cannot be undone.`,
 			confirmLabel: 'Delete',
 			variant: 'danger',
 		});

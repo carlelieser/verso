@@ -21,8 +21,7 @@ function isDraftDirty(
 ): boolean {
 	if (draft.length !== committed.length) return true;
 	return draft.some(
-		(s, i) =>
-			s.emotion !== committed[i]?.emotion || s.intensity !== committed[i]?.intensity,
+		(s, i) => s.emotion !== committed[i]?.emotion || s.intensity !== committed[i]?.intensity,
 	);
 }
 
@@ -52,9 +51,7 @@ export function EmotionSheet({ sheet }: EmotionSheetProps): React.JSX.Element | 
 
 	const handleIntensityChange = useCallback(
 		(emotion: EmotionCategory, intensity: EmotionIntensity) => {
-			setDraft((prev) =>
-				prev.map((s) => (s.emotion === emotion ? { ...s, intensity } : s)),
-			);
+			setDraft((prev) => prev.map((s) => (s.emotion === emotion ? { ...s, intensity } : s)));
 		},
 		[],
 	);
@@ -121,8 +118,8 @@ export function EmotionSheet({ sheet }: EmotionSheetProps): React.JSX.Element | 
 								How are you feeling?
 							</Text>
 							<Text className="text-xs text-muted leading-5">
-								Drag your finger around to select. Double-tap to get more
-								specific. Tap to add.
+								Drag your finger around to select. Double-tap to get more specific.
+								Tap to add.
 							</Text>
 						</View>
 

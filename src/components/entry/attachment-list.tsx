@@ -169,7 +169,7 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 			const label =
 				attachment.type === 'location'
 					? attachment.data.name
-					: (attachment.data.fileName ?? 'this file');
+					: attachment.data.fileName ?? 'this file';
 
 			const confirmed = await dialog.confirm({
 				title: 'Delete Attachment',

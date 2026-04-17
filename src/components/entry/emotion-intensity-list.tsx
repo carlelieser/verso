@@ -65,7 +65,7 @@ const EmotionIntensityRow = React.memo(function EmotionIntensityRow({
 }: EmotionIntensityRowProps): React.JSX.Element {
 	const handleChange = useCallback(
 		(val: number | number[]) => {
-			const rounded = Math.round(Array.isArray(val) ? (val[0] ?? 0) : val);
+			const rounded = Math.round(Array.isArray(val) ? val[0] ?? 0 : val);
 			if (isEmotionIntensity(rounded)) {
 				onIntensityChange(emotion, rounded);
 			}

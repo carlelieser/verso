@@ -132,7 +132,9 @@ export default function EntryViewScreen(): React.JSX.Element {
 						/>
 						<Fab
 							icon={<Pencil size={20} color={accentForeground} />}
-							onPress={() => router.push(`/journal/${journalId}/entry/${entryId}/edit`)}
+							onPress={() =>
+								router.push(`/journal/${journalId}/entry/${entryId}/edit`)
+							}
 						/>
 					</View>
 				) : undefined
@@ -145,11 +147,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 					</Text>
 				</View>
 			) : (
-				<EntryContent
-					entry={entry}
-					journalId={journalId ?? ''}
-					entryId={entryId ?? ''}
-				/>
+				<EntryContent entry={entry} journalId={journalId ?? ''} entryId={entryId ?? ''} />
 			)}
 		</Screen>
 	);
