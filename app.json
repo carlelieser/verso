@@ -2,7 +2,7 @@
   "expo": {
     "name": "Verso",
     "slug": "verso",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "verso",
@@ -78,7 +78,8 @@
       ],
       "expo-asset",
       "expo-web-browser",
-      "react-native-realtime-audio"
+      "react-native-realtime-audio",
+      "./plugins/withBeatunesMavenRepo"
     ],
     "runtimeVersion": {
       "policy": "appVersion"
