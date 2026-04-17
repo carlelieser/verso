@@ -1,16 +1,18 @@
 import { getRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { type SharedValue } from 'react-native-reanimated';
 import { initWhisper, type WhisperContext } from 'whisper.rn';
 import { RealtimeTranscriber } from 'whisper.rn/src/realtime-transcription';
 
+import { STT_MODEL_FILENAME } from '@/constants/settings';
 import { useAudioPcmStream } from '@/hooks/use-audio-pcm-stream';
 import { RealtimeAudioStreamAdapter } from '@/services/realtime-audio-stream-adapter';
 
-const MODEL_ASSET: number = require('../../assets/models/ggml-tiny.en.bin');
+const MODEL_PATH = `${FileSystem.documentDirectory}models/${STT_MODEL_FILENAME}`;
 
-type TranscriptionStatus = 'idle' | 'loading' | 'recording' | 'error';
+type TranscriptionStatus = 'idle' | 'loading' | 'recording' | 'error' | 'unavailable';
 
 interface UseWhisperTranscriptionResult {
 	readonly status: TranscriptionStatus;
@@ -43,9 +45,11 @@ export function useWhisperTranscription(
 		};
 	}, []);
 
-	const ensureContext = useCallback(async (): Promise<WhisperContext> => {
+	const ensureContext = useCallback(async (): Promise<WhisperContext | null> => {
 		if (contextRef.current) return contextRef.current;
-		const ctx = await initWhisper({ filePath: MODEL_ASSET });
+		const info = await FileSystem.getInfoAsync(MODEL_PATH);
+		if (!info.exists) return null;
+		const ctx = await initWhisper({ filePath: MODEL_PATH });
 		contextRef.current = ctx;
 		return ctx;
 	}, []);
@@ -72,6 +76,10 @@ export function useWhisperTranscription(
 			setLiveText('');
 
 			const ctx = await ensureContext();
+			if (!ctx) {
+				setStatus('unavailable');
+				return;
+			}
 			const audioStream = new RealtimeAudioStreamAdapter();
 			let currentSliceText = '';
 
@@ -151,6 +159,14 @@ export function useWhisperTranscription(
 			startRecording();
 		}
 	}, [status, startRecording, stopRecording]);
+
+	useEffect(() => {
+		FileSystem.getInfoAsync(MODEL_PATH)
+			.then((info) => {
+				if (!info.exists) setStatus('unavailable');
+			})
+			.catch(() => {});
+	}, []);
 
 	return {
 		status,

@@ -1,3 +1,4 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
@@ -12,6 +13,8 @@ import {
 	SETTINGS_SHOW_DONATION_BANNER_KEY,
 	SETTINGS_THEME_KEY,
 	SETTINGS_TRANSCRIPTION_KEY,
+	SETTINGS_VOICE_INPUT_KEY,
+	STT_MODEL_FILENAME,
 	isValidTheme,
 } from '@/constants/settings';
 import { getErrorMessage } from '@/utils/error';
@@ -26,7 +29,7 @@ export interface ReminderSettings {
 
 export interface SettingsContextValue {
 	readonly isAutoLocation: boolean;
-	readonly isTranscriptionEnabled: boolean;
+	readonly isVoiceInputEnabled: boolean;
 	readonly shouldShowDonationBanner: boolean;
 	readonly reminders: ReminderSettings;
 	readonly theme: Theme;
@@ -41,6 +44,7 @@ export const SettingsContext = createContext<SettingsContextValue | null>(null);
 const BOOLEAN_DEFAULTS: Record<string, boolean> = {
 	[SETTINGS_AUTO_LOCATION_KEY]: true,
 	[SETTINGS_TRANSCRIPTION_KEY]: true,
+	[SETTINGS_VOICE_INPUT_KEY]: false,
 	[SETTINGS_REMINDERS_ENABLED_KEY]: false,
 	[SETTINGS_SHOW_DONATION_BANNER_KEY]: true,
 };
@@ -48,6 +52,7 @@ const BOOLEAN_DEFAULTS: Record<string, boolean> = {
 const BOOLEAN_KEYS = [
 	SETTINGS_AUTO_LOCATION_KEY,
 	SETTINGS_TRANSCRIPTION_KEY,
+	SETTINGS_VOICE_INPUT_KEY,
 	SETTINGS_REMINDERS_ENABLED_KEY,
 	SETTINGS_SHOW_DONATION_BANNER_KEY,
 ] as const;
@@ -78,7 +83,25 @@ function parseReminderDays(raw: string | null): readonly number[] {
 	return DEFAULT_REMINDER_DAYS;
 }
 
+function migrateTranscriptionSetting(): void {
+	const legacy = SecureStore.getItem(SETTINGS_TRANSCRIPTION_KEY);
+	const current = SecureStore.getItem(SETTINGS_VOICE_INPUT_KEY);
+	if (legacy === 'true' && current === null) {
+		const modelPath = `${FileSystem.documentDirectory}models/${STT_MODEL_FILENAME}`;
+		// FileSystem.getInfoAsync is async — perform a best-effort sync check via existence
+		// by writing false now; the async load will correct it if the model exists
+		SecureStore.setItem(SETTINGS_VOICE_INPUT_KEY, 'false');
+		FileSystem.getInfoAsync(modelPath)
+			.then((info) => {
+				if (!info.exists) return;
+				SecureStore.setItemAsync(SETTINGS_VOICE_INPUT_KEY, 'true').catch(() => {});
+			})
+			.catch(() => {});
+	}
+}
+
 function loadInitialBooleans(): Record<string, boolean> {
+	migrateTranscriptionSetting();
 	const values: Record<string, boolean> = {};
 	for (const key of BOOLEAN_KEYS) {
 		const raw = SecureStore.getItem(key);
@@ -186,7 +209,7 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 	const value = useMemo<SettingsContextValue>(
 		() => ({
 			isAutoLocation: boolValues[SETTINGS_AUTO_LOCATION_KEY] ?? false,
-			isTranscriptionEnabled: boolValues[SETTINGS_TRANSCRIPTION_KEY] ?? true,
+			isVoiceInputEnabled: boolValues[SETTINGS_VOICE_INPUT_KEY] ?? false,
 			shouldShowDonationBanner: boolValues[SETTINGS_SHOW_DONATION_BANNER_KEY] ?? true,
 			reminders,
 			theme,
