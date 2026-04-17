@@ -12,22 +12,15 @@ import {
 	type PermissionItem,
 	PermissionsContent,
 } from '@/components/onboarding/permissions-content';
+import { VoiceInputContent } from '@/components/onboarding/voice-input-content';
 import { WelcomeContent } from '@/components/onboarding/welcome-content';
-import {
-	SETTINGS_AUTO_LOCATION_KEY,
-	SETTINGS_ONBOARDING_COMPLETE_KEY,
-	SETTINGS_TRANSCRIPTION_KEY,
-} from '@/constants/settings';
+import { SETTINGS_AUTO_LOCATION_KEY, SETTINGS_ONBOARDING_COMPLETE_KEY } from '@/constants/settings';
 import { usePermissions } from '@/hooks/use-permissions';
 
-async function completeOnboarding(
-	locationGranted: boolean,
-	microphoneGranted: boolean,
-): Promise<void> {
+async function completeOnboarding(locationGranted: boolean): Promise<void> {
 	await Promise.all([
 		SecureStore.setItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY, 'true'),
 		SecureStore.setItemAsync(SETTINGS_AUTO_LOCATION_KEY, String(locationGranted)),
-		SecureStore.setItemAsync(SETTINGS_TRANSCRIPTION_KEY, String(microphoneGranted)),
 	]);
 	router.replace('/');
 }
@@ -60,17 +53,14 @@ export default function OnboardingScreen(): React.JSX.Element {
 	const allGranted = items.every((item) => item.permission.status === 'granted');
 
 	const handleComplete = useCallback(() => {
-		completeOnboarding(
-			permissions.location.status === 'granted',
-			permissions.microphone.status === 'granted',
-		);
-	}, [permissions.location.status, permissions.microphone.status]);
+		completeOnboarding(permissions.location.status === 'granted');
+	}, [permissions.location.status]);
 
 	const handleSetup = useCallback(async () => {
 		await permissions.notification.request();
 		const locationGranted = await permissions.location.request();
-		const microphoneGranted = await permissions.microphone.request();
-		completeOnboarding(locationGranted, microphoneGranted);
+		await permissions.microphone.request();
+		completeOnboarding(locationGranted);
 	}, [permissions]);
 
 	const pages: readonly OnboardingPage[] = [
@@ -86,8 +76,17 @@ export default function OnboardingScreen(): React.JSX.Element {
 			key: 'permissions',
 			content: <PermissionsContent items={items} />,
 			cta: {
-				label: allGranted ? 'Get Started' : 'Setup',
-				onPress: allGranted ? handleComplete : handleSetup,
+				label: allGranted ? 'Next' : 'Setup',
+				onPress: allGranted ? () => pagerRef.current?.goToNext() : handleSetup,
+			},
+			secondaryAction: { label: 'Skip', onPress: () => pagerRef.current?.goToNext() },
+		},
+		{
+			key: 'voice-input',
+			content: <VoiceInputContent />,
+			cta: {
+				label: 'Get Started',
+				onPress: handleComplete,
 			},
 			secondaryAction: { label: 'Skip', onPress: handleComplete },
 		},
