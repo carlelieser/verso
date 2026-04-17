@@ -132,6 +132,7 @@ export function EntryProvider({
 	const currentEntryIdRef = useRef(currentEntryId);
 	const dbRef = useRef(db);
 	const cleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const savedRef = useRef(false);
 
 	currentEntryIdRef.current = currentEntryId;
 	dbRef.current = db;
@@ -146,7 +147,7 @@ export function EntryProvider({
 
 		return () => {
 			const id = currentEntryIdRef.current;
-			if (!id) return;
+			if (!id || savedRef.current) return;
 
 			cleanupTimerRef.current = setTimeout(() => {
 				const database = dbRef.current;
@@ -279,6 +280,8 @@ export function EntryProvider({
 
 	const save = useCallback(() => {
 		if (!currentEntryId) return;
+
+		savedRef.current = true;
 
 		const saves: Promise<void>[] = [
 			updateEntryService(db, {
