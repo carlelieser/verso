@@ -1,0 +1,683 @@
+diff --git a/node_modules/react-native-realtime-audio/android/build.gradle b/node_modules/react-native-realtime-audio/android/build.gradle
+index 5e5ddd3..76e20ee 100644
+--- a/node_modules/react-native-realtime-audio/android/build.gradle
++++ b/node_modules/react-native-realtime-audio/android/build.gradle
+@@ -9,15 +9,11 @@ applyKotlinExpoModulesCorePlugin()
+ useCoreDependencies()
+ useExpoPublishing()
+ 
+-// If you want to use the managed Android SDK versions from expo-modules-core, set this to true.
+-// The Android SDK versions will be bumped from time to time in SDK releases and may introduce breaking changes in your module code.
+-// Most of the time, you may like to manage the Android SDK versions yourself.
+ def useManagedAndroidSdkVersions = false
+ if (useManagedAndroidSdkVersions) {
+   useDefaultAndroidSdkVersions()
+ } else {
+   buildscript {
+-    // Simple helper that allows the root project to override versions declared by this library.
+     ext.safeExtGet = { prop, fallback ->
+       rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+     }
+@@ -41,12 +37,6 @@ android {
+     abortOnError false
+   }
+ 
+-  sourceSets {
+-    main {
+-      assets.srcDirs = ['src/main/assets']
+-    }
+-  }
+-
+   repositories {
+     google()
+     mavenCentral()
+@@ -56,7 +46,6 @@ android {
+   }
+ 
+   dependencies {
+-    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.20.0'
+     implementation 'com.tagtraum:pcmsampledsp:0.9.5'
+   }
+ }
+diff --git a/node_modules/react-native-realtime-audio/android/src/main/assets/silero_vad_16k_op15.onnx b/node_modules/react-native-realtime-audio/android/src/main/assets/silero_vad_16k_op15.onnx
+deleted file mode 100644
+index 0607ae8..0000000
+Binary files a/node_modules/react-native-realtime-audio/android/src/main/assets/silero_vad_16k_op15.onnx and /dev/null differ
+diff --git a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/AssetUtil.kt b/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/AssetUtil.kt
+deleted file mode 100644
+index ab75b55..0000000
+--- a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/AssetUtil.kt
++++ /dev/null
+@@ -1,39 +0,0 @@
+-package com.paulingalls.realtimeaudio
+-
+-import android.content.Context
+-import java.io.File
+-import java.io.FileOutputStream
+-import java.io.IOException
+-
+-object AssetUtil {
+-    /**
+-     * Copies an asset file to the app's internal storage if it hasn't already been copied,
+-     * and returns its absolute file path.
+-     *
+-     * @param context       the application context
+-     * @param assetFileName the name of the asset file (e.g., "silero_vad_16k_op15.onnx")
+-     * @return the absolute path to the copied file, or null if the copy fails
+-     */
+-    fun getAssetFilePath(context: Context, assetFileName: String): String? {
+-        val file = File(context.filesDir, assetFileName)
+-        if (!file.exists()) {
+-            try {
+-                context.assets.open(assetFileName).use { inputStream ->
+-                    FileOutputStream(file).use { outputStream ->
+-                        val buffer = ByteArray(1024)
+-                        var length = inputStream.read(buffer)
+-                        while (length != -1) {
+-                            outputStream.write(buffer, 0, length)
+-                            length = inputStream.read(buffer)
+-                        }
+-                        outputStream.flush()
+-                    }
+-                }
+-            } catch (e: IOException) {
+-                e.printStackTrace()
+-                return null
+-            }
+-        }
+-        return file.absolutePath
+-    }
+-}
+diff --git a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorder.kt b/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorder.kt
+deleted file mode 100644
+index 5154124..0000000
+--- a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorder.kt
++++ /dev/null
+@@ -1,182 +0,0 @@
+-package com.paulingalls.realtimeaudio
+-
+-import android.annotation.SuppressLint
+-import android.media.AudioFormat
+-import android.media.AudioRecord
+-import android.media.MediaRecorder
+-import android.util.Base64
+-import com.tagtraum.pcmsampledsp.Rational
+-import com.tagtraum.pcmsampledsp.Resampler
+-import convertByteArrayToFloatArray
+-import convertFloatArrayToByteArray
+-import convertShortArrayToByteArray
+-import expo.modules.kotlin.sharedobjects.SharedObject
+-import kotlinx.coroutines.CoroutineScope
+-import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.Job
+-import kotlinx.coroutines.SupervisorJob
+-import kotlinx.coroutines.cancel
+-import kotlinx.coroutines.isActive
+-import kotlinx.coroutines.launch
+-import java.nio.ByteBuffer
+-
+-interface RealtimeAudioVoiceDelegate {
+-    fun audioStringReady(base64Audio: String)
+-    fun voiceBufferReady(buffer: FloatArray)
+-    fun voiceStarted()
+-    fun voiceStopped()
+-}
+-
+-private const val VAD_SAMPLE_RATE = 16000
+-private const val VAD_CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+-private const val VAD_AUDIO_FORMAT = AudioFormat.ENCODING_PCM_FLOAT
+-
+-class RealtimeAudioVADRecorder(
+-    private val sampleRate: Int,
+-    private val channelConfig: Int,
+-    private val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT
+-) : SharedObject() {
+-    var delegate: RealtimeAudioVoiceDelegate? = null
+-    var isEchoCancellationEnabled = false
+-    var modelPath: String = ""
+-
+-    private var audioRecord: AudioRecord? = null
+-    private var isListening = false
+-    private var isSpeaking = false
+-    private var recordingJob: Job? = null
+-    private val recordingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+-    private var vadIterator: VadIterator? = null
+-    private val resampler = Resampler(Rational(sampleRate, VAD_SAMPLE_RATE))
+-    private var bufferSize = 0
+-    private val minBufferSize: Int =
+-        AudioRecord.getMinBufferSize(VAD_SAMPLE_RATE, VAD_CHANNEL_CONFIG, VAD_AUDIO_FORMAT)
+-
+-    fun startListening() {
+-        if (isListening) return
+-
+-        try {
+-            bufferSize = 512 * Float.SIZE_BYTES
+-            if (bufferSize < minBufferSize) {
+-                bufferSize *= 2
+-            }
+-            if (bufferSize < minBufferSize) {
+-                bufferSize *= 512 * Float.SIZE_BYTES * 3
+-            }
+-            if (bufferSize < minBufferSize) {
+-                throw Exception("Buffer size is too small")
+-            }
+-            initializeVAD()
+-            initializeAudioRecord()
+-            audioRecord?.startRecording()
+-            isListening = true
+-            startRecordingJob()
+-        } catch (e: Exception) {
+-            print("error starting to record $e")
+-        }
+-    }
+-
+-    fun stopListening() {
+-        isListening = false
+-        recordingJob?.cancel()
+-        audioRecord?.apply {
+-            stop()
+-            release()
+-        }
+-        audioRecord = null
+-        delegate?.voiceStopped()
+-    }
+-
+-    private fun initializeVAD() {
+-        if (modelPath.isEmpty()) {
+-            throw Exception("Model path is empty")
+-        }
+-        if (vadIterator != null) {
+-            vadIterator?.resetState()
+-            return
+-        }
+-
+-        vadIterator = VadIterator(
+-            modelPath,
+-            VAD_SAMPLE_RATE.toLong(),
+-            32,
+-            0.5f,
+-            1500)
+-    }
+-
+-    @SuppressLint("MissingPermission")
+-    private fun initializeAudioRecord() {
+-        var source = MediaRecorder.AudioSource.MIC
+-        if (isEchoCancellationEnabled) {
+-            source = MediaRecorder.AudioSource.VOICE_COMMUNICATION
+-        }
+-        audioRecord = AudioRecord(
+-            source,
+-            VAD_SAMPLE_RATE,
+-            VAD_CHANNEL_CONFIG,
+-            VAD_AUDIO_FORMAT,
+-            bufferSize
+-        )
+-    }
+-
+-    private fun startRecordingJob() {
+-        recordingJob = recordingScope.launch {
+-            val buffer = ByteBuffer.allocateDirect(bufferSize)
+-            val vadBufferSize = 512 * Float.SIZE_BYTES
+-            while (isActive) {
+-                val bufferLength = audioRecord?.read(buffer, bufferSize) ?: -1
+-
+-                if (bufferLength > 0 && bufferLength % vadBufferSize == 0) {
+-                    var position = 0
+-                    while( position < bufferLength - 1) {
+-                        val chunkSize = minOf(vadBufferSize, bufferLength - position)
+-                        val byteArray = ByteArray(chunkSize)
+-                        buffer.get(byteArray, 0, chunkSize)
+-                        position += chunkSize
+-                        val floatArray = convertByteArrayToFloatArray(byteArray)
+-                        val hasVoice = vadIterator?.predict(floatArray)
+-                        if (hasVoice == true) {
+-                            if (!isSpeaking) {
+-                                delegate?.voiceStarted()
+-                                isSpeaking = true
+-                            }
+-                            val resampledBufferSize = floatArray.size * sampleRate / VAD_SAMPLE_RATE
+-                            val resampled = getResampledBuffer(floatArray, resampledBufferSize)
+-                            delegate?.voiceBufferReady(resampled)
+-                            var bitsArray: ByteArray
+-                            if (audioFormat == AudioFormat.ENCODING_PCM_16BIT) {
+-                                val shortArray = ShortArray(resampled.size) { i ->
+-                                    (resampled[i] * Short.MAX_VALUE).toInt().toShort()
+-                                }
+-                                bitsArray = convertShortArrayToByteArray(shortArray)
+-                            } else {
+-                                bitsArray = convertFloatArrayToByteArray(resampled)
+-                            }
+-                            val base64Data =
+-                                Base64.encodeToString(bitsArray, 0, bitsArray.size, Base64.NO_WRAP)
+-                            delegate?.audioStringReady(base64Data)
+-                        } else {
+-                            if (isSpeaking) {
+-                                delegate?.voiceStopped()
+-                                isSpeaking = false
+-                            }
+-                        }
+-                    }
+-                    buffer.clear()
+-                } else {
+-                    print("Error reading audio data: $bufferLength")
+-                }
+-            }
+-        }
+-    }
+-
+-    private fun getResampledBuffer(buffer: FloatArray, refactoredSamples: Int): FloatArray {
+-        val resampledBuffer = FloatArray(refactoredSamples)
+-        resampler.resample(buffer, resampledBuffer, 0, 1)
+-        return resampledBuffer
+-    }
+-
+-    fun release() {
+-        stopListening()
+-        recordingScope.cancel()
+-    }
+-}
+\ No newline at end of file
+diff --git a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorderModule.kt b/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorderModule.kt
+deleted file mode 100644
+index 32fa36d..0000000
+--- a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorderModule.kt
++++ /dev/null
+@@ -1,128 +0,0 @@
+-package com.paulingalls.realtimeaudio
+-
+-import AudioFormatSettings
+-import expo.modules.kotlin.modules.Module
+-import expo.modules.kotlin.modules.ModuleDefinition
+-import getAndroidColor
+-import mapAudioEncodingToFormat
+-import mapChannelCountToInputFormat
+-
+-class RealtimeAudioVADRecorderModule : Module() {
+-    var hasListeners = false
+-    private var modelPath: String? = ""
+-
+-    override fun definition() = ModuleDefinition {
+-        Name("RealtimeAudioVADRecorder")
+-        Events("onVoiceCaptured", "onVoiceStarted", "onVoiceEnded")
+-
+-        OnCreate {
+-            modelPath = AssetUtil.getAssetFilePath(appContext.reactContext!!.applicationContext, "silero_vad_16k_op15.onnx")
+-        }
+-
+-        OnStartObserving {
+-            hasListeners = true
+-        }
+-
+-        OnStopObserving {
+-            hasListeners = false
+-        }
+-
+-        Class("RealtimeAudioVADRecorder", RealtimeAudioVADRecorder::class) {
+-            Constructor { format: AudioFormatSettings, echoCancellationEnabled: Boolean ->
+-                return@Constructor RealtimeAudioVADRecorder(
+-                    format.sampleRate,
+-                    mapChannelCountToInputFormat(format.channelCount),
+-                    mapAudioEncodingToFormat(format.encoding)
+-                ).apply {
+-                    isEchoCancellationEnabled = echoCancellationEnabled
+-                    delegate = RealtimeVADEventDelegate(this@RealtimeAudioVADRecorderModule)
+-                    modelPath = this@RealtimeAudioVADRecorderModule.modelPath!!
+-                }
+-            }
+-
+-            AsyncFunction("startListening") { recorder: RealtimeAudioVADRecorder ->
+-                recorder.startListening()
+-            }
+-            AsyncFunction("stopListening") { recorder: RealtimeAudioVADRecorder ->
+-                recorder.stopListening()
+-            }
+-        }
+-
+-        View(RealtimeAudioVADRecorderView::class) {
+-            Events("onVoiceCaptured", "onVoiceStarted", "onVoiceEnded")
+-
+-            Prop("waveformColor") { view: RealtimeAudioVADRecorderView, hexColor: String ->
+-                view.setVisualizationColor(getAndroidColor(hexColor))
+-            }
+-
+-            Prop("visualizer") { view: RealtimeAudioVADRecorderView, visualizer: String ->
+-                when (visualizer) {
+-                    "barGraph" -> {
+-                        view.setVisualizer(BarGraphVisualizer())
+-                    }
+-                    "linearWaveform" -> {
+-                        view.setVisualizer(LinearWaveformVisualizer())
+-                    }
+-                    "circularWaveform" -> {
+-                        view.setVisualizer(CircularWaveformVisualizer())
+-                    }
+-                    "tripleCircle" -> {
+-                        view.setVisualizer(TripleCircleVisualizer())
+-                    }
+-                }
+-            }
+-
+-            Prop("echoCancellationEnabled") { view: RealtimeAudioVADRecorderView, echoCancellationEnabled: Boolean ->
+-                view.setEchoCancellationEnabled(echoCancellationEnabled)
+-            }
+-
+-            Prop("audioFormat") { view: RealtimeAudioVADRecorderView,
+-                                  format: AudioFormatSettings ->
+-                view.setModelPath(modelPath!!)
+-                view.setAudioFormat(
+-                    format.sampleRate,
+-                    mapChannelCountToInputFormat(format.channelCount),
+-                    mapAudioEncodingToFormat(format.encoding)
+-                )
+-            }
+-
+-            AsyncFunction("startListening") { view: RealtimeAudioVADRecorderView ->
+-                view.setModelPath(modelPath!!)
+-                view.startListening()
+-            }
+-
+-            AsyncFunction("stopListening") { view: RealtimeAudioVADRecorderView ->
+-                view.stopListening()
+-            }
+-        }
+-
+-    }
+-
+-    class RealtimeVADEventDelegate(
+-        private val module: RealtimeAudioVADRecorderModule
+-    ) : RealtimeAudioVoiceDelegate {
+-        override fun audioStringReady(base64Audio: String) {
+-            if (module.hasListeners) {
+-                module.sendEvent(
+-                    "onVoiceCaptured", mapOf(
+-                        "audioBuffer" to base64Audio
+-                    )
+-                )
+-            }
+-        }
+-
+-        override fun voiceBufferReady(buffer: FloatArray) {}
+-
+-        override fun voiceStarted() {
+-            if (module.hasListeners) {
+-                module.sendEvent("onVoiceStarted", mapOf())
+-            }
+-        }
+-
+-        override fun voiceStopped() {
+-            if (module.hasListeners) {
+-                module.sendEvent("onVoiceEnded", mapOf())
+-            }
+-        }
+-    }
+-}
+\ No newline at end of file
+diff --git a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorderView.kt b/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorderView.kt
+deleted file mode 100644
+index bd3e7a2..0000000
+--- a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/RealtimeAudioVADRecorderView.kt
++++ /dev/null
+@@ -1,83 +0,0 @@
+-package com.paulingalls.realtimeaudio
+-
+-import android.content.Context
+-import expo.modules.kotlin.AppContext
+-import expo.modules.kotlin.viewevent.EventDispatcher
+-
+-class RealtimeAudioVADRecorderView(
+-    context: Context,
+-    appContext: AppContext
+-) : BaseAudioView(context, appContext),
+-    RealtimeAudioVoiceDelegate {
+-    private val onVoiceCaptured by EventDispatcher<Map<String, String>>()
+-    private val onVoiceStarted by EventDispatcher()
+-    private val onVoiceEnded by EventDispatcher()
+-    private var audioRecorder: RealtimeAudioVADRecorder? = null
+-    private var isEchoCancellationEnabled = false
+-    private var modelPath: String = ""
+-    private var voiceActive: Boolean = false
+-
+-    override fun setAudioFormat(sampleRate: Int, channelConfig: Int, audioFormat: Int) {
+-        audioRecorder?.release()
+-        audioRecorder = RealtimeAudioVADRecorder(sampleRate, channelConfig, audioFormat).apply {
+-            delegate = this@RealtimeAudioVADRecorderView
+-            isEchoCancellationEnabled = this@RealtimeAudioVADRecorderView.isEchoCancellationEnabled
+-            modelPath = this@RealtimeAudioVADRecorderView.modelPath
+-        }
+-        super.setAudioFormat(sampleRate, channelConfig, audioFormat)
+-    }
+-
+-    fun setEchoCancellationEnabled(echoCancellationEnabled: Boolean) {
+-        isEchoCancellationEnabled = echoCancellationEnabled
+-        audioRecorder?.isEchoCancellationEnabled = echoCancellationEnabled
+-    }
+-
+-    fun setModelPath(modelPath: String) {
+-        this.modelPath = modelPath
+-    }
+-
+-    fun startListening() {
+-        running = true
+-        audioRecorder?.modelPath = modelPath
+-        audioRecorder?.startListening()
+-        postInvalidate()
+-    }
+-
+-    fun stopListening() {
+-        running = false
+-        audioRecorder?.stopListening()
+-    }
+-
+-    override fun audioStringReady(base64Audio: String) {
+-        onVoiceCaptured(mapOf("audioBuffer" to base64Audio))
+-    }
+-
+-    override fun voiceBufferReady(buffer: FloatArray) {
+-        if (voiceActive) {
+-            scheduleChunks(buffer)
+-        }
+-    }
+-
+-    override fun voiceStarted() {
+-        voiceActive = true
+-        onVoiceStarted(mapOf())
+-    }
+-
+-    override fun voiceStopped() {
+-        onVoiceEnded(mapOf())
+-        voiceActive = false
+-        if (visible) {
+-            handler.postDelayed({
+-                visualization.updateData(FloatArray(0))
+-                audioChunks.clear()
+-                chunkRenderTimeInMillis = 0
+-                postInvalidate()
+-            }, 300)
+-        }
+-    }
+-
+-    override fun onDetachedFromWindow() {
+-        super.onDetachedFromWindow()
+-        stopListening()
+-    }
+-}
+\ No newline at end of file
+diff --git a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/VadIterator.kt b/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/VadIterator.kt
+deleted file mode 100644
+index 218154f..0000000
+--- a/node_modules/react-native-realtime-audio/android/src/main/java/com/paulingalls/realtimeaudio/VadIterator.kt
++++ /dev/null
+@@ -1,101 +0,0 @@
+-package com.paulingalls.realtimeaudio
+-
+-import ai.onnxruntime.OnnxTensor
+-import ai.onnxruntime.OrtEnvironment
+-import ai.onnxruntime.OrtSession
+-import java.nio.FloatBuffer
+-
+-class VadIterator constructor(
+-    modelPath: String,
+-    private val sampleRate: Long,
+-    frameSize: Long,
+-    private val threshold: Float,
+-    minSilenceDurationMs: Long
+-) {
+-    private val frameSize: Long
+-    private val minSilenceSamples: Long
+-
+-    /** support 256 512 768 for 8k; 512 1024 1536 for 16k */
+-    private val windowSizeSamples: Long
+-
+-    // model states
+-    private var triggerd: Boolean = false
+-    private var tempEnd: Long = 0
+-    private var currentSample: Long = 0
+-
+-    // model inputs
+-    private var state: Array<Array<FloatArray>>
+-
+-    init {
+-        val srPerMs = sampleRate / 1000;
+-        this.frameSize = frameSize;
+-        this.minSilenceSamples = srPerMs * minSilenceDurationMs;
+-        this.windowSizeSamples = frameSize * srPerMs;
+-        this.state = Array(2) { Array(1) { FloatArray(128) } }; // 64 -> 128
+-
+-        initSession(modelPath);
+-    }
+-
+-    private lateinit var env: OrtEnvironment;
+-    private lateinit var session: OrtSession;
+-
+-
+-    private fun initSession(modelPath: String) {
+-        env = OrtEnvironment.getEnvironment();
+-        val sessionOptions = OrtSession.SessionOptions();
+-        sessionOptions.setIntraOpNumThreads(1);
+-        sessionOptions.setInterOpNumThreads(1);
+-        sessionOptions.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
+-        session = env.createSession(modelPath, sessionOptions);
+-    }
+-
+-    fun resetState() {
+-        triggerd = false;
+-        tempEnd = 0;
+-        currentSample = 0;
+-        state = Array(2) { Array(1) { FloatArray(128) } };
+-    }
+-
+-
+-    fun predict(data: FloatArray): Boolean {
+-        val inputOrt =
+-            OnnxTensor.createTensor(env, FloatBuffer.wrap(data), longArrayOf(1, windowSizeSamples));
+-        val srOrt = OnnxTensor.createTensor(
+-            env, sampleRate
+-        );
+-        val stateOrt = OnnxTensor.createTensor(env, state); // Change hOrt and cOrt to stateOrt
+-
+-        val outputOrt = session.run(
+-            mapOf(
+-                "input" to inputOrt,
+-                "sr" to srOrt,
+-                "state" to stateOrt, // Change h and c to state
+-            )
+-        );
+-        val output = (outputOrt[0].value as Array<FloatArray>
+-            ?: throw Exception("Unexpected output type"))[0][0];
+-        state = outputOrt[1].value as Array<Array<FloatArray>>; // Change hn and cn to state
+-
+-        currentSample += windowSizeSamples;
+-
+-        if (output >= threshold && tempEnd != 0.toLong()) {
+-            tempEnd = 0
+-        }
+-
+-        if (output >= threshold && !triggerd) {
+-            triggerd = true
+-        }
+-
+-        if (output < (threshold - 0.15) && triggerd) {
+-            if (tempEnd == 0.toLong()) {
+-                tempEnd = currentSample
+-            }
+-
+-            if (currentSample - tempEnd >= minSilenceSamples) {
+-                triggerd = false
+-                tempEnd = 0
+-            }
+-        }
+-        return triggerd;
+-    }
+-}
+\ No newline at end of file
+diff --git a/node_modules/react-native-realtime-audio/build/index.d.ts b/node_modules/react-native-realtime-audio/build/index.d.ts
+index b64bb16..6736144 100644
+--- a/node_modules/react-native-realtime-audio/build/index.d.ts
++++ b/node_modules/react-native-realtime-audio/build/index.d.ts
+@@ -1,12 +1,5 @@
+ export { default as RealtimeAudioModule } from './RealtimeAudioModule';
+-export { default as RealtimeAudioPlayerModule } from './RealtimeAudioPlayerModule';
+ export { default as RealtimeAudioRecorderModule } from './RealtimeAudioRecorderModule';
+-export { default as RealtimeAudioVADRecorderModule } from './RealtimeAudioVADRecorderModule';
+-export { default as RealtimeAudioPlayerView } from './RealtimeAudioPlayerView';
+ export { default as RealtimeAudioRecorderView } from './RealtimeAudioRecorderView';
+-export { default as RealtimeAudioVADRecorderView } from './RealtimeAudioVADRecorderView';
+ export * from './RealtimeAudio.types';
+-export * from './RealtimeAudioPlayer';
+ export * from './RealtimeAudioRecorder';
+\ No newline at end of file
+-export * from './RealtimeAudioVADRecorder';
+-//# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/react-native-realtime-audio/build/index.js b/node_modules/react-native-realtime-audio/build/index.js
+index bb06b6b..6736144 100644
+--- a/node_modules/react-native-realtime-audio/build/index.js
++++ b/node_modules/react-native-realtime-audio/build/index.js
+@@ -1,14 +1,5 @@
+-// Reexport the native module. On web, it will be resolved to RealtimeAudioModule.web.ts
+-// and on native platforms to RealtimeAudioModule.ts
+ export { default as RealtimeAudioModule } from './RealtimeAudioModule';
+-export { default as RealtimeAudioPlayerModule } from './RealtimeAudioPlayerModule';
+ export { default as RealtimeAudioRecorderModule } from './RealtimeAudioRecorderModule';
+-export { default as RealtimeAudioVADRecorderModule } from './RealtimeAudioVADRecorderModule';
+-export { default as RealtimeAudioPlayerView } from './RealtimeAudioPlayerView';
+ export { default as RealtimeAudioRecorderView } from './RealtimeAudioRecorderView';
+-export { default as RealtimeAudioVADRecorderView } from './RealtimeAudioVADRecorderView';
+ export * from './RealtimeAudio.types';
+-export * from './RealtimeAudioPlayer';
+ export * from './RealtimeAudioRecorder';
+\ No newline at end of file
+-export * from './RealtimeAudioVADRecorder';
+-//# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/react-native-realtime-audio/expo-module.config.json b/node_modules/react-native-realtime-audio/expo-module.config.json
+index bbf575f..e809697 100644
+--- a/node_modules/react-native-realtime-audio/expo-module.config.json
++++ b/node_modules/react-native-realtime-audio/expo-module.config.json
+@@ -1,23 +1,15 @@
+ {
+-  "platforms": [
+-    "apple",
+-    "android",
+-    "web"
+-  ],
++  "platforms": ["apple", "android", "web"],
+   "apple": {
+     "modules": [
+       "RealtimeAudioModule",
+-      "RealtimeAudioPlayerModule",
+-      "RealtimeAudioRecorderModule",
+-      "RealtimeAudioVADRecorderModule"
++      "RealtimeAudioRecorderModule"
+     ]
+   },
+   "android": {
+     "modules": [
+       "com.paulingalls.realtimeaudio.RealtimeAudioModule",
+-      "com.paulingalls.realtimeaudio.RealtimeAudioPlayerModule",
+-      "com.paulingalls.realtimeaudio.RealtimeAudioRecorderModule",
+-      "com.paulingalls.realtimeaudio.RealtimeAudioVADRecorderModule"
++      "com.paulingalls.realtimeaudio.RealtimeAudioRecorderModule"
+     ]
+   }
+ }

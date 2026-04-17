@@ -1,4 +1,3 @@
-import type { EventSubscription } from 'expo-modules-core';
 import {
 	AudioEncoding,
 	type RealtimeAudioRecorder,
@@ -40,7 +39,7 @@ interface AudioStreamInterface {
  */
 export class RealtimeAudioStreamAdapter implements AudioStreamInterface {
 	private recorder: RealtimeAudioRecorder | null = null;
-	private subscription: EventSubscription | null = null;
+	private subscription: { remove: () => void } | null = null;
 	private recording = false;
 	private config: AudioStreamConfig | null = null;
 	private dataCallback?: (data: AudioStreamData) => void;

@@ -78,7 +78,6 @@
       ],
       "expo-asset",
       "expo-web-browser",
-      "react-native-realtime-audio",
       "./plugins/withBeatunesMavenRepo"
     ],
     "runtimeVersion": {
