@@ -48,7 +48,11 @@ export function useAudioPcmStream(): UseAudioPcmStreamResult {
 	const start = useCallback(async () => {
 		if (recorderRef.current) return;
 
-		const RecorderClass = (RealtimeAudioRecorderModule as unknown as { RealtimeAudioRecorder: new (config: object, arg: boolean) => RealtimeAudioRecorder }).RealtimeAudioRecorder;
+		const RecorderClass = (
+			RealtimeAudioRecorderModule as unknown as {
+				RealtimeAudioRecorder: new (config: object, arg: boolean) => RealtimeAudioRecorder;
+			}
+		).RealtimeAudioRecorder;
 		const recorder = new RecorderClass(
 			{ sampleRate: SAMPLE_RATE, encoding: AudioEncoding.pcm16bitInteger, channelCount: 1 },
 			false,

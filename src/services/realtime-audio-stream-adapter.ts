@@ -55,7 +55,14 @@ export class RealtimeAudioStreamAdapter implements AudioStreamInterface {
 		this.config = config;
 
 		try {
-			const RecorderClass = (RealtimeAudioRecorderModule as unknown as { RealtimeAudioRecorder: new (config: object, arg: boolean) => RealtimeAudioRecorder }).RealtimeAudioRecorder;
+			const RecorderClass = (
+				RealtimeAudioRecorderModule as unknown as {
+					RealtimeAudioRecorder: new (
+						config: object,
+						arg: boolean,
+					) => RealtimeAudioRecorder;
+				}
+			).RealtimeAudioRecorder;
 			this.recorder = new RecorderClass(
 				{
 					sampleRate: config.sampleRate ?? 16000,
