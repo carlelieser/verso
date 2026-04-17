@@ -1,9 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
-	ArrowUpRight,
 	EllipsisVertical,
-	FolderInput,
 	Maximize,
 	Palette,
 	Pencil,
@@ -23,7 +21,7 @@ import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
 import { JournalColorBanner } from '@/components/journal/journal-color-banner';
 import { RenameJournal } from '@/components/journal/rename-journal';
 import { Screen } from '@/components/layout/screen';
-import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
+import { ActionSheet } from '@/components/ui/action-sheet';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu } from '@/components/ui/fab-menu';
@@ -33,10 +31,10 @@ import { useScreenInsets } from '@/contexts/screen-context';
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
 import { useDeleteEntry } from '@/hooks/use-delete-entry';
 import { useEntries } from '@/hooks/use-entries';
+import { useEntryActions } from '@/hooks/use-entry-actions';
 import { useJournalActions } from '@/hooks/use-journal-actions';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
-import { useMoveEntry } from '@/hooks/use-move-entry';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntrySummaryWithJournal } from '@/types/entry';
 import { isLightColor } from '@/utils/color';
@@ -137,7 +135,6 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	});
 
 	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
-	const { moveSheet, moveEntry } = useMoveEntry();
 
 	const debouncedSearch = useDebouncedCallback(searchEntries);
 
@@ -215,38 +212,15 @@ export default function JournalDetailScreen(): React.JSX.Element {
 		router.push(`/journal/${journalId}/entry/${selectedEntry.id}`);
 	}, [selectedEntry, journalId]);
 
-	const handleMoveEntry = useCallback(
-		async (targetJournalId: string) => {
-			if (!selectedEntry) return;
-			await moveEntry(selectedEntry.id, targetJournalId);
-		},
-		[selectedEntry, moveEntry],
-	);
-
-	const entryActionItems: readonly ActionSheetItem[] = useMemo(
-		() => [
-			{
-				id: 'view',
-				label: 'View',
-				icon: ArrowUpRight,
-				onPress: handleViewEntry,
-			},
-			{
-				id: 'move',
-				label: 'Move',
-				icon: FolderInput,
-				onPress: moveSheet.open,
-			},
-			{
-				id: 'delete',
-				label: 'Delete',
-				icon: Trash2,
-				variant: 'danger' as const,
-				onPress: handleDeleteEntry,
-			},
-		],
-		[handleViewEntry, handleDeleteEntry, moveSheet.open],
-	);
+	const {
+		actionItems: entryActionItems,
+		moveSheet,
+		moveEntry: moveEntryTo,
+	} = useEntryActions({
+		entryId: selectedEntry?.id,
+		onView: handleViewEntry,
+		onDelete: handleDeleteEntry,
+	});
 
 	const Icon = journal ? getJournalIcon(journal.icon) : null;
 
@@ -313,7 +287,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					sheet={moveSheet}
 					journals={journals}
 					currentJournalId={selectedEntry?.journalId ?? journalId ?? ''}
-					onMove={handleMoveEntry}
+					onMove={moveEntryTo}
 				/>
 
 				{renameSheet.isOpen ? (

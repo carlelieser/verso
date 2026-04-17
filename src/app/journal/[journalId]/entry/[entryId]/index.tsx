@@ -78,6 +78,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 	const { confirmDeleteEntry } = useDeleteEntry(deleteEntry);
 	const { journals } = useJournals();
 	const { moveSheet, moveEntry } = useMoveEntry();
+	const canMove = journals.length > 1;
 	const [entry, setEntry] = useState<EntryDetail | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -97,12 +98,16 @@ export default function EntryViewScreen(): React.JSX.Element {
 
 	const menuItems: readonly FabMenuItem[] = useMemo(
 		() => [
-			{
-				id: 'move',
-				label: 'Move',
-				icon: <FolderInput size={16} color={foreground} />,
-				onPress: moveSheet.open,
-			},
+			...(canMove
+				? [
+						{
+							id: 'move',
+							label: 'Move',
+							icon: <FolderInput size={16} color={foreground} />,
+							onPress: moveSheet.open,
+						} satisfies FabMenuItem,
+				  ]
+				: []),
 			{
 				id: 'delete',
 				label: 'Delete',
@@ -111,7 +116,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 				onPress: handleDelete,
 			},
 		],
-		[danger, foreground, handleDelete, moveSheet.open],
+		[canMove, danger, foreground, handleDelete, moveSheet.open],
 	);
 
 	useFocusEffect(
