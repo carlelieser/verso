@@ -1,6 +1,11 @@
 export const SETTINGS_AUTO_LOCATION_KEY = 'settings.autoLocation';
 export const SETTINGS_TRANSCRIPTION_KEY = 'settings.transcription';
+export const SETTINGS_VOICE_INPUT_KEY = 'settings.voiceInput';
 export const SETTINGS_THEME_KEY = 'settings.theme';
+
+export const STT_MODEL_URL =
+	'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin';
+export const STT_MODEL_FILENAME = 'ggml-tiny.en.bin';
 export const SETTINGS_ONBOARDING_COMPLETE_KEY = 'settings.onboardingComplete';
 export const SETTINGS_REMINDERS_ENABLED_KEY = 'settings.remindersEnabled';
 export const SETTINGS_REMINDERS_TIME_KEY = 'settings.remindersTime';
