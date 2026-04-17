@@ -1,5 +1,5 @@
 import { Button } from 'heroui-native';
-import { CheckCircle, Download, RotateCcw, X } from 'lucide-react-native';
+import { Check, CheckCircle, Download, RotateCcw, X } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -19,15 +19,15 @@ export function ModelDownloadStatus({ model }: ModelDownloadStatusProps): React.
 			{model.status === 'downloaded' ? (
 				<>
 					<View className="flex-row items-center gap-2">
-						<CheckCircle size={14} color={muted} />
-						<Text className="text-xs text-muted">Model ready</Text>
+						<Check size={14} color={muted} />
+						<Text className="text-xs text-muted">Ready</Text>
 					</View>
 					<View />
 				</>
 			) : model.status === 'downloading' ? (
 				<>
 					<View className="flex-1 gap-1 mr-2">
-						<View className={"flex flex-row items-center justify-between"}>
+						<View className={'flex flex-row items-center justify-between'}>
 							<Text className="text-xs text-muted">Downloading...</Text>
 							<Text className="text-xs text-muted">{percent}%</Text>
 						</View>
@@ -51,7 +51,7 @@ export function ModelDownloadStatus({ model }: ModelDownloadStatusProps): React.
 				</>
 			) : (
 				<>
-					<Button className={"px-0"} variant="ghost" size="sm" onPress={model.download}>
+					<Button className={'px-0'} variant="ghost" size="sm" onPress={model.download}>
 						<Button.Label className="text-accent text-xs">Download</Button.Label>
 					</Button>
 					<Text className="text-xs text-muted">~77 MB</Text>
