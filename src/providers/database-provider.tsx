@@ -24,14 +24,17 @@ export function useDatabaseContext(): DatabaseContextValue {
 }
 
 interface DatabaseProviderProps {
+	readonly onReady?: () => void;
 	readonly children: React.ReactNode;
 }
 
 function MigratedDatabase({
 	db,
+	onReady,
 	children,
 }: {
 	readonly db: Db;
+	readonly onReady?: () => void;
 	readonly children: React.ReactNode;
 }): React.JSX.Element {
 	const { success, error } = useMigrations(db, migrations);
@@ -44,10 +47,11 @@ function MigratedDatabase({
 			setupFts(db);
 			ensureDefaultJournal(db);
 			setReady(true);
+			onReady?.();
 		} catch (err: unknown) {
 			setSeedError(err instanceof Error ? err : new Error(String(err)));
 		}
-	}, [success, db]);
+	}, [success, db, onReady]);
 
 	if (error ?? seedError) {
 		const message = (error ?? seedError)!.message;
@@ -61,19 +65,12 @@ function MigratedDatabase({
 		);
 	}
 
-	if (!ready) {
-		return (
-			<View className="flex-1 items-center justify-center bg-background">
-				<ActivityIndicator size="large" />
-				<Text className="mt-3 text-base text-muted">Initializing...</Text>
-			</View>
-		);
-	}
+	if (!ready) return <></>;
 
 	return <DatabaseContext.Provider value={{ db }}>{children}</DatabaseContext.Provider>;
 }
 
-export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX.Element {
+export function DatabaseProvider({ onReady, children }: DatabaseProviderProps): React.JSX.Element {
 	const [db, setDb] = useState<Db | null>(null);
 	const [error, setError] = useState<Error | null>(null);
 	const [attempt, setAttempt] = useState(0);
@@ -104,14 +101,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps): React.JSX
 		);
 	}
 
-	if (!db) {
-		return (
-			<View className="flex-1 items-center justify-center bg-background">
-				<ActivityIndicator size="large" />
-				<Text className="mt-3 text-base text-muted">Initializing...</Text>
-			</View>
-		);
-	}
+	if (!db) return <></>;
 
-	return <MigratedDatabase db={db}>{children}</MigratedDatabase>;
+	return <MigratedDatabase db={db} onReady={onReady}>{children}</MigratedDatabase>;
 }

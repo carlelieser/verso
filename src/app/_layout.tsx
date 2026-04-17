@@ -9,7 +9,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { HeroUINativeProvider } from 'heroui-native';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Uniwind } from 'uniwind';
 
@@ -52,6 +52,8 @@ export default function RootLayout(): React.JSX.Element {
 	});
 
 	const fontsLoaded = dmSerifLoaded && googleSansLoaded && libreBaskervilleLoaded;
+	const [dbReady, setDbReady] = useState(false);
+	const handleDbReady = useCallback(() => setDbReady(true), []);
 
 	// Hot refresh preserves component state but resets Appearance.setColorScheme.
 	// The guard inside restoreTheme prevents redundant calls when already correct.
@@ -59,10 +61,10 @@ export default function RootLayout(): React.JSX.Element {
 	restoreTheme();
 
 	useEffect(() => {
-		if (fontsLoaded) {
+		if (fontsLoaded && dbReady) {
 			SplashScreen.hideAsync();
 		}
-	}, [fontsLoaded]);
+	}, [fontsLoaded, dbReady]);
 
 	if (!fontsLoaded) {
 		return <></>;
@@ -73,7 +75,7 @@ export default function RootLayout(): React.JSX.Element {
 			<HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
 				<PortalProvider>
 					<SettingsProvider>
-						<DatabaseProvider>
+						<DatabaseProvider onReady={handleDbReady}>
 							<DialogProvider>
 								<Stack
 									screenOptions={{
