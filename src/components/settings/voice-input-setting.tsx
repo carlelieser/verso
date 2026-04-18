@@ -61,7 +61,7 @@ export function VoiceInputSetting(): React.JSX.Element {
 					</ListGroup.ItemSuffix>
 				</ListGroup.Item>
 			</ControlField>
-			<View className={'pl-12 pr-4 -mt-4'}>
+			<View className={'pl-12 pr-4 -mt-6'}>
 				<ModelDownloadStatus model={model} />
 			</View>
 		</View>

@@ -15,7 +15,7 @@ export function ModelDownloadStatus({ model }: ModelDownloadStatusProps): React.
 	const percent = Math.round(model.progress * 100);
 
 	return (
-		<View className="h-10 flex-row items-center justify-between">
+		<View className="h-14 flex-row items-center justify-between">
 			{model.status === 'downloaded' ? (
 				<>
 					<View className="flex-row items-center gap-2">
