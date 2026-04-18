@@ -2,12 +2,12 @@ import { getRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
-import { type SharedValue } from 'react-native-reanimated';
+import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { initWhisper, type WhisperContext } from 'whisper.rn';
 import { RealtimeTranscriber } from 'whisper.rn/src/realtime-transcription';
 
+import { WAVEFORM_BAR_COUNT } from '@/constants/audio';
 import { STT_MODEL_FILENAME } from '@/constants/settings';
-import { useAudioPcmStream } from '@/hooks/use-audio-pcm-stream';
 import { RealtimeAudioStreamAdapter } from '@/services/realtime-audio-stream-adapter';
 
 const MODEL_PATH = `${FileSystem.documentDirectory}models/${STT_MODEL_FILENAME}`;
@@ -35,7 +35,11 @@ export function useWhisperTranscription(
 	const onFinishRef = useRef(onFinish);
 	onFinishRef.current = onFinish;
 
-	const pcmStream = useAudioPcmStream();
+	const amp0 = useSharedValue(0);
+	const amp1 = useSharedValue(0);
+	const amp2 = useSharedValue(0);
+	const amp3 = useSharedValue(0);
+	const amplitudes = useRef([amp0, amp1, amp2, amp3]).current;
 
 	useEffect(() => {
 		return () => {
@@ -81,6 +85,12 @@ export function useWhisperTranscription(
 				return;
 			}
 			const audioStream = new RealtimeAudioStreamAdapter();
+			audioStream.onRms((rms) => {
+				for (let i = 0; i < WAVEFORM_BAR_COUNT - 1; i++) {
+					amplitudes[i]!.value = amplitudes[i + 1]!.value;
+				}
+				amplitudes[WAVEFORM_BAR_COUNT - 1]!.value = Math.sqrt(rms);
+			});
 			let currentSliceText = '';
 
 			const transcriber = new RealtimeTranscriber(
@@ -129,16 +139,14 @@ export function useWhisperTranscription(
 
 			transcriberRef.current = transcriber;
 			await transcriber.start();
-			await pcmStream.start();
 		} catch {
 			setStatus('error');
 		}
-	}, [ensureContext, pcmStream]);
+	}, [ensureContext, amplitudes]);
 
 	const stopRecording = useCallback(async () => {
 		await transcriberRef.current?.stop();
 		transcriberRef.current = null;
-		await pcmStream.stop();
 
 		const text = fullTextRef.current.trim();
 		if (text.length > 0) {
@@ -148,9 +156,12 @@ export function useWhisperTranscription(
 		completedSlicesRef.current = '';
 		fullTextRef.current = '';
 		lastSliceIndexRef.current = -1;
+		for (const amp of amplitudes) {
+			amp.value = withTiming(0, { duration: 150 });
+		}
 		setLiveText('');
 		setStatus('idle');
-	}, [pcmStream]);
+	}, [amplitudes]);
 
 	const toggle = useCallback(() => {
 		if (status === 'recording') {
@@ -160,19 +171,11 @@ export function useWhisperTranscription(
 		}
 	}, [status, startRecording, stopRecording]);
 
-	useEffect(() => {
-		FileSystem.getInfoAsync(MODEL_PATH)
-			.then((info) => {
-				if (!info.exists) setStatus('unavailable');
-			})
-			.catch(() => {});
-	}, []);
-
 	return {
 		status,
 		isRecording: status === 'recording',
 		liveText,
-		amplitudes: pcmStream.amplitudes,
+		amplitudes,
 		toggle,
 	};
 }

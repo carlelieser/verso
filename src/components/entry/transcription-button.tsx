@@ -41,7 +41,7 @@ export function useEditorTranscription({
 	const transcription = useWhisperTranscription(handleFinish);
 
 	return {
-		isEnabled: isVoiceInputEnabled && transcription.status !== 'unavailable',
+		isEnabled: isVoiceInputEnabled,
 		isRecording: transcription.isRecording,
 		isLoading: transcription.status === 'loading',
 		liveText: transcription.liveText,
