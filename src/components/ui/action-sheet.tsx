@@ -1,4 +1,5 @@
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { Portal } from '@gorhom/portal';
 import { Button, Separator } from 'heroui-native';
 import { type LucideIcon } from 'lucide-react-native';
 import React from 'react';
@@ -30,39 +31,41 @@ export function ActionSheet({ header, items, sheet }: ActionSheetProps): React.J
 	if (!sheet.isOpen) return null;
 
 	return (
-		<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
-			<BottomSheetView>
-				<SheetContent className={'p-0 gap-1'}>
-					{header ? <View pointerEvents="none">{header}</View> : null}
-					<Separator />
-					{items.map((item) => {
-						const isDanger = item.variant === 'danger';
-						const color = isDanger ? danger : muted;
-						const Icon = item.icon;
+		<Portal>
+			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
+				<BottomSheetView>
+					<SheetContent className={'p-0 gap-1'}>
+						{header ? <View pointerEvents="none">{header}</View> : null}
+						<Separator />
+						{items.map((item) => {
+							const isDanger = item.variant === 'danger';
+							const color = isDanger ? danger : muted;
+							const Icon = item.icon;
 
-						return (
-							<Button
-								key={item.id}
-								variant="ghost"
-								onPress={() => {
-									sheet.close();
-									item.onPress();
-								}}
-								className="justify-start"
-							>
-								{Icon ? <Icon size={18} color={color} /> : null}
-								<Text
-									className={`text-base ${
-										isDanger ? 'text-danger' : 'text-foreground'
-									}`}
+							return (
+								<Button
+									key={item.id}
+									variant="ghost"
+									onPress={() => {
+										sheet.close();
+										item.onPress();
+									}}
+									className="justify-start"
 								>
-									{item.label}
-								</Text>
-							</Button>
-						);
-					})}
-				</SheetContent>
-			</BottomSheetView>
-		</BottomSheet>
+									{Icon ? <Icon size={18} color={color} /> : null}
+									<Text
+										className={`text-base ${
+											isDanger ? 'text-danger' : 'text-foreground'
+										}`}
+									>
+										{item.label}
+									</Text>
+								</Button>
+							);
+						})}
+					</SheetContent>
+				</BottomSheetView>
+			</BottomSheet>
+		</Portal>
 	);
 }
