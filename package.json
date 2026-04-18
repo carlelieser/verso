@@ -18,7 +18,8 @@
 		"format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
 		"postinstall": "npx patch-package",
 		"eas:build:dev": "eas workflow:run .eas/workflows/create-development-builds.yml",
-		"eas:build:prod": "eas workflow:run .eas/workflows/create-production-builds.yml"
+		"eas:build:prod": "eas workflow:run .eas/workflows/create-production-builds.yml",
+		"build": "eas build --platform android --profile preview --local --output=build/verso-$npm_package_version.apk"
 	},
 	"dependencies": {
 		"@expo-google-fonts/dm-serif-display": "^0.4.2",
