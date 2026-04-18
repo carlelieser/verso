@@ -1,4 +1,4 @@
-const ONE_DAY_MS = 86_400_000;
+export const ONE_DAY_MS = 86_400_000;
 
 export function formatRelativeDate(timestamp: number): string {
 	const date = new Date(timestamp);

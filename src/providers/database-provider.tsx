@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { Db } from '@/db/client';
 import { createDatabase } from '@/db/client';
 import { setupFts } from '@/db/fts';
-import { ensureDefaultJournal } from '@/db/seed';
+import { ensureDefaultJournal, seedMockData } from '@/db/seed';
 
 import migrations from '../../drizzle/migrations';
 
@@ -43,14 +43,20 @@ function MigratedDatabase({
 
 	useEffect(() => {
 		if (!success) return;
-		try {
-			setupFts(db);
-			ensureDefaultJournal(db);
-			setReady(true);
-			onReady?.();
-		} catch (err: unknown) {
-			setSeedError(err instanceof Error ? err : new Error(String(err)));
-		}
+		(async () => {
+			try {
+				setupFts(db);
+				if (process.env.EXPO_PUBLIC_MOCK_DATA === '1') {
+					await seedMockData(db);
+				} else {
+					ensureDefaultJournal(db);
+				}
+				setReady(true);
+				onReady?.();
+			} catch (err: unknown) {
+				setSeedError(err instanceof Error ? err : new Error(String(err)));
+			}
+		})();
 	}, [success, db, onReady]);
 
 	if (error ?? seedError) {
