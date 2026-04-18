@@ -1,5 +1,6 @@
 import {
 	AudioEncoding,
+	AudioSource,
 	type RealtimeAudioRecorder,
 	RealtimeAudioRecorderModule,
 } from 'react-native-realtime-audio';
@@ -45,6 +46,11 @@ export class RealtimeAudioStreamAdapter implements AudioStreamInterface {
 	private dataCallback?: (data: AudioStreamData) => void;
 	private errorCallback?: (error: string) => void;
 	private statusCallback?: (isRecording: boolean) => void;
+	private rmsCallback?: (rms: number) => void;
+
+	onRms(callback: (rms: number) => void): void {
+		this.rmsCallback = callback;
+	}
 
 	async initialize(config: AudioStreamConfig): Promise<void> {
 		if (this.recorder) {
@@ -67,13 +73,16 @@ export class RealtimeAudioStreamAdapter implements AudioStreamInterface {
 					sampleRate: config.sampleRate ?? 16000,
 					encoding: AudioEncoding.pcm16bitInteger,
 					channelCount: config.channels ?? 1,
+					audioSource: AudioSource.mic,
 				},
 				false,
 			);
 
 			this.subscription = RealtimeAudioRecorderModule.addListener(
 				'onAudioCaptured',
-				(event: { audioBuffer: string }) => {
+				(event: { audioBuffer: string; rms?: number }) => {
+					if (typeof event.rms === 'number') this.rmsCallback?.(event.rms);
+
 					if (!this.dataCallback) return;
 
 					try {
@@ -157,5 +166,6 @@ export class RealtimeAudioStreamAdapter implements AudioStreamInterface {
 		this.dataCallback = undefined;
 		this.errorCallback = undefined;
 		this.statusCallback = undefined;
+		this.rmsCallback = undefined;
 	}
 }

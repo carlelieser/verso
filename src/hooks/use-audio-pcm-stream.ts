@@ -6,8 +6,7 @@ import {
 } from 'react-native-realtime-audio';
 import { type SharedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { computeBarAmplitudes, WAVEFORM_BAR_COUNT } from '@/constants/audio';
-import { decodeBase64Pcm16 } from '@/utils/audio';
+import { WAVEFORM_BAR_COUNT } from '@/constants/audio';
 
 const SAMPLE_RATE = 16000;
 
@@ -29,14 +28,12 @@ export function useAudioPcmStream(): UseAudioPcmStreamResult {
 	useEffect(() => {
 		const subscription = RealtimeAudioRecorderModule.addListener(
 			'onAudioCaptured',
-			(event: { audioBuffer: string }) => {
-				const samples = decodeBase64Pcm16(event.audioBuffer);
-				if (samples.length < WAVEFORM_BAR_COUNT) return;
-
-				const bars = computeBarAmplitudes(samples);
-				for (let i = 0; i < WAVEFORM_BAR_COUNT; i++) {
-					amplitudes[i]!.value = bars[i]!;
+			(event: { rms?: number }) => {
+				if (typeof event.rms !== 'number') return;
+				for (let i = 0; i < WAVEFORM_BAR_COUNT - 1; i++) {
+					amplitudes[i]!.value = amplitudes[i + 1]!.value;
 				}
+				amplitudes[WAVEFORM_BAR_COUNT - 1]!.value = Math.sqrt(event.rms);
 			},
 		);
 
