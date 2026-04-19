@@ -1,4 +1,3 @@
-import * as FileSystem from 'expo-file-system/legacy';
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 import { Uniwind } from 'uniwind';
@@ -13,9 +12,7 @@ import {
 	SETTINGS_REQUIRE_PIN_KEY,
 	SETTINGS_SHOW_DONATION_BANNER_KEY,
 	SETTINGS_THEME_KEY,
-	SETTINGS_TRANSCRIPTION_KEY,
 	SETTINGS_VOICE_INPUT_KEY,
-	STT_MODEL_FILENAME,
 	isValidTheme,
 } from '@/constants/settings';
 import { storage } from '@/services/storage';
@@ -45,9 +42,8 @@ export interface SettingsContextValue {
 
 export const SettingsContext = createContext<SettingsContextValue | null>(null);
 
-const BOOLEAN_DEFAULTS: Record<string, boolean> = {
+const DEFAULT_SETTINGS: Record<string, boolean> = {
 	[SETTINGS_AUTO_LOCATION_KEY]: true,
-	[SETTINGS_TRANSCRIPTION_KEY]: true,
 	[SETTINGS_VOICE_INPUT_KEY]: false,
 	[SETTINGS_REMINDERS_ENABLED_KEY]: false,
 	[SETTINGS_SHOW_DONATION_BANNER_KEY]: true,
@@ -55,9 +51,8 @@ const BOOLEAN_DEFAULTS: Record<string, boolean> = {
 	[SETTINGS_BIOMETRICS_KEY]: false,
 };
 
-const BOOLEAN_KEYS = [
+const SETTINGS_KEYS = [
 	SETTINGS_AUTO_LOCATION_KEY,
-	SETTINGS_TRANSCRIPTION_KEY,
 	SETTINGS_VOICE_INPUT_KEY,
 	SETTINGS_REMINDERS_ENABLED_KEY,
 	SETTINGS_SHOW_DONATION_BANNER_KEY,
@@ -77,26 +72,10 @@ function parseReminderTime(raw: string): { hour: number; minute: number } {
 	return { hour, minute };
 }
 
-function migrateTranscriptionSetting(): void {
-	const legacy = storage.get(SETTINGS_TRANSCRIPTION_KEY, false);
-	if (!legacy || storage.has(SETTINGS_VOICE_INPUT_KEY)) return;
-	const modelPath = `${FileSystem.documentDirectory}models/${STT_MODEL_FILENAME}`;
-	// FileSystem.getInfoAsync is async — perform a best-effort sync check via existence
-	// by writing false now; the async load will correct it if the model exists
-	void storage.set(SETTINGS_VOICE_INPUT_KEY, false);
-	FileSystem.getInfoAsync(modelPath)
-		.then((info) => {
-			if (!info.exists) return;
-			void storage.set(SETTINGS_VOICE_INPUT_KEY, true);
-		})
-		.catch(() => {});
-}
-
-function loadInitialBooleans(): Record<string, boolean> {
-	migrateTranscriptionSetting();
+function loadDefaultSettings(): Record<string, boolean> {
 	const values: Record<string, boolean> = {};
-	for (const key of BOOLEAN_KEYS) {
-		values[key] = storage.get(key, BOOLEAN_DEFAULTS[key] ?? false);
+	for (const key of SETTINGS_KEYS) {
+		values[key] = storage.get(key, DEFAULT_SETTINGS[key] ?? false);
 	}
 	return values;
 }
@@ -106,7 +85,7 @@ interface SettingsProviderProps {
 }
 
 export function SettingsProvider({ children }: SettingsProviderProps): React.JSX.Element {
-	const [boolValues, setBoolValues] = useState<Record<string, boolean>>(loadInitialBooleans);
+	const [values, setValues] = useState<Record<string, boolean>>(loadDefaultSettings);
 	const [theme, setThemeState] = useState<Theme>(() => {
 		const stored = storage.get(SETTINGS_THEME_KEY, DEFAULT_THEME);
 		return isValidTheme(stored) ? stored : DEFAULT_THEME;
@@ -120,25 +99,25 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 
 	const load = useCallback(() => {
 		Promise.all([
-			...BOOLEAN_KEYS.map((key) =>
-				storage.getAsync(key, BOOLEAN_DEFAULTS[key] ?? false),
+			...SETTINGS_KEYS.map((key) =>
+				storage.getAsync(key, DEFAULT_SETTINGS[key] ?? false),
 			),
 			storage.getAsync(SETTINGS_THEME_KEY, DEFAULT_THEME),
 		])
 			.then((results) => {
 				const loaded: Record<string, boolean> = {};
-				for (let i = 0; i < BOOLEAN_KEYS.length; i++) {
-					const key = BOOLEAN_KEYS[i];
+				for (let i = 0; i < SETTINGS_KEYS.length; i++) {
+					const key = SETTINGS_KEYS[i];
 					if (!key) continue;
 					loaded[key] = results[i] as boolean;
 				}
-				setBoolValues((prev) => {
-					const hasChanged = BOOLEAN_KEYS.some((key) => prev[key] !== loaded[key]);
+				setValues((prev) => {
+					const hasChanged = SETTINGS_KEYS.some((key) => prev[key] !== loaded[key]);
 					return hasChanged ? loaded : prev;
 				});
 
-				const themeRaw = results[BOOLEAN_KEYS.length];
-				if (typeof themeRaw === 'string' && isValidTheme(themeRaw)) {
+				const themeRaw = results[SETTINGS_KEYS.length];
+				if (isValidTheme(themeRaw)) {
 					setThemeState((prev) => (prev === themeRaw ? prev : themeRaw));
 				}
 			})
@@ -155,7 +134,7 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 	}, [load]);
 
 	const setSetting = useCallback((key: string, value: boolean) => {
-		setBoolValues((prev) => ({ ...prev, [key]: value }));
+		setValues((prev) => ({ ...prev, [key]: value }));
 		void storage.set(key, value);
 	}, []);
 
@@ -175,7 +154,7 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 		void storage.set(SETTINGS_REMINDERS_DAYS_KEY, days);
 	}, []);
 
-	const isRemindersEnabled = boolValues[SETTINGS_REMINDERS_ENABLED_KEY] ?? false;
+	const isRemindersEnabled = values[SETTINGS_REMINDERS_ENABLED_KEY] ?? false;
 	const reminders = useMemo<ReminderSettings>(
 		() => ({
 			isEnabled: isRemindersEnabled,
@@ -188,11 +167,11 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 
 	const value = useMemo<SettingsContextValue>(
 		() => ({
-			isAutoLocation: boolValues[SETTINGS_AUTO_LOCATION_KEY] ?? false,
-			isVoiceInputEnabled: boolValues[SETTINGS_VOICE_INPUT_KEY] ?? false,
-			shouldShowDonationBanner: boolValues[SETTINGS_SHOW_DONATION_BANNER_KEY] ?? true,
-			isRequirePin: boolValues[SETTINGS_REQUIRE_PIN_KEY] ?? false,
-			isBiometricsEnabled: boolValues[SETTINGS_BIOMETRICS_KEY] ?? false,
+			isAutoLocation: values[SETTINGS_AUTO_LOCATION_KEY] ?? false,
+			isVoiceInputEnabled: values[SETTINGS_VOICE_INPUT_KEY] ?? false,
+			shouldShowDonationBanner: values[SETTINGS_SHOW_DONATION_BANNER_KEY] ?? true,
+			isRequirePin: values[SETTINGS_REQUIRE_PIN_KEY] ?? false,
+			isBiometricsEnabled: values[SETTINGS_BIOMETRICS_KEY] ?? false,
 			reminders,
 			theme,
 			setSetting,
@@ -200,7 +179,7 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 			setReminderDays,
 			setTheme,
 		}),
-		[boolValues, reminders, theme, setSetting, setReminderTime, setReminderDays, setTheme],
+		[values, reminders, theme, setSetting, setReminderTime, setReminderDays, setTheme],
 	);
 
 	return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
