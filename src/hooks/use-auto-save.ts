@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { useDatabaseContext } from '@/providers/database-provider';
 import { updateEntry } from '@/services/entry-service';
-import { getErrorMessage } from '@/utils/error';
+import { log } from '@/utils/log';
 
 const DEBOUNCE_MS = 500;
 
@@ -42,7 +42,7 @@ export function useAutoSave(entryId: string | null, content: AutoSaveRefs): UseA
 				contentHtml: content.html.current,
 				contentText: content.text.current,
 			}).catch((err: unknown) => {
-				console.error('Auto-save failed:', getErrorMessage(err));
+				log.error('auto-save', 'Auto-save failed', err);
 			});
 		}, DEBOUNCE_MS);
 	}, [db, entryId, content]);
@@ -72,7 +72,7 @@ export function useAutoSave(entryId: string | null, content: AutoSaveRefs): UseA
 					contentHtml: html.current,
 					contentText: text.current,
 				}).catch((err: unknown) => {
-					console.error('Auto-save flush failed:', getErrorMessage(err));
+					log.error('auto-save', 'Auto-save flush failed', err);
 				});
 			}
 		};

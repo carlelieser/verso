@@ -1,7 +1,8 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { getRandomBytes } from 'expo-crypto';
-import * as SecureStore from 'expo-secure-store';
 import { openDatabaseSync } from 'expo-sqlite';
+
+import { storage } from '@/services/storage';
 
 import * as relations from './relations';
 import * as schema from './schema';
@@ -23,13 +24,13 @@ function generateEncryptionKey(): string {
 }
 
 async function getOrCreateEncryptionKey(): Promise<string> {
-	const existingKey = await SecureStore.getItemAsync(ENCRYPTION_KEY_ALIAS);
-	if (existingKey) {
+	const existingKey = await storage.getAsync(ENCRYPTION_KEY_ALIAS, '');
+	if (existingKey !== '') {
 		return existingKey;
 	}
 
 	const newKey = generateEncryptionKey();
-	await SecureStore.setItemAsync(ENCRYPTION_KEY_ALIAS, newKey);
+	await storage.set(ENCRYPTION_KEY_ALIAS, newKey);
 	return newKey;
 }
 

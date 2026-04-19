@@ -1,5 +1,4 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { Button, Toast, useToast } from 'heroui-native';
 import { ArrowUpRight, BookOpen, History, Pencil, Settings } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef } from 'react';
@@ -14,9 +13,10 @@ import {
 import { EntrySummaryCard } from '@/components/entry/entry-summary-card';
 import { SETTINGS_ONBOARDING_COMPLETE_KEY } from '@/constants/settings';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { storage } from '@/services/storage';
 
 function isOnboardingDone(): boolean {
-	return SecureStore.getItem(SETTINGS_ONBOARDING_COMPLETE_KEY) === 'true';
+	return storage.get(SETTINGS_ONBOARDING_COMPLETE_KEY, false);
 }
 
 function HomeContent(): React.JSX.Element {

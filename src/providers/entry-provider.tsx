@@ -23,7 +23,7 @@ import {
 import { captureLocationAndWeather } from '@/services/location-weather-service';
 import type { EmotionSelection } from '@/types/emotion';
 import type { Journal } from '@/types/journal';
-import { getErrorMessage } from '@/utils/error';
+import { log } from '@/utils/log';
 
 interface EntryContextValue {
 	// Identity
@@ -116,7 +116,7 @@ export function EntryProvider({
 				setCurrentEntryId(entry.id);
 				if (isAutoLocation) {
 					captureLocationAndWeather(db, entry.id).catch((err: unknown) => {
-						console.warn('Silent failure:', getErrorMessage(err));
+						log.warn('entry', 'Silent failure', err);
 					});
 				}
 			})
@@ -156,12 +156,12 @@ export function EntryProvider({
 
 						if (!hasEntryContent && !hasAttachments && !hasEmotions) {
 							deleteEntryService(database, id).catch((err: unknown) => {
-								console.warn('Silent failure:', getErrorMessage(err));
+								log.warn('entry', 'Silent failure', err);
 							});
 						}
 					})
 					.catch((err: unknown) => {
-						console.warn('Silent failure:', getErrorMessage(err));
+						log.warn('entry', 'Silent failure', err);
 					});
 			}, 100);
 		};
@@ -262,7 +262,7 @@ export function EntryProvider({
 				setIsLoading(false);
 			})
 			.catch((err: unknown) => {
-				console.error('Failed to load entry:', getErrorMessage(err));
+				log.error('entry', 'Failed to load entry', err);
 				if (isActive) {
 					setIsLoading(false);
 				}
@@ -303,7 +303,7 @@ export function EntryProvider({
 		}
 
 		Promise.all(saves).catch((err: unknown) => {
-			console.error('Save failed:', getErrorMessage(err));
+			log.error('entry', 'Save failed', err);
 		});
 	}, [currentEntryId, journalId, emotions, db]);
 
@@ -328,7 +328,7 @@ export function EntryProvider({
 
 		if (isAutoLocation) {
 			captureLocationAndWeather(db, entry.id).catch((err: unknown) => {
-				console.warn('Silent failure:', getErrorMessage(err));
+				log.warn('entry', 'Silent failure', err);
 			});
 		}
 	}, [resolveJournalId, isAutoLocation, db]);

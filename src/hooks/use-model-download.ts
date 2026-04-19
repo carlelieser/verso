@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { STT_MODEL_FILENAME, STT_MODEL_URL } from '@/constants/settings';
+import { log } from '@/utils/log';
 
 export type ModelDownloadStatus = 'not-downloaded' | 'downloading' | 'downloaded' | 'error';
 
@@ -72,7 +73,7 @@ export function useModelDownload(): UseModelDownloadResult {
 				setStatus('error');
 			}
 		} catch (err: unknown) {
-			console.error('Model download failed:', err);
+			log.error('model-download', 'Model download failed', err);
 			if (downloadRef.current !== null) {
 				setStatus('error');
 			}

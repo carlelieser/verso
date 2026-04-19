@@ -10,8 +10,8 @@ import { SETTINGS_REMINDERS_ENABLED_KEY } from '@/constants/settings';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useSettings } from '@/hooks/use-settings';
 import { scheduleReminders } from '@/services/reminder-service';
-import { getErrorMessage } from '@/utils/error';
 import { formatTime12 } from '@/utils/format-time';
+import { log } from '@/utils/log';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
 
@@ -38,7 +38,7 @@ export function RemindersSheet({ sheet }: RemindersSheetProps): React.JSX.Elemen
 				minute: overrides.minute ?? reminders.minute,
 				days: overrides.days ?? reminders.days,
 			}).catch((err: unknown) => {
-				console.warn('Failed to schedule reminders:', getErrorMessage(err));
+				log.warn('reminders', 'Failed to schedule reminders', err);
 			});
 		},
 		[reminders],

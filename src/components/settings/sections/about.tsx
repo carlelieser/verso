@@ -1,5 +1,4 @@
 import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { ListGroup, Separator } from 'heroui-native';
 import { BookOpen, Code, Hash, RotateCcw } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
@@ -9,17 +8,19 @@ import { Section } from '@/components/layout/section';
 import { LibrariesDialog } from '@/components/settings/libraries-dialog';
 import { SETTINGS_ONBOARDING_COMPLETE_KEY } from '@/constants/settings';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-import { getErrorMessage } from '@/utils/error';
+import { storage } from '@/services/storage';
+import { log } from '@/utils/log';
 
 import packageJson from '../../../../package.json';
 
 function restartOnboarding(): void {
-	SecureStore.deleteItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY)
+	storage
+		.remove(SETTINGS_ONBOARDING_COMPLETE_KEY)
 		.then(() => {
 			router.replace('/onboarding');
 		})
 		.catch((err: unknown) => {
-			console.error('Failed to restart onboarding:', getErrorMessage(err));
+			log.error('about', 'Failed to restart onboarding', err);
 		});
 }
 

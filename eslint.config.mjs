@@ -40,7 +40,7 @@ export default [
         },
       ],
       "import/no-default-export": "error",
-      "no-console": "warn",
+      "no-console": "error",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
     },
@@ -49,6 +49,12 @@ export default [
     files: ["src/app/**/*.tsx"],
     rules: {
       "import/no-default-export": "off",
+    },
+  },
+  {
+    files: ["src/utils/log.ts"],
+    rules: {
+      "no-console": "off",
     },
   },
 ];

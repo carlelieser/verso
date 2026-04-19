@@ -1,5 +1,4 @@
 import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { Bell, MapPin, Mic } from 'lucide-react-native';
 import React, { useCallback, useRef } from 'react';
 
@@ -16,11 +15,12 @@ import { VoiceInputContent } from '@/components/onboarding/voice-input-content';
 import { WelcomeContent } from '@/components/onboarding/welcome-content';
 import { SETTINGS_AUTO_LOCATION_KEY, SETTINGS_ONBOARDING_COMPLETE_KEY } from '@/constants/settings';
 import { usePermissions } from '@/hooks/use-permissions';
+import { storage } from '@/services/storage';
 
 async function completeOnboarding(locationGranted: boolean): Promise<void> {
 	await Promise.all([
-		SecureStore.setItemAsync(SETTINGS_ONBOARDING_COMPLETE_KEY, 'true'),
-		SecureStore.setItemAsync(SETTINGS_AUTO_LOCATION_KEY, String(locationGranted)),
+		storage.set(SETTINGS_ONBOARDING_COMPLETE_KEY, true),
+		storage.set(SETTINGS_AUTO_LOCATION_KEY, locationGranted),
 	]);
 	router.replace('/');
 }

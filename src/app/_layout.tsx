@@ -5,7 +5,6 @@ import { useFonts as useGoogleSans } from '@expo-google-fonts/google-sans-flex';
 import { useFonts as useLibreBaskerville } from '@expo-google-fonts/libre-baskerville';
 import { PortalProvider } from '@gorhom/portal';
 import { Stack } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { HeroUINativeProvider } from 'heroui-native';
@@ -13,15 +12,20 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Uniwind } from 'uniwind';
 
+import { AuthGate } from '@/components/security/auth-gate';
+import { PrivacyScreen } from '@/components/security/privacy-screen';
 import { SETTINGS_THEME_KEY, isValidTheme } from '@/constants/settings';
 import { DatabaseProvider } from '@/providers/database-provider';
 import { DialogProvider } from '@/providers/dialog-provider';
+import { ReauthProvider } from '@/providers/reauth-provider';
+import { SecurityProvider } from '@/providers/security-provider';
 import { SettingsProvider } from '@/providers/settings-provider';
+import { storage } from '@/services/storage';
 
 SplashScreen.preventAutoHideAsync();
 
 function restoreTheme(): void {
-	const themeRaw = SecureStore.getItem(SETTINGS_THEME_KEY);
+	const themeRaw = storage.get(SETTINGS_THEME_KEY, 'system');
 	const theme = isValidTheme(themeRaw) ? themeRaw : 'system';
 
 	if (theme === 'system' && Uniwind.hasAdaptiveThemes) return;
@@ -75,22 +79,28 @@ export default function RootLayout(): React.JSX.Element {
 			<HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
 				<PortalProvider>
 					<SettingsProvider>
-						<DatabaseProvider onReady={handleDbReady}>
-							<DialogProvider>
-								<Stack
-									screenOptions={{
-										headerShown: false,
-									}}
-								>
-									<Stack.Screen
-										name="onboarding"
-										options={{
-											gestureEnabled: false,
-										}}
-									/>
-								</Stack>
-							</DialogProvider>
-						</DatabaseProvider>
+						<SecurityProvider>
+							<DatabaseProvider onReady={handleDbReady}>
+								<DialogProvider>
+									<ReauthProvider>
+										<Stack
+											screenOptions={{
+												headerShown: false,
+											}}
+										>
+											<Stack.Screen
+												name="onboarding"
+												options={{
+													gestureEnabled: false,
+												}}
+											/>
+										</Stack>
+										<AuthGate />
+										<PrivacyScreen />
+									</ReauthProvider>
+								</DialogProvider>
+							</DatabaseProvider>
+						</SecurityProvider>
 					</SettingsProvider>
 					<StatusBar style="auto" />
 				</PortalProvider>
