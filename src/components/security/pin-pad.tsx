@@ -6,8 +6,6 @@ import Animated, {
 	interpolateColor,
 	useAnimatedStyle,
 	useSharedValue,
-	withSequence,
-	withSpring,
 	withTiming,
 } from 'react-native-reanimated';
 
@@ -37,37 +35,29 @@ const DigitKey = React.memo(DigitKeyImpl);
 
 function DigitKeyImpl({ value, onPress, isDisabled }: DigitKeyProps): React.JSX.Element {
 	const { accent, border, foreground, accentForeground } = useThemeColors();
-	const scale = useSharedValue(0);
-	const color = useSharedValue(0);
+	const active = useSharedValue(0);
 
-	const flash = (): void => {
-		scale.value = withSequence(
-			withSpring(1, { duration: 120, dampingRatio: 0.9 }),
-			withSpring(0, { duration: 120, dampingRatio: 0.7 }),
-		);
-		color.value = withSequence(
-			withTiming(1, { duration: 120 }),
-			withTiming(0, { duration: 120 }),
-		);
-	};
-
-	const handlePress = (): void => {
+	const handlePressIn = (): void => {
 		Haptics.selectionAsync();
-		flash();
+		active.value = withTiming(1, { duration: 80 });
 		onPress(value);
 	};
 
+	const handlePressOut = (): void => {
+		active.value = withTiming(0, { duration: 120 });
+	};
+
 	const containerStyle = useAnimatedStyle(() => ({
-		transform: [{ scale: 1 - scale.value * 0.08 }],
-		backgroundColor: interpolateColor(color.value, [0, 1], [border, accent]),
+		transform: [{ scale: 1 - active.value * 0.08 }],
+		backgroundColor: interpolateColor(active.value, [0, 1], [border, accent]),
 	}));
 
 	const textStyle = useAnimatedStyle(() => ({
-		color: interpolateColor(color.value, [0, 1], [foreground, accentForeground]),
+		color: interpolateColor(active.value, [0, 1], [foreground, accentForeground]),
 	}));
 
 	return (
-		<Pressable onPress={handlePress} disabled={isDisabled}>
+		<Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={isDisabled}>
 			<Animated.View
 				style={containerStyle}
 				className="w-20 h-20 rounded-full items-center justify-center"
