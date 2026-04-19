@@ -8,9 +8,11 @@ import { InfoCard } from '@/components/ui/info-card';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
 import { VoiceNote } from '@/components/voice-note/voice-note';
 import { ATTACHMENT_TYPE_ICONS } from '@/constants/attachment-icons';
+import { useEntryWeather } from '@/hooks/use-entry-weather';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDatabaseContext } from '@/providers/database-provider';
 import { useConfirmDialog } from '@/providers/dialog-provider';
+import { useEntryContext } from '@/providers/entry-provider';
 import { deleteAttachment } from '@/services/attachment-service';
 import type { Attachment, FileAttachment, LocationAttachment } from '@/types/attachment';
 import { getErrorMessage } from '@/utils/error';
@@ -80,6 +82,8 @@ function LocationCard({
 	readonly isDeleting: boolean;
 }): React.JSX.Element {
 	const { muted } = useThemeColors();
+	const { entryId } = useEntryContext();
+	const weather = useEntryWeather(entryId);
 
 	const menuItems: readonly OverflowMenuItem[] = useMemo(
 		() => [
@@ -101,10 +105,9 @@ function LocationCard({
 				<Text className="text-sm text-foreground" numberOfLines={1}>
 					{attachment.data.name}
 				</Text>
-				{attachment.data.latitude !== null && attachment.data.longitude !== null ? (
+				{weather ? (
 					<Text className="text-xs text-muted">
-						{attachment.data.latitude.toFixed(4)},{' '}
-						{attachment.data.longitude.toFixed(4)}
+						{weather.condition} • {Math.round(weather.temperature)}°F
 					</Text>
 				) : null}
 			</View>
