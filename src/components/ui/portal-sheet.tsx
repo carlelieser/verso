@@ -7,7 +7,7 @@ import type { useBottomSheet } from '@/hooks/use-bottom-sheet';
 
 interface PortalSheetProps {
 	readonly sheet: ReturnType<typeof useBottomSheet>;
-	readonly title?: string;
+	readonly title?: string | React.ReactNode;
 	readonly footer?: React.ReactNode;
 	readonly className?: string;
 	readonly keyboardPersist?: boolean;

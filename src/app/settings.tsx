@@ -8,6 +8,7 @@ import { AboutSection } from '@/components/settings/sections/about';
 import { AppearanceSection } from '@/components/settings/sections/appearance';
 import { GeneralSection } from '@/components/settings/sections/general';
 import { PermissionsSection } from '@/components/settings/sections/permissions';
+import { SecuritySection } from '@/components/settings/sections/security';
 import { useSettings } from '@/hooks/use-settings';
 
 export default function SettingsScreen(): React.JSX.Element {
@@ -24,6 +25,7 @@ export default function SettingsScreen(): React.JSX.Element {
 				{shouldShowDonationBanner ? <DonationBanner /> : null}
 				<AppearanceSection />
 				<GeneralSection />
+				<SecuritySection />
 				<PermissionsSection />
 				<AboutSection />
 			</ScrollView>
