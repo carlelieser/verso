@@ -9,10 +9,6 @@ React Native (Expo) journaling app. TypeScript, Tailwind (NativeWind), feature-b
 3. Run formatter and linter before committing.
 4. Human approval required before any commit.
 
-## Communication
-
-Be direct and honest. Lead with substance, not praise. Treat user opinions as claims to evaluate. Say "I don't know" when uncertain. Hold correct positions under pressure. Never open with flattery or filler.
-
 ## Code Style
 
 **Naming:** `camelCase` variables/functions, `PascalCase` types/components, `CONSTANT_CASE` module constants, `kebab-case` filenames. Prefix booleans with `is`/`has`/`can`/`should`/`will`. Treat acronyms as words (`loadHttpUrl`). No `I` prefix on interfaces. No abbreviations.
@@ -45,7 +41,7 @@ Function components only. Props typed with `interface`, not `React.FC`. Hooks at
 
 Full reference in `docs/coding/DESIGN.md`. Key rules:
 
-- **Spacing:** Tailwind 4pt grid only. No fractional values (`gap-1.5`). No inline styles for static layout.
+- **Spacing:** Tailwind 4pt grid only. No fractional values (`gap-1.5`) unless warranted. No inline styles for static layout.
 - **Color:** Theme classes only (`bg-surface`, `text-muted`). `useThemeColors()` only for icon `color` props. No hardcoded hex.
 - **Radius:** `rounded-lg` (8px), `rounded-xl` (12px), `rounded-full` (pills/FAB).
 - **Typography:** `font-heading` for titles only. `Overline` component for section labels.
