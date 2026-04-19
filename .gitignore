@@ -56,3 +56,6 @@ coverage/
 # Build
 build/
 *.ai
+
+# Local spec scratchpad
+docs/specs/
