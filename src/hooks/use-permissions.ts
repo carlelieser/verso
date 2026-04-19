@@ -18,17 +18,16 @@ interface UsePermissionsResult {
 	readonly notification: Permission;
 }
 
-interface PermissionResult {
-	readonly granted: boolean;
-	readonly canAskAgain: boolean;
+type PermissionFn = () => Promise<{ status: string }>;
+
+function toStatus(result: { status: string }): PermissionStatus {
+	if (result.status === 'granted') return 'granted';
+	if (result.status === 'undetermined') return 'undetermined';
+	return 'denied';
 }
 
-type PermissionFn = () => Promise<PermissionResult>;
-
-function toStatus(result: PermissionResult): PermissionStatus {
-	if (result.granted) return 'granted';
-	if (result.canAskAgain) return 'undetermined';
-	return 'denied';
+function isGranted(result: { status: string }): boolean {
+	return result.status === 'granted';
 }
 
 function openAppSettings(): void {
@@ -57,7 +56,7 @@ function usePermission(checkFn: PermissionFn, requestFn: PermissionFn): Permissi
 	const request = useCallback(async (): Promise<boolean> => {
 		const result = await requestFn();
 		setStatus(toStatus(result));
-		return result.granted;
+		return isGranted(result);
 	}, [requestFn]);
 
 	return useMemo<Permission>(

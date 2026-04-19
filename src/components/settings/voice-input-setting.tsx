@@ -1,15 +1,15 @@
-import { ControlField, ListGroup, Separator } from 'heroui-native';
+import { ControlField, ListGroup } from 'heroui-native';
 import { Mic } from 'lucide-react-native';
 import React, { useCallback } from 'react';
+import { View } from 'react-native';
 
 import { ModelDownloadStatus } from '@/components/settings/model-download-status';
-import { SETTINGS_VOICE_INPUT_KEY, STT_MODEL_URL } from '@/constants/settings';
+import { SETTINGS_VOICE_INPUT_KEY } from '@/constants/settings';
 import { useModelDownload } from '@/hooks/use-model-download';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useSettings } from '@/hooks/use-settings';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useConfirmDialog } from '@/providers/dialog-provider';
-import { View } from 'react-native';
 
 export function VoiceInputSetting(): React.JSX.Element {
 	const { muted } = useThemeColors();

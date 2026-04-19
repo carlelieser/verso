@@ -1,10 +1,9 @@
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
-import * as relations from './relations';
-import * as schema from './schema';
+import type * as relations from './relations';
+import type * as schema from './schema';
 
-const fullSchema = { ...schema, ...relations };
-type Schema = typeof fullSchema;
+type Schema = typeof schema & typeof relations;
 
 export type Db = ExpoSQLiteDatabase<Schema>;
 

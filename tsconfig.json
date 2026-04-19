@@ -4,7 +4,8 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "expo-modules-core": ["./node_modules/expo/node_modules/expo-modules-core"]
     }
   },
   "include": [

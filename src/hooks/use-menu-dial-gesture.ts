@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useMemo } from 'react';
 import { Gesture } from 'react-native-gesture-handler';
-import type { GestureType } from 'react-native-gesture-handler';
+import type { ComposedGesture, GestureType } from 'react-native-gesture-handler';
 import { runOnJS, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
@@ -16,7 +16,7 @@ interface UseMenuDialGestureOptions {
 }
 
 interface UseMenuDialGestureReturn {
-	readonly gesture: GestureType;
+	readonly gesture: ComposedGesture | GestureType;
 	readonly angle: SharedValue<number>;
 	readonly highlightedIndex: SharedValue<number>;
 	readonly tapProgress: SharedValue<number>;

@@ -1,5 +1,5 @@
 import { Button } from 'heroui-native';
-import { Check, CheckCircle, Download, RotateCcw, X } from 'lucide-react-native';
+import { Check, RotateCcw, X } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -11,7 +11,7 @@ interface ModelDownloadStatusProps {
 }
 
 export function ModelDownloadStatus({ model }: ModelDownloadStatusProps): React.JSX.Element {
-	const { muted, accent } = useThemeColors();
+	const { muted } = useThemeColors();
 	const percent = Math.round(model.progress * 100);
 
 	return (

@@ -18,8 +18,8 @@ export async function scheduleReminders(options: ScheduleRemindersOptions): Prom
 
 	if (!options.isEnabled || options.days.length === 0) return;
 
-	const { granted } = await Notifications.getPermissionsAsync();
-	if (!granted) return;
+	const { status } = await Notifications.getPermissionsAsync();
+	if (status !== 'granted') return;
 
 	await Promise.all(
 		options.days.map((weekday) =>
