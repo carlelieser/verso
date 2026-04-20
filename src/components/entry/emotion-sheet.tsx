@@ -36,6 +36,7 @@ export function EmotionSheet({ sheet }: EmotionSheetProps): React.JSX.Element | 
 	const [draft, setDraft] = useState<readonly EmotionSelection[]>(() => [...emotions]);
 	const draftRef = useRef(draft);
 	draftRef.current = draft;
+	const committingRef = useRef(false);
 
 	const dirty = isDraftDirty(draft, emotions);
 
@@ -57,6 +58,7 @@ export function EmotionSheet({ sheet }: EmotionSheetProps): React.JSX.Element | 
 	);
 
 	const handleDone = useCallback(() => {
+		committingRef.current = true;
 		setEmotions(draft);
 		sheet.close();
 	}, [draft, setEmotions, sheet]);
@@ -76,8 +78,12 @@ export function EmotionSheet({ sheet }: EmotionSheetProps): React.JSX.Element | 
 
 	const handleAnimate = useCallback(
 		(_fromIndex: number, toIndex: number) => {
-			if (!isDraftDirty(draftRef.current, emotions)) return;
 			if (toIndex !== -1) return;
+			if (committingRef.current) {
+				committingRef.current = false;
+				return;
+			}
+			if (!isDraftDirty(draftRef.current, emotions)) return;
 
 			sheet.ref.current?.snapToIndex(0);
 
