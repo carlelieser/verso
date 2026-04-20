@@ -13,6 +13,7 @@ Your private, local space for self-reflection and growth.
 - Minimalist distraction-free writing with rich text support
 - Dictate entries in realtime with on-device transcription powered by [Whisper](https://github.com/mybigday/whisper.rn)
 - Set reminders to help keep up with your practice
+- Protect your privacy with app or journal-specific PINs and biometric support.
 
 ## Install
 
