@@ -37,7 +37,7 @@ export function RenameJournal({
 			}
 		>
 			<BottomSheetTextInput
-				value={name}
+				defaultValue={currentName}
 				onChangeText={setName}
 				placeholder="Journal name"
 				placeholderTextColor={muted}
