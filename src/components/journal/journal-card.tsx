@@ -36,7 +36,11 @@ export function JournalCard({
 						<View className="flex-1">
 							<Card.Title>{journal.name}</Card.Title>
 							<Card.Description className="text-xs">
-								{formatJournalMeta(entryCount, isDefault ?? false)}
+								{formatJournalMeta(
+									entryCount,
+									isDefault ?? false,
+									journal.isLocked,
+								)}
 							</Card.Description>
 						</View>
 					</View>

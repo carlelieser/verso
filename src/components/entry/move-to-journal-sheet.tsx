@@ -1,5 +1,6 @@
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Button, Separator } from 'heroui-native';
+import { Lock } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -50,6 +51,11 @@ export function MoveToJournalSheet({
 							>
 								<Icon size={16} color={journal.color ?? muted} />
 								<Text className="text-base text-foreground">{journal.name}</Text>
+								{journal.isLocked ? (
+									<View className="ml-auto">
+										<Lock size={14} color={muted} />
+									</View>
+								) : null}
 							</Button>
 						);
 					})}

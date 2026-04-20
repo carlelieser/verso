@@ -1,5 +1,5 @@
 import { Button, Menu, Separator } from 'heroui-native';
-import { ChevronDown, Plus } from 'lucide-react-native';
+import { ChevronDown, Lock, Plus } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { Keyboard, Text, View } from 'react-native';
 
@@ -77,6 +77,11 @@ export function JournalSelect({
 										<Menu.Item key={journal.id} id={journal.id}>
 											<Menu.ItemIndicator variant="dot" />
 											<Menu.ItemTitle>{journal.name}</Menu.ItemTitle>
+											{journal.isLocked ? (
+												<View className="ml-auto">
+													<Lock size={14} color={muted} />
+												</View>
+											) : null}
 										</Menu.Item>
 									);
 								})}

@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import {
 	ArrowUpRight,
 	BookOpen,
+	Lock,
 	Maximize,
 	Palette,
 	Pencil,
@@ -17,6 +18,7 @@ import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
 import { CreateJournal } from '@/components/journal/create-journal';
 import { JournalCard } from '@/components/journal/journal-card';
+import { JournalPrivacySheet } from '@/components/journal/journal-privacy-sheet';
 import { RenameJournal } from '@/components/journal/rename-journal';
 import { Screen } from '@/components/layout/screen';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
@@ -104,6 +106,7 @@ export default function JournalsScreen(): React.JSX.Element {
 		deleteJournal,
 	} = useJournals();
 	const createSheet = useBottomSheet();
+	const privacySheet = useBottomSheet();
 	const {
 		selectedItem: selectedJournal,
 		handleLongPress,
@@ -174,6 +177,12 @@ export default function JournalsScreen(): React.JSX.Element {
 				icon: Palette,
 				onPress: colorSheet.open,
 			},
+			{
+				id: 'privacy',
+				label: 'Privacy',
+				icon: Lock,
+				onPress: privacySheet.open,
+			},
 			...(!isSelectedDefault
 				? [
 						{
@@ -197,6 +206,7 @@ export default function JournalsScreen(): React.JSX.Element {
 			renameSheet,
 			iconSheet,
 			colorSheet,
+			privacySheet,
 			handleView,
 			handleSetDefault,
 			handleDelete,
@@ -263,6 +273,14 @@ export default function JournalsScreen(): React.JSX.Element {
 					sheet={colorSheet}
 					currentColor={selectedJournal?.color ?? DEFAULT_JOURNAL_COLOR}
 					onChangeColor={handleChangeColor}
+				/>
+			) : null}
+
+			{privacySheet.isOpen && selectedJournal ? (
+				<JournalPrivacySheet
+					key={selectedJournal.id}
+					sheet={privacySheet}
+					journalId={selectedJournal.id}
 				/>
 			) : null}
 		</Screen>

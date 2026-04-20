@@ -11,7 +11,7 @@ interface SectionProps {
 export function Section({ label, children }: SectionProps): React.JSX.Element {
 	return (
 		<View className="flex flex-col gap-2">
-			<Overline>{label}</Overline>
+			{label && <Overline>{label}</Overline>}
 			{children}
 		</View>
 	);
