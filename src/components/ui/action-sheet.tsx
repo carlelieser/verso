@@ -25,47 +25,47 @@ interface ActionSheetProps {
 
 export type { ActionSheetItem };
 
-export function ActionSheet({ header, items, sheet }: ActionSheetProps): React.JSX.Element | null {
+export function ActionSheet({ header, items, sheet }: ActionSheetProps): React.JSX.Element {
 	const { danger, muted } = useThemeColors();
-
-	if (!sheet.isOpen) return null;
 
 	return (
 		<Portal>
-			<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
-				<BottomSheetView>
-					<SheetContent className={'p-0 gap-1'}>
-						{header ? <View pointerEvents="none">{header}</View> : null}
-						<Separator />
-						{items.map((item) => {
-							const isDanger = item.variant === 'danger';
-							const color = isDanger ? danger : muted;
-							const Icon = item.icon;
+			{sheet.isOpen ? (
+				<BottomSheet ref={sheet.ref} {...sheet.sheetProps}>
+					<BottomSheetView>
+						<SheetContent className={'p-0 gap-1'}>
+							{header ? <View pointerEvents="none">{header}</View> : null}
+							<Separator />
+							{items.map((item) => {
+								const isDanger = item.variant === 'danger';
+								const color = isDanger ? danger : muted;
+								const Icon = item.icon;
 
-							return (
-								<Button
-									key={item.id}
-									variant="ghost"
-									onPress={() => {
-										sheet.close();
-										item.onPress();
-									}}
-									className="justify-start"
-								>
-									{Icon ? <Icon size={18} color={color} /> : null}
-									<Text
-										className={`text-base ${
-											isDanger ? 'text-danger' : 'text-foreground'
-										}`}
+								return (
+									<Button
+										key={item.id}
+										variant="ghost"
+										onPress={() => {
+											item.onPress();
+											sheet.close();
+										}}
+										className="justify-start"
 									>
-										{item.label}
-									</Text>
-								</Button>
-							);
-						})}
-					</SheetContent>
-				</BottomSheetView>
-			</BottomSheet>
+										{Icon ? <Icon size={18} color={color} /> : null}
+										<Text
+											className={`text-base ${
+												isDanger ? 'text-danger' : 'text-foreground'
+											}`}
+										>
+											{item.label}
+										</Text>
+									</Button>
+								);
+							})}
+						</SheetContent>
+					</BottomSheetView>
+				</BottomSheet>
+			) : null}
 		</Portal>
 	);
 }
