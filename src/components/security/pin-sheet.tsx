@@ -2,14 +2,11 @@ import { Button } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 
-
 import { PinDots } from '@/components/security/pin-dots';
 import { PinPad } from '@/components/security/pin-pad';
 import { PortalSheet } from '@/components/ui/portal-sheet';
 import { PIN_MAX_LENGTH, PIN_MIN_LENGTH } from '@/constants/settings';
 import type { useBottomSheet } from '@/hooks/use-bottom-sheet';
-import { useSecurity } from '@/hooks/use-security';
-import { verifyPin } from '@/services/pin-service';
 import { getErrorMessage } from '@/utils/error';
 
 export type PinSheetMode = 'set' | 'change' | 'verify';
@@ -19,6 +16,8 @@ type Step = 'current' | 'new' | 'confirm';
 interface PinSheetProps {
 	readonly sheet: ReturnType<typeof useBottomSheet>;
 	readonly mode: PinSheetMode;
+	readonly onVerify: (pin: string) => Promise<boolean>;
+	readonly onSave?: (pin: string) => Promise<void>;
 	readonly onSuccess?: () => void;
 	readonly onRemove?: () => void;
 }
@@ -29,8 +28,14 @@ const STEP_DESCRIPTION: Record<Step, string> = {
 	confirm: 'Re-enter your new PIN to confirm.',
 };
 
-export function PinSheet({ sheet, mode, onSuccess, onRemove }: PinSheetProps): React.JSX.Element {
-	const { setPin } = useSecurity();
+export function PinSheet({
+	sheet,
+	mode,
+	onVerify,
+	onSave,
+	onSuccess,
+	onRemove,
+}: PinSheetProps): React.JSX.Element {
 	const [step, setStep] = useState<Step>(() =>
 		mode === 'change' ? 'current' : mode === 'verify' ? 'current' : 'new',
 	);
@@ -62,7 +67,7 @@ export function PinSheet({ sheet, mode, onSuccess, onRemove }: PinSheetProps): R
 		setIsSubmitting(true);
 		try {
 			if (step === 'current') {
-				const ok = await verifyPin(value);
+				const ok = await onVerify(value);
 				if (!ok) {
 					setError('Wrong PIN. Try again.');
 					setValue('');
@@ -89,7 +94,10 @@ export function PinSheet({ sheet, mode, onSuccess, onRemove }: PinSheetProps): R
 				setValue('');
 				return;
 			}
-			await setPin(value);
+			if (!onSave) {
+				throw new Error('PinSheet: onSave is required for set/change modes');
+			}
+			await onSave(value);
 			onSuccess?.();
 			sheet.close();
 		} catch (err: unknown) {
@@ -97,18 +105,14 @@ export function PinSheet({ sheet, mode, onSuccess, onRemove }: PinSheetProps): R
 		} finally {
 			setIsSubmitting(false);
 		}
-	}, [value, step, mode, candidate, setPin, onSuccess, sheet, reset]);
+	}, [value, step, mode, candidate, onVerify, onSave, onSuccess, sheet, reset]);
 
 	const canSubmit = value.length >= PIN_MIN_LENGTH && !isSubmitting;
 
 	const showRemove = mode === 'change' && step === 'current' && onRemove !== undefined;
 
 	return (
-		<PortalSheet
-			sheet={sheet}
-			title={<View></View>}
-			keyboardPersist
-		>
+		<PortalSheet sheet={sheet} title={<View></View>} keyboardPersist>
 			<Text className="text-base text-muted text-center">{STEP_DESCRIPTION[step]}</Text>
 
 			{error !== null ? (

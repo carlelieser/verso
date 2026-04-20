@@ -4,26 +4,61 @@ import React, { useCallback, useState } from 'react';
 
 import { Section } from '@/components/layout/section';
 import { type PinSheetMode, PinSheet } from '@/components/security/pin-sheet';
+import type { SecurityScope } from '@/components/security/security-scope';
+import { useAppSecurityScope } from '@/components/security/use-app-security-scope';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
-import { useSecurity } from '@/hooks/use-security';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-import { useConfirmDialog } from '@/providers/dialog-provider';
-import { useReauth } from '@/providers/reauth-provider';
 import { log } from '@/utils/log';
 
-export function SecuritySection(): React.JSX.Element {
+type ListGroupVariant = 'default' | 'secondary' | 'tertiary';
+
+interface SecuritySectionProps {
+	readonly scope?: SecurityScope;
+	readonly variant?: ListGroupVariant;
+}
+
+export function SecuritySection({
+	scope: providedScope,
+	variant = 'default',
+}: SecuritySectionProps): React.JSX.Element {
+	if (providedScope) {
+		return <SecuritySectionBody scope={providedScope} variant={variant} />;
+	}
+	return <AppSecuritySection variant={variant} />;
+}
+
+function AppSecuritySection({
+	variant,
+}: {
+	readonly variant: ListGroupVariant;
+}): React.JSX.Element {
+	const scope = useAppSecurityScope();
+	return <SecuritySectionBody scope={scope} variant={variant} />;
+}
+
+function SecuritySectionBody({
+	scope: security,
+	variant,
+}: {
+	readonly scope: SecurityScope;
+	readonly variant: ListGroupVariant;
+}): React.JSX.Element {
 	const { muted } = useThemeColors();
 	const {
 		hasPin,
+		canRequirePin,
 		isRequirePin,
 		isBiometricsEnabled,
 		biometric,
+		setPin,
+		verifyPin,
+		clearPin,
 		setRequirePin,
 		setBiometricsEnabled,
-		clearPin,
-	} = useSecurity();
-	const { requireAuth } = useReauth();
-	const { confirm } = useConfirmDialog();
+		requireAuth,
+		confirmRemovePin,
+		labels,
+	} = security;
 
 	const pinSheet = useBottomSheet();
 	const [pinMode, setPinMode] = useState<PinSheetMode>('set');
@@ -42,43 +77,54 @@ export function SecuritySection(): React.JSX.Element {
 
 	const handleRemovePin = useCallback(async () => {
 		pinSheet.close();
-		const ok = await confirm({
-			title: 'Remove PIN?',
-			description: 'This will also turn off Require PIN and biometrics.',
-			confirmLabel: 'Remove',
-			variant: 'danger',
-		});
+		const ok = await confirmRemovePin();
 		if (!ok) return;
-		clearPin().catch((err: unknown) => {
+		Promise.resolve(clearPin()).catch((err: unknown) => {
 			log.error('security', 'Failed to clear PIN', err);
 		});
-	}, [pinSheet, confirm, clearPin]);
+	}, [pinSheet, confirmRemovePin, clearPin]);
 
 	const handleRequirePinToggle = useCallback(
 		async (value: boolean) => {
 			if (isRequirePin === value) return;
-			const ok = await requireAuth(value ? 'Enable app lock' : 'Disable app lock');
+			const ok = await requireAuth(
+				value ? labels.requirePinEnableReason : labels.requirePinDisableReason,
+			);
 			if (!ok) return;
-			setRequirePin(value);
+			await setRequirePin(value);
 		},
-		[isRequirePin, requireAuth, setRequirePin],
+		[
+			isRequirePin,
+			requireAuth,
+			setRequirePin,
+			labels.requirePinEnableReason,
+			labels.requirePinDisableReason,
+		],
 	);
 
 	const handleBiometricsToggle = useCallback(
 		async (value: boolean) => {
 			if (isBiometricsEnabled === value) return;
-			const ok = await requireAuth(value ? 'Enable biometrics' : 'Disable biometrics');
+			const ok = await requireAuth(
+				value ? labels.biometricsEnableReason : labels.biometricsDisableReason,
+			);
 			if (!ok) return;
-			setBiometricsEnabled(value);
+			await setBiometricsEnabled(value);
 		},
-		[isBiometricsEnabled, requireAuth, setBiometricsEnabled],
+		[
+			isBiometricsEnabled,
+			requireAuth,
+			setBiometricsEnabled,
+			labels.biometricsEnableReason,
+			labels.biometricsDisableReason,
+		],
 	);
 
 	const biometricsDescription = hasPin ? biometric.label : 'Set a PIN first';
 
 	return (
-		<Section label="Security">
-			<ListGroup>
+		<Section label={labels.sectionTitle}>
+			<ListGroup variant={variant}>
 				<ListGroup.Item onPress={openPinFlow}>
 					<ListGroup.ItemPrefix>
 						<Asterisk size={20} color={muted} />
@@ -86,7 +132,7 @@ export function SecuritySection(): React.JSX.Element {
 					<ListGroup.ItemContent>
 						<ListGroup.ItemTitle>PIN</ListGroup.ItemTitle>
 						<ListGroup.ItemDescription>
-							{hasPin ? 'Tap to change' : 'Not set'}
+							{hasPin ? labels.pinDescription : 'Not set'}
 						</ListGroup.ItemDescription>
 					</ListGroup.ItemContent>
 					<ListGroup.ItemSuffix>
@@ -95,7 +141,7 @@ export function SecuritySection(): React.JSX.Element {
 				</ListGroup.Item>
 				<Separator className="mx-4" />
 				<ControlField
-					isDisabled={!hasPin}
+					isDisabled={!canRequirePin}
 					isSelected={isRequirePin}
 					onSelectedChange={handleRequirePinToggle}
 				>
@@ -104,7 +150,7 @@ export function SecuritySection(): React.JSX.Element {
 							<Lock size={20} color={muted} />
 						</ListGroup.ItemPrefix>
 						<ListGroup.ItemContent>
-							<ListGroup.ItemTitle>Require PIN</ListGroup.ItemTitle>
+							<ListGroup.ItemTitle>{labels.requirePinLabel}</ListGroup.ItemTitle>
 						</ListGroup.ItemContent>
 						<ListGroup.ItemSuffix>
 							<ControlField.Indicator />
@@ -115,7 +161,7 @@ export function SecuritySection(): React.JSX.Element {
 					<>
 						<Separator className="mx-4" />
 						<ControlField
-							isDisabled={!hasPin}
+							isDisabled={!canRequirePin || !isRequirePin}
 							isSelected={isBiometricsEnabled}
 							onSelectedChange={handleBiometricsToggle}
 						>
@@ -124,7 +170,9 @@ export function SecuritySection(): React.JSX.Element {
 									<Fingerprint size={20} color={muted} />
 								</ListGroup.ItemPrefix>
 								<ListGroup.ItemContent>
-									<ListGroup.ItemTitle>Unlock with Biometrics</ListGroup.ItemTitle>
+									<ListGroup.ItemTitle>
+										Unlock with Biometrics
+									</ListGroup.ItemTitle>
 									<ListGroup.ItemDescription>
 										{biometricsDescription}
 									</ListGroup.ItemDescription>
@@ -139,7 +187,13 @@ export function SecuritySection(): React.JSX.Element {
 			</ListGroup>
 
 			{pinSheet.isOpen ? (
-				<PinSheet sheet={pinSheet} mode={pinMode} onRemove={handleRemovePin} />
+				<PinSheet
+					sheet={pinSheet}
+					mode={pinMode}
+					onRemove={handleRemovePin}
+					onVerify={verifyPin}
+					onSave={setPin}
+				/>
 			) : null}
 		</Section>
 	);

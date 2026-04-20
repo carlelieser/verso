@@ -4,10 +4,17 @@ import { PinSheet } from '@/components/security/pin-sheet';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useSecurity } from '@/hooks/use-security';
 import { authenticateBiometric } from '@/services/biometric-service';
+import { verifyPin as verifyAppPin } from '@/services/pin-service';
 import { log } from '@/utils/log';
 
+export interface RequireAuthOptions {
+	readonly hasPin: boolean;
+	readonly isBiometricsEnabled: boolean;
+	readonly verifyPin: (pin: string) => Promise<boolean>;
+}
+
 interface ReauthContextValue {
-	readonly requireAuth: (reason: string) => Promise<boolean>;
+	readonly requireAuth: (reason: string, options?: RequireAuthOptions) => Promise<boolean>;
 }
 
 const ReauthContext = createContext<ReauthContextValue | null>(null);
@@ -25,24 +32,30 @@ interface ReauthProviderProps {
 }
 
 export function ReauthProvider({ children }: ReauthProviderProps): React.JSX.Element {
-	const { hasPin, isBiometricsEnabled, biometric } = useSecurity();
+	const {
+		hasPin: appHasPin,
+		isBiometricsEnabled: appBiometricsEnabled,
+		biometric,
+	} = useSecurity();
 	const sheet = useBottomSheet();
 	const resolveRef = useRef<((value: boolean) => void) | null>(null);
 	const [isSheetMounted, setIsSheetMounted] = useState(false);
+	const [verifyFn, setVerifyFn] = useState<(pin: string) => Promise<boolean>>(() => verifyAppPin);
 
-	const resolve = useCallback(
-		(value: boolean) => {
-			const fn = resolveRef.current;
-			resolveRef.current = null;
-			if (fn) fn(value);
+	const resolve = useCallback((value: boolean) => {
+		const fn = resolveRef.current;
+		resolveRef.current = null;
+		if (fn) fn(value);
+	}, []);
+
+	const openSheet = useCallback(
+		(verify: (pin: string) => Promise<boolean>) => {
+			setVerifyFn(() => verify);
+			setIsSheetMounted(true);
+			sheet.open();
 		},
-		[],
+		[sheet],
 	);
-
-	const openSheet = useCallback(() => {
-		setIsSheetMounted(true);
-		sheet.open();
-	}, [sheet]);
 
 	const handleSheetClose = useCallback(() => {
 		setIsSheetMounted(false);
@@ -54,7 +67,10 @@ export function ReauthProvider({ children }: ReauthProviderProps): React.JSX.Ele
 	}, [resolve]);
 
 	const requireAuth = useCallback(
-		async (reason: string): Promise<boolean> => {
+		async (reason: string, options?: RequireAuthOptions): Promise<boolean> => {
+			const hasPin = options?.hasPin ?? appHasPin;
+			const isBiometricsEnabled = options?.isBiometricsEnabled ?? appBiometricsEnabled;
+			const verify = options?.verifyPin ?? verifyAppPin;
 			if (!hasPin) return true;
 			if (resolveRef.current !== null) return false;
 			if (isBiometricsEnabled && biometric.isAvailable) {
@@ -67,10 +83,10 @@ export function ReauthProvider({ children }: ReauthProviderProps): React.JSX.Ele
 			}
 			return new Promise<boolean>((res) => {
 				resolveRef.current = res;
-				openSheet();
+				openSheet(verify);
 			});
 		},
-		[hasPin, isBiometricsEnabled, biometric.isAvailable, openSheet],
+		[appHasPin, appBiometricsEnabled, biometric.isAvailable, openSheet],
 	);
 
 	const contextValue = useMemo<ReauthContextValue>(() => ({ requireAuth }), [requireAuth]);
@@ -84,7 +100,12 @@ export function ReauthProvider({ children }: ReauthProviderProps): React.JSX.Ele
 		<ReauthContext.Provider value={contextValue}>
 			{children}
 			{isSheetMounted ? (
-				<PinSheet sheet={sheetWithClose} mode="verify" onSuccess={handleSuccess} />
+				<PinSheet
+					sheet={sheetWithClose}
+					mode="verify"
+					onVerify={verifyFn}
+					onSuccess={handleSuccess}
+				/>
 			) : null}
 		</ReauthContext.Provider>
 	);
