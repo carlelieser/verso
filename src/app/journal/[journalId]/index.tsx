@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
 	EllipsisVertical,
+	Lock,
 	Maximize,
 	Palette,
 	Pencil,
@@ -19,8 +20,10 @@ import { MoveToJournalSheet } from '@/components/entry/move-to-journal-sheet';
 import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
 import { JournalColorBanner } from '@/components/journal/journal-color-banner';
+import { JournalPrivacySheet } from '@/components/journal/journal-privacy-sheet';
 import { RenameJournal } from '@/components/journal/rename-journal';
 import { Screen } from '@/components/layout/screen';
+import { JournalLockGate } from '@/components/security/journal-lock-gate';
 import { ActionSheet } from '@/components/ui/action-sheet';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
@@ -28,6 +31,7 @@ import { FabMenu } from '@/components/ui/fab-menu';
 import { SearchInput } from '@/components/ui/search-input';
 import { DEFAULT_JOURNAL_COLOR, getJournalIcon } from '@/constants/journal-icons';
 import { useScreenInsets } from '@/contexts/screen-context';
+import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
 import { useDeleteEntry } from '@/hooks/use-delete-entry';
 import { useEntries } from '@/hooks/use-entries';
@@ -108,6 +112,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const entryCount = journalId ? entryCounts.get(journalId) ?? 0 : 0;
 	const { entries, searchEntries, createEntry, deleteEntry } = useEntries(journalId);
 	const [searchQuery, setSearchQuery] = useState('');
+	const privacySheet = useBottomSheet();
 	const {
 		selectedItem: selectedEntry,
 		handleLongPress: handleEntryLongPress,
@@ -172,6 +177,12 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				icon: <Palette size={16} color={muted} />,
 				onPress: colorSheet.open,
 			},
+			{
+				id: 'privacy',
+				label: 'Privacy',
+				icon: <Lock size={16} color={muted} />,
+				onPress: privacySheet.open,
+			},
 			...(!isDefault
 				? [
 						{
@@ -197,6 +208,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 			renameSheet,
 			iconSheet,
 			colorSheet,
+			privacySheet,
 			handleSetDefault,
 			handleDeleteJournal,
 		],
@@ -224,7 +236,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 
 	const Icon = journal ? getJournalIcon(journal.icon) : null;
 
-	const subtitle = formatJournalMeta(entryCount, isDefault ?? false);
+	const subtitle = formatJournalMeta(entryCount, isDefault ?? false, journal?.isLocked ?? false);
 
 	const titleContent = (
 		<View className="flex-row items-center gap-4">
@@ -245,7 +257,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const statusBarStyle = journal ? (isLightColor(journal.color) ? 'dark' : 'light') : 'auto';
 
 	return (
-		<>
+		<JournalLockGate journalId={journalId ?? ''}>
 			<StatusBar style={statusBarStyle} />
 			<Screen
 				title={titleContent}
@@ -313,7 +325,11 @@ export default function JournalDetailScreen(): React.JSX.Element {
 						onChangeColor={handleChangeColor}
 					/>
 				) : null}
+
+				{privacySheet.isOpen && journalId ? (
+					<JournalPrivacySheet sheet={privacySheet} journalId={journalId} />
+				) : null}
 			</Screen>
-		</>
+		</JournalLockGate>
 	);
 }

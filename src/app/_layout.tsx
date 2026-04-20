@@ -17,6 +17,7 @@ import { PrivacyScreen } from '@/components/security/privacy-screen';
 import { SETTINGS_THEME_KEY, isValidTheme } from '@/constants/settings';
 import { DatabaseProvider } from '@/providers/database-provider';
 import { DialogProvider } from '@/providers/dialog-provider';
+import { JournalLockProvider } from '@/providers/journal-lock-provider';
 import { ReauthProvider } from '@/providers/reauth-provider';
 import { SecurityProvider } from '@/providers/security-provider';
 import { SettingsProvider } from '@/providers/settings-provider';
@@ -81,24 +82,26 @@ export default function RootLayout(): React.JSX.Element {
 					<SettingsProvider>
 						<SecurityProvider>
 							<DatabaseProvider onReady={handleDbReady}>
-								<DialogProvider>
-									<ReauthProvider>
-										<Stack
-											screenOptions={{
-												headerShown: false,
-											}}
-										>
-											<Stack.Screen
-												name="onboarding"
-												options={{
-													gestureEnabled: false,
+								<JournalLockProvider>
+									<DialogProvider>
+										<ReauthProvider>
+											<Stack
+												screenOptions={{
+													headerShown: false,
 												}}
-											/>
-										</Stack>
-										<AuthGate />
-										<PrivacyScreen />
-									</ReauthProvider>
-								</DialogProvider>
+											>
+												<Stack.Screen
+													name="onboarding"
+													options={{
+														gestureEnabled: false,
+													}}
+												/>
+											</Stack>
+											<AuthGate />
+											<PrivacyScreen />
+										</ReauthProvider>
+									</DialogProvider>
+								</JournalLockProvider>
 							</DatabaseProvider>
 						</SecurityProvider>
 					</SettingsProvider>

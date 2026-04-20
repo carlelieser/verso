@@ -5,6 +5,7 @@ import { ScrollView } from 'react-native';
 import { AttachmentButton } from '@/components/entry/attachment-button';
 import { AttachmentList } from '@/components/entry/attachment-list';
 import { Screen } from '@/components/layout/screen';
+import { JournalLockGate } from '@/components/security/journal-lock-gate';
 import { useScreenInsets } from '@/contexts/screen-context';
 import { useLiveAttachments } from '@/hooks/use-live-attachments';
 import { EntryProvider } from '@/providers/entry-provider';
@@ -38,11 +39,13 @@ function AttachmentsContent(): React.JSX.Element {
 }
 
 export default function AttachmentsScreen(): React.JSX.Element {
-	const { entryId } = useLocalSearchParams<{ journalId: string; entryId: string }>();
+	const { journalId, entryId } = useLocalSearchParams<{ journalId: string; entryId: string }>();
 
 	return (
-		<EntryProvider entryId={entryId}>
-			<AttachmentsContent />
-		</EntryProvider>
+		<JournalLockGate journalId={journalId ?? ''}>
+			<EntryProvider entryId={entryId}>
+				<AttachmentsContent />
+			</EntryProvider>
+		</JournalLockGate>
 	);
 }

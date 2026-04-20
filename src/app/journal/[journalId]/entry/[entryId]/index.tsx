@@ -10,6 +10,7 @@ import { MoveToJournalSheet } from '@/components/entry/move-to-journal-sheet';
 import { WeatherCard } from '@/components/entry/weather-card';
 import { Screen } from '@/components/layout/screen';
 import { Section } from '@/components/layout/section';
+import { JournalLockGate } from '@/components/security/journal-lock-gate';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu, type FabMenuItem } from '@/components/ui/fab-menu';
 import { useScreenInsets } from '@/contexts/screen-context';
@@ -146,7 +147,7 @@ export default function EntryViewScreen(): React.JSX.Element {
 	);
 
 	return (
-		<>
+		<JournalLockGate journalId={journalId ?? ''}>
 			<Screen
 				fab={
 					entry ? (
@@ -186,6 +187,6 @@ export default function EntryViewScreen(): React.JSX.Element {
 				currentJournalId={journalId ?? ''}
 				onMove={handleMove}
 			/>
-		</>
+		</JournalLockGate>
 	);
 }
