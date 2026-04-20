@@ -121,19 +121,26 @@ interface FtsRow {
 	readonly journal_name: string;
 }
 
-export async function searchEntries(db: Db, query: string): Promise<EntrySummaryWithJournal[]> {
+export async function searchEntries(
+	db: Db,
+	query: string,
+	journalId?: string,
+): Promise<EntrySummaryWithJournal[]> {
 	if (query.trim().length === 0) return [];
 
 	const rawDb = getRawClient(db);
+
+	const scopeClause = journalId ? 'AND e.journal_id = ?' : 'AND j.is_locked = 0';
+	const params: unknown[] = journalId ? [query, journalId] : [query];
 
 	const rows = (await rawDb.getAllAsync(
 		`SELECT e.id, e.journal_id, e.content_text, e.created_at, e.updated_at, j.name as journal_name
      FROM entry_fts fts
      JOIN entry e ON e.rowid = fts.rowid
      JOIN journal j ON j.id = e.journal_id
-     WHERE entry_fts MATCH ?
+     WHERE entry_fts MATCH ? ${scopeClause}
      ORDER BY rank`,
-		[query],
+		params,
 	)) as FtsRow[]; // System boundary: raw SQL result shape is not typed by the driver
 
 	return rows.map((row) => ({

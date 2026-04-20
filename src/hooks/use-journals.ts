@@ -1,4 +1,4 @@
-import { asc, count, ne } from 'drizzle-orm';
+import { and, asc, count, eq, ne } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useCallback, useMemo } from 'react';
 
@@ -39,7 +39,8 @@ export function useJournals(): UseJournalsResult {
 				count: count(),
 			})
 			.from(entries)
-			.where(ne(entries.contentText, ''))
+			.innerJoin(journals, eq(journals.id, entries.journalId))
+			.where(and(ne(entries.contentText, ''), eq(journals.isLocked, false)))
 			.groupBy(entries.journalId),
 	);
 

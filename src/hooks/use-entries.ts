@@ -23,6 +23,7 @@ const ENTRY_LIST_COLUMNS = {
 } as const;
 
 const NON_EMPTY = ne(entries.contentText, '');
+const NOT_LOCKED = eq(journals.isLocked, false);
 
 interface UseEntriesResult {
 	readonly entries: readonly EntrySummaryWithJournal[];
@@ -49,7 +50,11 @@ export function useEntries(journalId?: string): UseEntriesResult {
 			.select(ENTRY_LIST_COLUMNS)
 			.from(entries)
 			.innerJoin(journals, eq(entries.journalId, journals.id))
-			.where(journalId ? and(NON_EMPTY, eq(entries.journalId, journalId)) : NON_EMPTY)
+			.where(
+				journalId
+					? and(NON_EMPTY, eq(entries.journalId, journalId))
+					: and(NON_EMPTY, NOT_LOCKED),
+			)
 			.orderBy(desc(entries.updatedAt))
 			.limit(50),
 		[journalId],
@@ -111,10 +116,10 @@ export function useEntries(journalId?: string): UseEntriesResult {
 				setSearchResults(null);
 				return;
 			}
-			const results = await searchEntriesService(db, query);
+			const results = await searchEntriesService(db, query, journalId);
 			setSearchResults(results);
 		},
-		[db],
+		[db, journalId],
 	);
 
 	return {
