@@ -12,7 +12,7 @@ function deserialize<T>(raw: string): T {
 	try {
 		return JSON.parse(raw) as T;
 	} catch {
-		return String(raw) as T
+		return String(raw) as T;
 	}
 }
 

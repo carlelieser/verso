@@ -16,7 +16,8 @@ import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/log';
 
 export function AuthGate(): React.JSX.Element | null {
-	const { isLocked, hasPin, isRequirePin, isBiometricsEnabled, biometric, unlock } = useSecurity();
+	const { isLocked, hasPin, isRequirePin, isBiometricsEnabled, biometric, unlock } =
+		useSecurity();
 	const { muted } = useThemeColors();
 	const insets = useSafeAreaInsets();
 	const [value, setValue] = useState('');
@@ -114,11 +115,8 @@ export function AuthGate(): React.JSX.Element | null {
 							{error ?? 'Enter PIN'}
 						</Text>
 					</View>
-					<View className={"py-12"}>
-						<PinDots
-							length={value.length}
-							maxLength={PIN_MAX_LENGTH}
-						/>
+					<View className={'py-12'}>
+						<PinDots length={value.length} maxLength={PIN_MAX_LENGTH} />
 					</View>
 					<PinPad
 						onDigit={handleDigit}

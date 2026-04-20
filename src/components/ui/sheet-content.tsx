@@ -22,7 +22,7 @@ export function SheetContent({
 			{typeof title === 'string' ? (
 				<Text className="text-3xl font-heading text-foreground pb-1">{title}</Text>
 			) : (
-				(title ?? null)
+				title ?? null
 			)}
 			{children}
 			{footer ? <View className="flex-row items-center justify-end">{footer}</View> : null}

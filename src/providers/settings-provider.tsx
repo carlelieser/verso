@@ -99,9 +99,7 @@ export function SettingsProvider({ children }: SettingsProviderProps): React.JSX
 
 	const load = useCallback(() => {
 		Promise.all([
-			...SETTINGS_KEYS.map((key) =>
-				storage.getAsync(key, DEFAULT_SETTINGS[key] ?? false),
-			),
+			...SETTINGS_KEYS.map((key) => storage.getAsync(key, DEFAULT_SETTINGS[key] ?? false)),
 			storage.getAsync(SETTINGS_THEME_KEY, DEFAULT_THEME),
 		])
 			.then((results) => {

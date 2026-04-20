@@ -45,7 +45,7 @@ export async function getBiometricCapability(): Promise<BiometricCapability> {
 	const isAvailable = hasHardware && isEnrolled && types.length > 0;
 	const type = getPreferredAuthenticationType(types);
 	const label = getAuthenticationTypeLabel(type);
-	return {isAvailable, type, label};
+	return { isAvailable, type, label };
 }
 
 export async function authenticateBiometric(reason: string): Promise<boolean> {

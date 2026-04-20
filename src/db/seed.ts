@@ -45,7 +45,12 @@ const MOCK_JOURNALS = [
 			{
 				daysAgo: 2,
 				text: 'Cooked a proper dinner for the first time in what feels like a month — pasta with brown butter and sage, a salad that existed mostly as an alibi. Put the phone in the other room on purpose, which felt absurd until halfway through, when I noticed I was actually tasting the food. There\u2019s a version of me that doesn\u2019t know how to sit at a table for half an hour without being entertained, and I\u2019d like to phase him out.',
-				weather: { temperature: 16, condition: 'Partly Cloudy', humidity: 65, windSpeed: 10 },
+				weather: {
+					temperature: 16,
+					condition: 'Partly Cloudy',
+					humidity: 65,
+					windSpeed: 10,
+				},
 				emotions: [{ category: 'content', intensity: 4 }],
 			},
 			{
@@ -62,7 +67,12 @@ const MOCK_JOURNALS = [
 			{
 				daysAgo: 7,
 				text: 'Rough day. The kind where nothing is actually wrong but everything feels like it\u2019s running one gear too low. Got through the meetings, answered the emails, ate lunch at my desk and didn\u2019t really taste it. Skipped the gym, which I\u2019m trying not to narrate as a failure. Some days the quiet victory is just not making things worse. Tomorrow is another try.',
-				weather: { temperature: 9, condition: 'Moderate Rain', humidity: 88, windSpeed: 22 },
+				weather: {
+					temperature: 9,
+					condition: 'Moderate Rain',
+					humidity: 88,
+					windSpeed: 22,
+				},
 				emotions: [{ category: 'tired', intensity: 4 }],
 			},
 			{
@@ -169,7 +179,12 @@ const MOCK_JOURNALS = [
 			{
 				daysAgo: 0,
 				text: '5K at easy pace, the first ten minutes felt like running through wet sand and then, somewhere around the bridge, the legs remembered themselves and I stopped noticing them. This is the part of running nobody describes accurately — it is not fun exactly, not even close to fun for the first third, but at some point the body stops being a thing you are negotiating with and starts being a vehicle you\u2019re sitting inside. Splits were even. Heart rate came down faster than last week.',
-				weather: { temperature: 11, condition: 'Partly Cloudy', humidity: 68, windSpeed: 10 },
+				weather: {
+					temperature: 11,
+					condition: 'Partly Cloudy',
+					humidity: 68,
+					windSpeed: 10,
+				},
 				emotions: [{ category: 'energetic', intensity: 4 }],
 			},
 			{

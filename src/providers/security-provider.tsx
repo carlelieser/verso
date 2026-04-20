@@ -3,10 +3,7 @@ import { AppState } from 'react-native';
 
 import { SETTINGS_BIOMETRICS_KEY, SETTINGS_REQUIRE_PIN_KEY } from '@/constants/settings';
 import { useSettings } from '@/hooks/use-settings';
-import {
-	type BiometricCapability,
-	getBiometricCapability,
-} from '@/services/biometric-service';
+import { type BiometricCapability, getBiometricCapability } from '@/services/biometric-service';
 import {
 	clearPin as clearPinStorage,
 	hasPin as readHasPin,
