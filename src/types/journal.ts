@@ -6,6 +6,9 @@ export interface Journal {
 	readonly icon: string;
 	readonly color: string;
 	readonly displayOrder: number;
+	readonly isLocked: boolean;
+	readonly hasOverridePin: boolean;
+	readonly biometricsEnabled: boolean;
 	readonly createdAt: Timestamp;
 	readonly updatedAt: Timestamp;
 }

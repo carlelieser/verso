@@ -14,11 +14,18 @@ export const journals = sqliteTable(
 		icon: text('icon').notNull().default('book-open'),
 		color: text('color').notNull().default(DEFAULT_JOURNAL_COLOR),
 		displayOrder: integer('display_order').notNull().default(0),
+		isLocked: integer('is_locked', { mode: 'boolean' }).notNull().default(false),
+		pinHash: text('pin_hash'),
+		pinSalt: text('pin_salt'),
+		biometricsEnabled: integer('biometrics_enabled', { mode: 'boolean' })
+			.notNull()
+			.default(false),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 	},
 	(table) => [
 		index('journal_order_idx').on(table.displayOrder),
+		index('journal_locked_idx').on(table.isLocked),
 		uniqueIndex('journal_name_idx').on(table.name),
 	],
 );

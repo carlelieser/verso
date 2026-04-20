@@ -3,6 +3,8 @@ import { asc, eq, ne, sql } from 'drizzle-orm';
 import type { Db } from '@/db/client';
 import { journals } from '@/db/schema';
 import { JournalNotFoundError } from '@/errors/domain-errors';
+import { generateSalt, hashPin, timingSafeEqual } from '@/services/pin-crypto';
+import { verifyPin as verifyAppPin } from '@/services/pin-service';
 import type { Journal } from '@/types/journal';
 import { generateId } from '@/utils/id';
 
@@ -25,6 +27,10 @@ export function toJournal(row: {
 	icon: string;
 	color: string;
 	displayOrder: number;
+	isLocked: boolean;
+	pinHash: string | null;
+	pinSalt: string | null;
+	biometricsEnabled: boolean;
 	createdAt: Date;
 	updatedAt: Date;
 }): Journal {
@@ -34,6 +40,9 @@ export function toJournal(row: {
 		icon: row.icon,
 		color: row.color,
 		displayOrder: row.displayOrder,
+		isLocked: row.isLocked,
+		hasOverridePin: row.pinHash !== null,
+		biometricsEnabled: row.biometricsEnabled,
 		createdAt: row.createdAt.getTime(),
 		updatedAt: row.updatedAt.getTime(),
 	};
@@ -70,6 +79,9 @@ export async function createJournal(db: Db, input: CreateJournalInput): Promise<
 		icon: input.icon,
 		color: input.color,
 		displayOrder,
+		isLocked: false,
+		hasOverridePin: false,
+		biometricsEnabled: false,
 		createdAt: now.getTime(),
 		updatedAt: now.getTime(),
 	};
@@ -106,4 +118,45 @@ export async function deleteJournal(db: Db, id: string): Promise<void> {
 		.limit(1);
 	if (!existing) throw new JournalNotFoundError(id);
 	await db.delete(journals).where(eq(journals.id, id));
+}
+
+export async function setJournalLocked(db: Db, id: string, isLocked: boolean): Promise<void> {
+	await db.update(journals).set({ isLocked, updatedAt: new Date() }).where(eq(journals.id, id));
+}
+
+export async function setJournalOverridePin(db: Db, id: string, pin: string): Promise<void> {
+	const salt = generateSalt();
+	const hash = await hashPin(pin, salt);
+	await db
+		.update(journals)
+		.set({ pinHash: hash, pinSalt: salt, updatedAt: new Date() })
+		.where(eq(journals.id, id));
+}
+
+export async function clearJournalOverridePin(db: Db, id: string): Promise<void> {
+	await db
+		.update(journals)
+		.set({ pinHash: null, pinSalt: null, updatedAt: new Date() })
+		.where(eq(journals.id, id));
+}
+
+export async function verifyJournalPin(db: Db, id: string, pin: string): Promise<boolean> {
+	const [row] = await db
+		.select({ pinHash: journals.pinHash, pinSalt: journals.pinSalt })
+		.from(journals)
+		.where(eq(journals.id, id))
+		.limit(1);
+	if (!row) return false;
+	if (row.pinHash === null || row.pinSalt === null) {
+		return verifyAppPin(pin);
+	}
+	const computed = await hashPin(pin, row.pinSalt);
+	return timingSafeEqual(computed, row.pinHash);
+}
+
+export async function setJournalBiometrics(db: Db, id: string, enabled: boolean): Promise<void> {
+	await db
+		.update(journals)
+		.set({ biometricsEnabled: enabled, updatedAt: new Date() })
+		.where(eq(journals.id, id));
 }
