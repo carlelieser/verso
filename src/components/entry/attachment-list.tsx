@@ -3,6 +3,7 @@ import { AudioLinesIcon, MapPin, Paperclip, Share2, Trash2 } from 'lucide-react-
 import React, { useCallback, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
+import { FilePreview } from '@/components/entry/file-preview';
 import { EmptyState } from '@/components/ui/empty-state';
 import { InfoCard } from '@/components/ui/info-card';
 import { OverflowMenu, type OverflowMenuItem } from '@/components/ui/overflow-menu';
@@ -57,17 +58,23 @@ function FileCard({
 	const menuItems = useShareDeleteMenu(onShare, onDelete);
 
 	return (
-		<InfoCard style={isDeleting ? { opacity: 0.5 } : undefined}>
-			<Icon size={20} color={muted} />
-			<View className="flex-1">
-				<Text className="text-sm text-foreground" numberOfLines={1}>
-					{attachment.data.fileName ?? 'Untitled'}
-				</Text>
-				<Text className="text-xs text-muted">
-					{formatFileSize(attachment.data.sizeBytes)}
-				</Text>
+		<InfoCard
+			style={isDeleting ? { opacity: 0.5 } : undefined}
+			className="flex-col items-stretch gap-3"
+		>
+			<FilePreview attachment={attachment} />
+			<View className="flex-row items-center gap-3">
+				<Icon size={20} color={muted} />
+				<View className="flex-1">
+					<Text className="text-sm text-foreground" numberOfLines={1}>
+						{attachment.data.fileName ?? 'Untitled'}
+					</Text>
+					<Text className="text-xs text-muted">
+						{formatFileSize(attachment.data.sizeBytes)}
+					</Text>
+				</View>
+				<OverflowMenu items={menuItems} />
 			</View>
-			<OverflowMenu items={menuItems} />
 		</InfoCard>
 	);
 }
@@ -197,7 +204,7 @@ export function AttachmentList({ attachments }: AttachmentListProps): React.JSX.
 	);
 
 	return (
-		<View className={'flex-1'}>
+		<View className="grow">
 			{attachments.length === 0 ? (
 				<EmptyState
 					icon={<Paperclip size={48} color={muted} />}
