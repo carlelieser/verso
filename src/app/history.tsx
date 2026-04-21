@@ -127,7 +127,12 @@ export default function HistoryScreen(): React.JSX.Element {
 			<ActionSheet
 				header={
 					selectedEntry ? (
-						<EntryCard entry={selectedEntry} showJournalName onPress={() => {}} />
+						<EntryCard
+							entry={selectedEntry}
+							showJournalName
+							onPress={() => {}}
+							variant="transparent"
+						/>
 					) : null
 				}
 				items={actionItems}

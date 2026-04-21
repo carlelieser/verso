@@ -288,7 +288,11 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				<ActionSheet
 					header={
 						selectedEntry ? (
-							<EntryCard entry={selectedEntry} onPress={() => {}} />
+							<EntryCard
+								entry={selectedEntry}
+								onPress={() => {}}
+								variant="transparent"
+							/>
 						) : null
 					}
 					items={entryActionItems}

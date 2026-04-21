@@ -5,11 +5,14 @@ import { Pressable, View } from 'react-native';
 import type { EntrySummaryWithJournal } from '@/types/entry';
 import { formatRelativeDate } from '@/utils/date';
 
+type CardVariant = 'default' | 'secondary' | 'tertiary' | 'transparent';
+
 interface EntryCardProps {
 	readonly entry: EntrySummaryWithJournal;
 	readonly onPress: () => void;
 	readonly onLongPress?: () => void;
 	readonly showJournalName?: boolean;
+	readonly variant?: CardVariant;
 }
 
 function countWords(text: string): number {
@@ -29,6 +32,7 @@ export function EntryCard({
 	onPress,
 	onLongPress,
 	showJournalName = false,
+	variant,
 }: EntryCardProps): React.JSX.Element {
 	const preview = entry.contentText.slice(0, 120).trim();
 	const wordCount = countWords(entry.contentText);
@@ -39,7 +43,7 @@ export function EntryCard({
 
 	return (
 		<Pressable onPress={onPress} onLongPress={onLongPress}>
-			<Card>
+			<Card variant={variant}>
 				<Card.Body>
 					<View>
 						<Card.Title className="font-editor text-sm" numberOfLines={2}>
