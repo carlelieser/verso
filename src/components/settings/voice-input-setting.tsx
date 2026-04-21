@@ -4,7 +4,7 @@ import React, { useCallback } from 'react';
 import { View } from 'react-native';
 
 import { ModelDownloadStatus } from '@/components/settings/model-download-status';
-import { SETTINGS_VOICE_INPUT_KEY } from '@/constants/settings';
+import { SETTINGS_VOICE_INPUT_KEY, STT_MODEL_DOWNLOAD_SIZE_LABEL } from '@/constants/settings';
 import { useModelDownload } from '@/hooks/use-model-download';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useSettings } from '@/hooks/use-settings';
@@ -23,7 +23,7 @@ export function VoiceInputSetting(): React.JSX.Element {
 			if (enabled && model.status !== 'downloaded') {
 				const confirmed = await dialog.confirm({
 					title: 'Download Model',
-					description: `Voice input requires a one-time download of the Whisper STT (Speech-to-Text) model. This model is tiny (~77MB) and runs completely locally. No data leaves your device.`,
+					description: `Voice input requires a one-time download of the Whisper STT (Speech-to-Text) model. This model is tiny (${STT_MODEL_DOWNLOAD_SIZE_LABEL}) and runs completely locally. No data leaves your device.`,
 					confirmLabel: 'Download',
 				});
 

@@ -53,7 +53,7 @@ export function useWhisperTranscription(
 		if (contextRef.current) return contextRef.current;
 		const info = await FileSystem.getInfoAsync(MODEL_PATH);
 		if (!info.exists) return null;
-		const ctx = await initWhisper({ filePath: MODEL_PATH });
+		const ctx = await initWhisper({ filePath: MODEL_PATH, useCoreMLIos: true });
 		contextRef.current = ctx;
 		return ctx;
 	}, []);

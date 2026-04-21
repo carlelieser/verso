@@ -65,6 +65,9 @@ declare module 'whisper.rn' {
 		isBundleAsset?: boolean;
 		downloadFileUrl?: string;
 		cacheDir?: string;
+		useGpu?: boolean;
+		useCoreMLIos?: boolean;
+		useFlashAttn?: boolean;
 	}): Promise<WhisperContext>;
 }
 

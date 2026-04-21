@@ -3,6 +3,7 @@ import { Check, RotateCcw, X } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
+import { STT_MODEL_DOWNLOAD_SIZE_LABEL } from '@/constants/settings';
 import type { UseModelDownloadResult } from '@/hooks/use-model-download';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
@@ -54,7 +55,7 @@ export function ModelDownloadStatus({ model }: ModelDownloadStatusProps): React.
 					<Button className={'px-0'} variant="ghost" size="sm" onPress={model.download}>
 						<Button.Label className="text-accent text-xs">Download</Button.Label>
 					</Button>
-					<Text className="text-xs text-muted">~77 MB</Text>
+					<Text className="text-xs text-muted">{STT_MODEL_DOWNLOAD_SIZE_LABEL}</Text>
 				</>
 			)}
 		</View>
