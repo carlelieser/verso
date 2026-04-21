@@ -59,7 +59,7 @@ export function AnimatedWave({
 		return () => cancelAnimation(loop);
 	}, [width, height, maxPoints, speed, delta, effectiveWaveHeight, loop, path, tick]);
 
-	const animatedProps = useAnimatedProps(() => ({ d: path.value }), [path.value]);
+	const animatedProps = useAnimatedProps(() => ({ d: path.value }));
 
 	if (width === 0) return <></>;
 
