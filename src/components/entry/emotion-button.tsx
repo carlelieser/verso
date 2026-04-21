@@ -11,7 +11,7 @@ import { useEntryContext } from '@/providers/entry-provider';
 export function EmotionButton(): React.JSX.Element {
 	const { accent, muted } = useThemeColors();
 	const { emotions } = useEntryContext();
-	const sheet = useBottomSheet({ maxDynamicContentSize: 700 });
+	const sheet = useBottomSheet({ maxDynamicContentSize: 900 });
 
 	const handlePress = useCallback(() => {
 		Keyboard.dismiss();
