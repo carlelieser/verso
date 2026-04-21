@@ -1,6 +1,6 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { Button } from 'heroui-native';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { PortalSheet } from '@/components/ui/portal-sheet';
 import type { useBottomSheet } from '@/hooks/use-bottom-sheet';
@@ -17,10 +17,9 @@ export function RenameJournal({
 	currentName,
 	onRename,
 }: RenameJournalProps): React.JSX.Element {
-	const [name, setName] = useState(currentName);
+	const nameRef = useRef(currentName);
+	const [isValid, setIsValid] = useState(false);
 	const { foreground, muted } = useThemeColors();
-
-	const isValid = name.trim().length > 0 && name.trim() !== currentName;
 
 	return (
 		<PortalSheet
@@ -30,7 +29,7 @@ export function RenameJournal({
 				<Button
 					variant="primary"
 					isDisabled={!isValid}
-					onPress={() => onRename(name.trim())}
+					onPress={() => onRename(nameRef.current.trim())}
 				>
 					<Button.Label>Save</Button.Label>
 				</Button>
@@ -38,7 +37,11 @@ export function RenameJournal({
 		>
 			<BottomSheetTextInput
 				defaultValue={currentName}
-				onChangeText={setName}
+				onChangeText={(text) => {
+					nameRef.current = text;
+					const trimmed = text.trim();
+					setIsValid(trimmed.length > 0 && trimmed !== currentName);
+				}}
 				placeholder="Journal name"
 				placeholderTextColor={muted}
 				autoFocus

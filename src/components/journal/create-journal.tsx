@@ -1,6 +1,6 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { Button } from 'heroui-native';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { Section } from '@/components/layout/section';
 import { ColorPicker, getRandomSwatch } from '@/components/ui/color-picker';
@@ -16,12 +16,11 @@ interface CreateJournalProps {
 }
 
 export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JSX.Element {
-	const [name, setName] = useState('');
+	const nameRef = useRef('');
+	const [isValid, setIsValid] = useState(false);
 	const [selectedIcon, setSelectedIcon] = useState('book-open');
 	const [selectedColor, setSelectedColor] = useState(getRandomSwatch);
 	const { foreground, muted } = useThemeColors();
-
-	const isValid = name.trim().length > 0;
 
 	return (
 		<PortalSheet
@@ -31,7 +30,7 @@ export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JS
 				<Button
 					variant="primary"
 					isDisabled={!isValid}
-					onPress={() => onCreate(name.trim(), selectedIcon, selectedColor)}
+					onPress={() => onCreate(nameRef.current.trim(), selectedIcon, selectedColor)}
 				>
 					<Button.Label>Create Journal</Button.Label>
 				</Button>
@@ -39,8 +38,11 @@ export function CreateJournal({ sheet, onCreate }: CreateJournalProps): React.JS
 		>
 			<Section label="Name">
 				<BottomSheetTextInput
-					value={name}
-					onChangeText={setName}
+					defaultValue=""
+					onChangeText={(text) => {
+						nameRef.current = text;
+						setIsValid(text.trim().length > 0);
+					}}
 					placeholder="e.g. Daily, Work, Ideas..."
 					placeholderTextColor={muted}
 					autoFocus={true}
