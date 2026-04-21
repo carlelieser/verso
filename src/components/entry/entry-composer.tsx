@@ -48,6 +48,8 @@ interface EntryComposerProps {
 	readonly isAnimatedCheck?: boolean;
 	/** Placeholder text for the editor. */
 	readonly placeholder?: string;
+	/** Skip the bottom safe-area inset — e.g. when a tab bar already provides spacing. */
+	readonly disableBottomInset?: boolean;
 }
 
 export const EntryComposer = forwardRef<EntryComposerHandle, EntryComposerProps>(
@@ -71,6 +73,7 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 			onFinish,
 			isAnimatedCheck = false,
 			placeholder = "What's on your mind?",
+			disableBottomInset = false,
 		},
 		forwardedRef,
 	) {
@@ -80,8 +83,7 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 		const dialog = useConfirmDialog();
 		const context = useEntryContext();
 		const attachments = useLiveAttachments(context.entryId);
-		// Capture the initial content once — when the editor first becomes ready to mount.
-		// Using a ref prevents re-renders from passing a new defaultValue and resetting the editor.
+
 		const initialContent = useRef<string | null>(null);
 		if (!context.isLoading && initialContent.current === null) {
 			initialContent.current = context.contentHtmlRef.current;
@@ -94,7 +96,6 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 			overflow: 'hidden' as const,
 		}));
 
-		// Check button animation
 		const checkProgress = useSharedValue(context.isEditMode ? 1 : 0);
 
 		const checkButtonStyle = useAnimatedStyle(() => ({
@@ -143,7 +144,10 @@ const EntryComposerInner = forwardRef<EntryComposerHandle, EntryComposerInnerPro
 			<>
 				<View
 					className="flex-1 bg-background"
-					style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+					style={{
+						paddingTop: insets.top,
+						paddingBottom: disableBottomInset ? 0 : insets.bottom,
+					}}
 				>
 					{context.isLoading ? (
 						<View className="flex-1" />

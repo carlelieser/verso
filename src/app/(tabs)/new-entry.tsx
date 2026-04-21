@@ -84,6 +84,7 @@ export default function NewEntryScreen(): React.JSX.Element {
 				ref={composerRef}
 				initialJournalId={journalId}
 				isAnimatedCheck
+				disableBottomInset
 				onFinish={handleFinish}
 			/>
 		</View>
