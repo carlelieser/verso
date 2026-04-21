@@ -6,7 +6,7 @@
     "url": "https://carlelieser.com",
     "email": "hello@carlelieser.com"
   },
-  "version": "1.3.0",
+  "version": "1.4.0",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
