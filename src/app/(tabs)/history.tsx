@@ -66,7 +66,7 @@ export default function HistoryScreen(): React.JSX.Element {
 	const sortedEntries = useMemo(() => sort.sort(entries) ?? [], [sort, entries]);
 
 	return (
-		<Screen title="History">
+		<Screen title="History" showBackButton={false}>
 			<SearchableList
 				data={sortedEntries}
 				keyExtractor={(item) => item.id}

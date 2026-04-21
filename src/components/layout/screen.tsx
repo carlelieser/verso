@@ -26,6 +26,8 @@ interface ScreenProps {
 	readonly headerRight?: React.ReactNode;
 	/** FAB cluster positioned at the bottom-right. Screen handles absolute positioning and content inset. */
 	readonly fab?: React.ReactNode;
+	/** Skip the FAB bottom offset — use when a tab bar already provides spacing. */
+	readonly disableBottomFabOffset?: boolean;
 	readonly children: React.ReactNode;
 }
 
@@ -36,6 +38,7 @@ export function Screen({
 	disableTopInset = false,
 	headerRight,
 	fab,
+	disableBottomFabOffset = false,
 	children,
 }: ScreenProps): React.JSX.Element {
 	const insets = useSafeAreaInsets();
@@ -46,7 +49,7 @@ export function Screen({
 		setFabHeight(event.nativeEvent.layout.height);
 	}, []);
 
-	const bottomBase = insets.bottom + FAB_BOTTOM_OFFSET;
+	const bottomBase = insets.bottom + (disableBottomFabOffset ? 0 : FAB_BOTTOM_OFFSET);
 
 	const screenInsets = useMemo(
 		() => ({

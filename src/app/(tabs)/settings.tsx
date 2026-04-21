@@ -16,7 +16,7 @@ export default function SettingsScreen(): React.JSX.Element {
 	const { shouldShowDonationBanner } = useSettings();
 
 	return (
-		<Screen title="Settings">
+		<Screen title="Settings" showBackButton={false}>
 			<ScrollView
 				className="rounded-t-4xl overflow-hidden"
 				contentContainerClassName="px-6 gap-6"

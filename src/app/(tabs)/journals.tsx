@@ -172,12 +172,14 @@ export default function JournalsScreen(): React.JSX.Element {
 	return (
 		<Screen
 			title="Journals"
+			showBackButton={false}
 			fab={
 				<Fab
 					icon={<Plus size={24} color={accentForeground} />}
 					onPress={createSheet.open}
 				/>
 			}
+			disableBottomFabOffset={true}
 		>
 			<SearchableList
 				data={sortedJournals}

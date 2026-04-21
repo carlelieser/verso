@@ -26,7 +26,14 @@ export function FabMenu({
 
 	return (
 		<PopoverMenu
-			trigger={<Fab variant={fabVariant} icon={icon} className={className} style={style} />}
+			trigger={
+				<Fab
+					variant={fabVariant}
+					icon={icon}
+					className={`${className} shadow-none`}
+					style={style}
+				/>
+			}
 			items={items}
 			placement="top"
 		/>
