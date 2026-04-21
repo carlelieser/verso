@@ -1,7 +1,8 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { Button } from 'heroui-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { View } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
 
 import { PortalSheet } from '@/components/ui/portal-sheet';
 import { VoiceNote } from '@/components/voice-note/voice-note';
@@ -19,7 +20,13 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 	const dialog = useConfirmDialog();
 	const recorder = useVoiceRecorder();
 	const { foreground, muted } = useThemeColors();
-	const [name, setName] = useState('');
+	const nameRef = useRef('');
+	const inputRef = useRef<TextInput>(null);
+
+	const resetName = useCallback(() => {
+		nameRef.current = '';
+		inputRef.current?.clear();
+	}, []);
 
 	const hasRecording = recorder.status === 'recorded';
 
@@ -32,9 +39,9 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 		});
 		if (confirmed) {
 			recorder.clear();
-			setName('');
+			resetName();
 		}
-	}, [dialog, recorder]);
+	}, [dialog, recorder, resetName]);
 
 	const handleDiscard = useCallback(async () => {
 		if (recorder.status !== 'idle') {
@@ -47,17 +54,18 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 			if (!confirmed) return;
 		}
 		recorder.clear();
-		setName('');
+		resetName();
 		sheet.close();
-	}, [dialog, recorder, sheet]);
+	}, [dialog, recorder, resetName, sheet]);
 
 	const handleAttach = useCallback(() => {
 		if (!recorder.uri) return;
-		onAttach(recorder.uri, name.trim().length > 0 ? name.trim() : null);
+		const trimmed = nameRef.current.trim();
+		onAttach(recorder.uri, trimmed.length > 0 ? trimmed : null);
 		recorder.clear();
-		setName('');
+		resetName();
 		sheet.close();
-	}, [recorder, name, onAttach, sheet]);
+	}, [recorder, onAttach, resetName, sheet]);
 
 	const footer = (
 		<View className="flex-row gap-3">
@@ -84,8 +92,11 @@ export function VoiceNoteSheet({ sheet, onAttach }: VoiceNoteSheetProps): React.
 				elevation={1}
 			/>
 			<BottomSheetTextInput
-				value={name}
-				onChangeText={setName}
+				ref={inputRef}
+				defaultValue=""
+				onChangeText={(text) => {
+					nameRef.current = text;
+				}}
 				placeholder="Name (optional)"
 				placeholderTextColor={muted}
 				className="bg-surface rounded-xl px-4 py-3 text-base border border-border"
