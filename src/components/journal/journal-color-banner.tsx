@@ -48,14 +48,14 @@ export function JournalColorBanner({
 	const backFill = midtoneFill(color);
 
 	const maxPoints = 3 + Math.floor(seededRandom(seed, 2) * 4);
-	const speed = 1 + seededRandom(seed, 3) * 10;
-	const delta = height * (0.1 + seededRandom(seed, 4) * 0.4);
+	const speed = 1 + seededRandom(seed, 3) * 3;
+	const delta = height * (0.1 + seededRandom(seed, 4) * 0.6);
 	const waveHeight = height * 0.3;
 	const initialTick = seededRandom(seed, 1) * 800;
 
 	const backMaxPoints = 3 + Math.floor(seededRandom(seed, 6) * 4);
-	const backSpeed = 2 + seededRandom(seed, 7) * 10;
-	const backDelta = height * (0.1 + seededRandom(seed, 8) * 0.4);
+	const backSpeed = 1 + seededRandom(seed, 7) * 3;
+	const backDelta = height * (0.1 + seededRandom(seed, 8) * 0.6);
 	const backWaveHeight = height * 0.15;
 	const backInitialTick = seededRandom(seed, 9) * 800;
 
