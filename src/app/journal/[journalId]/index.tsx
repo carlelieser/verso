@@ -12,8 +12,8 @@ import {
 	Star,
 	Trash2,
 } from 'lucide-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { Text, View } from 'react-native';
 
 import { EntryCard } from '@/components/entry/entry-card';
 import { MoveToJournalSheet } from '@/components/entry/move-to-journal-sheet';
@@ -25,12 +25,11 @@ import { RenameJournal } from '@/components/journal/rename-journal';
 import { Screen } from '@/components/layout/screen';
 import { JournalLockGate } from '@/components/security/journal-lock-gate';
 import { ActionSheet } from '@/components/ui/action-sheet';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
 import { FabMenu } from '@/components/ui/fab-menu';
-import { SearchInput } from '@/components/ui/search-input';
+import { SearchableList } from '@/components/ui/searchable-list';
+import { SortMenu } from '@/components/ui/sort-menu';
 import { DEFAULT_JOURNAL_COLOR, getJournalIcon } from '@/constants/journal-icons';
-import { useScreenInsets } from '@/contexts/screen-context';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
 import { useDeleteEntry } from '@/hooks/use-delete-entry';
@@ -39,68 +38,11 @@ import { useEntryActions } from '@/hooks/use-entry-actions';
 import { useJournalActions } from '@/hooks/use-journal-actions';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
+import { useSort } from '@/hooks/use-sort';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntrySummaryWithJournal } from '@/types/entry';
 import { isLightColor } from '@/utils/color';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
-
-function EntryList({
-	entries,
-	journalId,
-	searchQuery,
-	onSearchChange,
-	onLongPress,
-	muted,
-}: {
-	readonly entries: readonly EntrySummaryWithJournal[];
-	readonly journalId: string;
-	readonly searchQuery: string;
-	readonly onSearchChange: (query: string) => void;
-	readonly onLongPress: (entry: EntrySummaryWithJournal) => void;
-	readonly muted: string;
-}): React.JSX.Element {
-	const { contentInsetBottom } = useScreenInsets();
-
-	return (
-		<>
-			<SearchInput
-				value={searchQuery}
-				onChangeText={onSearchChange}
-				placeholder="Search entries..."
-			/>
-
-			<FlatList
-				className="rounded-t-4xl overflow-hidden"
-				data={entries}
-				keyExtractor={(item) => item.id}
-				renderItem={({ item }) => (
-					<EntryCard
-						entry={item}
-						onPress={() => router.push(`/journal/${journalId}/entry/${item.id}`)}
-						onLongPress={() => onLongPress(item)}
-					/>
-				)}
-				contentContainerClassName="pt-2 px-4 gap-3"
-				contentContainerStyle={{ flexGrow: 1, paddingBottom: contentInsetBottom }}
-				ListEmptyComponent={
-					searchQuery.length > 0 ? (
-						<EmptyState
-							icon={<Search size={48} color={muted} />}
-							title="No results"
-							description="Try a different search term."
-						/>
-					) : (
-						<EmptyState
-							icon={<ScrollText size={48} color={muted} />}
-							title="No entries yet"
-							description="Tap + to write your first entry."
-						/>
-					)
-				}
-			/>
-		</>
-	);
-}
 
 export default function JournalDetailScreen(): React.JSX.Element {
 	const { journalId } = useLocalSearchParams<{ journalId: string }>();
@@ -111,7 +53,6 @@ export default function JournalDetailScreen(): React.JSX.Element {
 	const isDefault = journal?.displayOrder === 0;
 	const entryCount = journalId ? entryCounts.get(journalId) ?? 0 : 0;
 	const { entries, searchEntries, createEntry, deleteEntry } = useEntries(journalId);
-	const [searchQuery, setSearchQuery] = useState('');
 	const privacySheet = useBottomSheet();
 	const {
 		selectedItem: selectedEntry,
@@ -143,19 +84,31 @@ export default function JournalDetailScreen(): React.JSX.Element {
 
 	const debouncedSearch = useDebouncedCallback(searchEntries);
 
-	const handleSearch = useCallback(
-		(query: string) => {
-			setSearchQuery(query);
-			debouncedSearch(query);
-		},
-		[debouncedSearch],
-	);
-
 	const handleNewEntry = useCallback(async () => {
 		if (!journalId) return;
 		const entry = await createEntry(journalId);
 		router.push(`/journal/${journalId}/entry/${entry.id}/edit`);
 	}, [journalId, createEntry]);
+
+	const entrySortOptions = useMemo(
+		() => [
+			{
+				key: 'createdAt',
+				label: 'Created',
+				compare: (a: EntrySummaryWithJournal, b: EntrySummaryWithJournal) =>
+					a.createdAt - b.createdAt,
+			},
+			{
+				key: 'updatedAt',
+				label: 'Updated',
+				compare: (a: EntrySummaryWithJournal, b: EntrySummaryWithJournal) =>
+					a.updatedAt - b.updatedAt,
+			},
+		],
+		[],
+	);
+	const sort = useSort({ options: entrySortOptions, defaultKey: 'createdAt' });
+	const sortedEntries = useMemo(() => sort.sort(entries) ?? [], [sort, entries]);
 
 	const menuItems = useMemo(
 		() => [
@@ -276,13 +229,29 @@ export default function JournalDetailScreen(): React.JSX.Element {
 					</View>
 				}
 			>
-				<EntryList
-					entries={entries}
-					journalId={journalId ?? ''}
-					searchQuery={searchQuery}
-					onSearchChange={handleSearch}
-					onLongPress={handleEntryLongPress}
-					muted={muted}
+				<SearchableList
+					data={sortedEntries}
+					keyExtractor={(item) => item.id}
+					renderItem={({ item }) => (
+						<EntryCard
+							entry={item}
+							onPress={() => router.push(`/journal/${journalId}/entry/${item.id}`)}
+							onLongPress={() => handleEntryLongPress(item)}
+						/>
+					)}
+					onQueryChange={debouncedSearch}
+					searchPlaceholder="Search entries..."
+					emptyState={{
+						icon: ScrollText,
+						title: 'No entries yet',
+						description: 'Tap + to write your first entry.',
+					}}
+					noResultsState={{
+						icon: Search,
+						title: 'No results',
+						description: 'Try a different search term.',
+					}}
+					headerAction={<SortMenu sort={sort} />}
 				/>
 
 				<ActionSheet

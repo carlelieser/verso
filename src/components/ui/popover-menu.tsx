@@ -10,6 +10,7 @@ interface PopoverMenuItem {
 	readonly id: string;
 	readonly label: string;
 	readonly icon?: LucideIcon | React.ReactNode;
+	readonly iconEnd?: LucideIcon | React.ReactNode;
 	readonly variant?: 'default' | 'danger';
 	readonly onPress: () => void;
 }
@@ -51,12 +52,12 @@ export function PopoverMenu({
 				>
 					{items.map((item) => {
 						const color = item.variant === 'danger' ? danger : muted;
-						const icon = (() => {
-							if (!item.icon) return null;
-							if (React.isValidElement(item.icon)) return item.icon;
-							const IconComponent = item.icon as LucideIcon;
+						const renderIcon = (icon: LucideIcon | React.ReactNode) => {
+							if (!icon) return null;
+							if (React.isValidElement(icon)) return icon;
+							const IconComponent = icon as LucideIcon;
 							return <IconComponent size={MENU_ICON_SIZE} color={color} />;
-						})();
+						};
 
 						return (
 							<Menu.Item
@@ -66,8 +67,9 @@ export function PopoverMenu({
 								shouldCloseOnSelect
 								onPress={item.onPress}
 							>
-								{icon}
+								{renderIcon(item.icon)}
 								<Menu.ItemTitle>{item.label}</Menu.ItemTitle>
+								{renderIcon(item.iconEnd)}
 							</Menu.Item>
 						);
 					})}

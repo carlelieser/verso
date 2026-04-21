@@ -11,8 +11,7 @@ import {
 	Star,
 	Trash2,
 } from 'lucide-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
 
 import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
@@ -22,81 +21,20 @@ import { JournalPrivacySheet } from '@/components/journal/journal-privacy-sheet'
 import { RenameJournal } from '@/components/journal/rename-journal';
 import { Screen } from '@/components/layout/screen';
 import { ActionSheet, type ActionSheetItem } from '@/components/ui/action-sheet';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
-import { SearchInput } from '@/components/ui/search-input';
+import { SearchableList } from '@/components/ui/searchable-list';
+import { SortMenu } from '@/components/ui/sort-menu';
 import { DEFAULT_JOURNAL_COLOR } from '@/constants/journal-icons';
-import { useScreenInsets } from '@/contexts/screen-context';
 import { useBottomSheet } from '@/hooks/use-bottom-sheet';
 import { useJournalActions } from '@/hooks/use-journal-actions';
 import { useJournals } from '@/hooks/use-journals';
 import { useLongPressAction } from '@/hooks/use-long-press-action';
+import { useSort } from '@/hooks/use-sort';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Journal } from '@/types/journal';
 
-function JournalList({
-	journals,
-	entryCounts,
-	searchQuery,
-	onSearchChange,
-	onLongPress,
-	muted,
-}: {
-	readonly journals: readonly Journal[];
-	readonly entryCounts: ReadonlyMap<string, number>;
-	readonly searchQuery: string;
-	readonly onSearchChange: (query: string) => void;
-	readonly onLongPress: (journal: Journal) => void;
-	readonly muted: string;
-}): React.JSX.Element {
-	const { contentInsetBottom } = useScreenInsets();
-
-	return (
-		<>
-			<SearchInput
-				value={searchQuery}
-				onChangeText={onSearchChange}
-				placeholder="Search journals..."
-			/>
-
-			<FlatList
-				className="rounded-t-4xl overflow-hidden"
-				data={journals}
-				keyExtractor={(item) => item.id}
-				renderItem={({ item }) => (
-					<JournalCard
-						journal={item}
-						entryCount={entryCounts.get(item.id) ?? 0}
-						isDefault={item.displayOrder === 0}
-						onPress={() => router.push(`/journal/${item.id}`)}
-						onLongPress={() => onLongPress(item)}
-					/>
-				)}
-				contentContainerClassName="pt-2 px-4 gap-3"
-				contentContainerStyle={{ flexGrow: 1, paddingBottom: contentInsetBottom }}
-				ListEmptyComponent={
-					searchQuery.length > 0 ? (
-						<EmptyState
-							icon={<Search size={48} color={muted} />}
-							title="No results"
-							description="Try a different search term."
-						/>
-					) : (
-						<EmptyState
-							icon={<BookOpen size={48} color={muted} />}
-							title="No journals yet"
-							description="Tap + to create your first journal."
-						/>
-					)
-				}
-			/>
-		</>
-	);
-}
-
 export default function JournalsScreen(): React.JSX.Element {
-	const { muted, accentForeground } = useThemeColors();
-	const [searchQuery, setSearchQuery] = useState('');
+	const { accentForeground } = useThemeColors();
 	const {
 		journals,
 		entryCounts,
@@ -130,11 +68,29 @@ export default function JournalsScreen(): React.JSX.Element {
 		deleteJournal,
 	});
 
-	const filteredJournals = useMemo(() => {
-		if (searchQuery.trim().length === 0) return journals;
-		const query = searchQuery.toLowerCase();
-		return journals.filter((j) => j.name.toLowerCase().includes(query));
-	}, [journals, searchQuery]);
+	const sortOptions = useMemo(
+		() => [
+			{
+				key: 'createdAt',
+				label: 'Created',
+				compare: (a: Journal, b: Journal) => a.createdAt - b.createdAt,
+			},
+			{
+				key: 'name',
+				label: 'Name',
+				compare: (a: Journal, b: Journal) => a.name.localeCompare(b.name),
+			},
+			{
+				key: 'entryCount',
+				label: 'Entries',
+				compare: (a: Journal, b: Journal) =>
+					(entryCounts.get(a.id) ?? 0) - (entryCounts.get(b.id) ?? 0),
+			},
+		],
+		[entryCounts],
+	);
+	const sort = useSort({ options: sortOptions, defaultKey: 'createdAt' });
+	const sortedJournals = useMemo(() => sort.sort(journals) ?? [], [sort, journals]);
 
 	const handleCreate = useCallback(
 		async (name: string, icon: string, color: string) => {
@@ -223,13 +179,31 @@ export default function JournalsScreen(): React.JSX.Element {
 				/>
 			}
 		>
-			<JournalList
-				journals={filteredJournals}
-				entryCounts={entryCounts}
-				searchQuery={searchQuery}
-				onSearchChange={setSearchQuery}
-				onLongPress={handleLongPress}
-				muted={muted}
+			<SearchableList
+				data={sortedJournals}
+				keyExtractor={(item) => item.id}
+				renderItem={({ item }) => (
+					<JournalCard
+						journal={item}
+						entryCount={entryCounts.get(item.id) ?? 0}
+						isDefault={item.displayOrder === 0}
+						onPress={() => router.push(`/journal/${item.id}`)}
+						onLongPress={() => handleLongPress(item)}
+					/>
+				)}
+				filter={(item, q) => item.name.toLowerCase().includes(q.toLowerCase())}
+				searchPlaceholder="Search journals..."
+				emptyState={{
+					icon: BookOpen,
+					title: 'No journals yet',
+					description: 'Tap + to create your first journal.',
+				}}
+				noResultsState={{
+					icon: Search,
+					title: 'No results',
+					description: 'Try a different search term.',
+				}}
+				headerAction={<SortMenu sort={sort} />}
 			/>
 
 			{createSheet.isOpen ? (
