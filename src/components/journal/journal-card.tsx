@@ -7,6 +7,8 @@ import { getJournalIcon } from '@/constants/journal-icons';
 import type { Journal } from '@/types/journal';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
 
+type CardVariant = 'default' | 'secondary' | 'tertiary' | 'transparent';
+
 interface JournalCardProps {
 	readonly journal: Journal;
 	readonly className?: string;
@@ -14,6 +16,7 @@ interface JournalCardProps {
 	readonly isDefault?: boolean;
 	readonly onPress: () => void;
 	readonly onLongPress?: () => void;
+	readonly variant?: CardVariant;
 }
 
 export function JournalCard({
@@ -23,12 +26,13 @@ export function JournalCard({
 	className = '',
 	onPress,
 	onLongPress,
+	variant,
 }: JournalCardProps): React.JSX.Element {
 	const Icon = getJournalIcon(journal.icon);
 
 	return (
 		<Pressable onPress={onPress} onLongPress={onLongPress}>
-			<Card className={`p-0 ${className}`}>
+			<Card className={`p-0 ${className}`} variant={variant}>
 				<JournalColorBanner color={journal.color} seed={journal.id} />
 				<Card.Body className={'p-4'}>
 					<View className="flex-row items-center gap-3">

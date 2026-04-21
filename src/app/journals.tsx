@@ -245,6 +245,7 @@ export default function JournalsScreen(): React.JSX.Element {
 							entryCount={entryCounts.get(selectedJournal.id) ?? 0}
 							isDefault={selectedJournal.displayOrder === 0}
 							onPress={() => {}}
+							variant="transparent"
 						/>
 					) : null
 				}
