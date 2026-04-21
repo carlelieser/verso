@@ -11,3 +11,2722 @@ index 9a03613..c2c3b1a 100644
    }
  
    private void startBlockquote(Editable text) {
+diff --git a/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/EnrichedTextInputView.kt b/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/EnrichedTextInputView.kt
+index 851e290..738ffc4 100644
+--- a/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/EnrichedTextInputView.kt
++++ b/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/EnrichedTextInputView.kt
+@@ -42,6 +42,7 @@ import com.swmansion.enriched.textinput.events.MentionHandler
+ import com.swmansion.enriched.textinput.events.OnContextMenuItemPressEvent
+ import com.swmansion.enriched.textinput.events.OnInputBlurEvent
+ import com.swmansion.enriched.textinput.events.OnInputFocusEvent
++import com.swmansion.enriched.textinput.events.OnInputScrollEvent
+ import com.swmansion.enriched.textinput.events.OnRequestHtmlResultEvent
+ import com.swmansion.enriched.textinput.spans.EnrichedInputH1Span
+ import com.swmansion.enriched.textinput.spans.EnrichedInputH2Span
+@@ -216,6 +217,23 @@ class EnrichedTextInputView : AppCompatEditText {
+ 
+   override fun canScrollHorizontally(direction: Int): Boolean = scrollEnabled
+ 
++  override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
++    super.onScrollChanged(l, t, oldl, oldt)
++    val surfaceId = UIManagerHelper.getSurfaceId(context)
++    val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(context, id)
++    val contentHeight = (layout?.height ?: 0) + paddingTop + paddingBottom
++    dispatcher?.dispatchEvent(
++      OnInputScrollEvent(
++        surfaceId,
++        id,
++        t.toFloat(),
++        contentHeight.toFloat(),
++        height.toFloat(),
++        experimentalSynchronousEvents
++      )
++    )
++  }
++
+   override fun onSelectionChanged(
+     selStart: Int,
+     selEnd: Int,
+diff --git a/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/events/OnInputScrollEvent.kt b/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/events/OnInputScrollEvent.kt
+new file mode 100644
+index 0000000..48fd3d2
+--- /dev/null
++++ b/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/events/OnInputScrollEvent.kt
+@@ -0,0 +1,31 @@
++package com.swmansion.enriched.textinput.events
++
++import com.facebook.react.bridge.Arguments
++import com.facebook.react.bridge.WritableMap
++import com.facebook.react.uimanager.events.Event
++
++class OnInputScrollEvent(
++  surfaceId: Int,
++  viewId: Int,
++  private val scrollY: Float,
++  private val contentHeight: Float,
++  private val layoutHeight: Float,
++  private val experimentalSynchronousEvents: Boolean,
++) : Event<OnInputScrollEvent>(surfaceId, viewId) {
++  override fun getEventName(): String = EVENT_NAME
++
++  override fun getEventData(): WritableMap {
++    val eventData: WritableMap = Arguments.createMap()
++    eventData.putDouble("scrollY", scrollY.toDouble())
++    eventData.putDouble("contentHeight", contentHeight.toDouble())
++    eventData.putDouble("layoutHeight", layoutHeight.toDouble())
++
++    return eventData
++  }
++
++  override fun experimental_isSynchronous(): Boolean = experimentalSynchronousEvents
++
++  companion object {
++    const val EVENT_NAME: String = "onInputScroll"
++  }
++}
+diff --git a/node_modules/react-native-enriched/ios/EnrichedTextInputView.mm b/node_modules/react-native-enriched/ios/EnrichedTextInputView.mm
+index 5e81c9f..ebdb92e 100644
+--- a/node_modules/react-native-enriched/ios/EnrichedTextInputView.mm
++++ b/node_modules/react-native-enriched/ios/EnrichedTextInputView.mm
+@@ -1462,6 +1462,17 @@ Class<RCTComponentViewProtocol> EnrichedTextInputViewCls(void) {
+   }
+ }
+ 
++- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
++  auto emitter = [self getEventEmitter];
++  if (emitter != nullptr) {
++    emitter->onInputScroll({
++      .scrollY = (float)scrollView.contentOffset.y,
++      .contentHeight = (float)scrollView.contentSize.height,
++      .layoutHeight = (float)scrollView.bounds.size.height,
++    });
++  }
++}
++
+ // MARK: - Styles manipulation
+ 
+ - (void)toggleRegularStyle:(StyleType)type {
+diff --git a/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/EventEmitters.cpp b/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/EventEmitters.cpp
+index 6e04a8c..4305466 100644
+--- a/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/EventEmitters.cpp
++++ b/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/EventEmitters.cpp
+@@ -422,4 +422,15 @@ payload.setProperty(runtime, "selectionEnd", event.selectionEnd);
+   });
+ }
+ 
++
++void EnrichedTextInputViewEventEmitter::onInputScroll(OnInputScroll event) const {
++  dispatchEvent("inputScroll", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "scrollY", event.scrollY);
++payload.setProperty(runtime, "contentHeight", event.contentHeight);
++payload.setProperty(runtime, "layoutHeight", event.layoutHeight);
++    return payload;
++  });
++}
++
+ } // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/EventEmitters.h b/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/EventEmitters.h
+index 857faaa..1ba0c1c 100644
+--- a/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/EventEmitters.h
++++ b/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/EventEmitters.h
+@@ -356,6 +356,12 @@ class EnrichedTextInputViewEventEmitter : public ViewEventEmitter {
+     int selectionEnd;
+     OnContextMenuItemPressStyleState styleState;
+     };
++
++  struct OnInputScroll {
++      Float scrollY;
++    Float contentHeight;
++    Float layoutHeight;
++    };
+   void onInputFocus(OnInputFocus value) const;
+ 
+   void onInputBlur(OnInputBlur value) const;
+@@ -381,5 +387,7 @@ class EnrichedTextInputViewEventEmitter : public ViewEventEmitter {
+   void onPasteImages(OnPasteImages value) const;
+ 
+   void onContextMenuItemPress(OnContextMenuItemPress value) const;
++
++  void onInputScroll(OnInputScroll value) const;
+ };
+ } // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/Props.h b/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/Props.h
+index 3ca484d..96868ea 100644
+--- a/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/Props.h
++++ b/node_modules/react-native-enriched/ios/generated/ReactNativeEnrichedSpec/Props.h
+@@ -13,6 +13,7 @@
+ #include <react/renderer/components/view/ViewProps.h>
+ #include <react/renderer/core/PropsParserContext.h>
+ #include <react/renderer/core/propsConversions.h>
++#include <react/renderer/debug/DebugStringConvertible.h>
+ #include <react/renderer/graphics/Color.h>
+ #include <vector>
+ 
+@@ -22,6 +23,7 @@ struct EnrichedTextInputViewHtmlStyleH1Struct {
+   Float fontSize{0.0};
+   bool bold{false};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleH1Struct&) const = default;
+ 
+@@ -61,6 +63,7 @@ struct EnrichedTextInputViewHtmlStyleH2Struct {
+   Float fontSize{0.0};
+   bool bold{false};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleH2Struct&) const = default;
+ 
+@@ -100,6 +103,7 @@ struct EnrichedTextInputViewHtmlStyleH3Struct {
+   Float fontSize{0.0};
+   bool bold{false};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleH3Struct&) const = default;
+ 
+@@ -139,6 +143,7 @@ struct EnrichedTextInputViewHtmlStyleH4Struct {
+   Float fontSize{0.0};
+   bool bold{false};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleH4Struct&) const = default;
+ 
+@@ -178,6 +183,7 @@ struct EnrichedTextInputViewHtmlStyleH5Struct {
+   Float fontSize{0.0};
+   bool bold{false};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleH5Struct&) const = default;
+ 
+@@ -217,6 +223,7 @@ struct EnrichedTextInputViewHtmlStyleH6Struct {
+   Float fontSize{0.0};
+   bool bold{false};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleH6Struct&) const = default;
+ 
+@@ -258,6 +265,7 @@ struct EnrichedTextInputViewHtmlStyleBlockquoteStruct {
+   Float gapWidth{0.0};
+   SharedColor color{};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleBlockquoteStruct&) const = default;
+ 
+@@ -308,6 +316,7 @@ struct EnrichedTextInputViewHtmlStyleCodeblockStruct {
+   Float borderRadius{0.0};
+   SharedColor backgroundColor{};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleCodeblockStruct&) const = default;
+ 
+@@ -352,6 +361,7 @@ struct EnrichedTextInputViewHtmlStyleCodeStruct {
+   SharedColor color{};
+   SharedColor backgroundColor{};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleCodeStruct&) const = default;
+ 
+@@ -391,6 +401,7 @@ struct EnrichedTextInputViewHtmlStyleAStruct {
+   SharedColor color{};
+   std::string textDecorationLine{};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleAStruct&) const = default;
+ 
+@@ -432,6 +443,7 @@ struct EnrichedTextInputViewHtmlStyleOlStruct {
+   std::string markerFontWeight{};
+   SharedColor markerColor{};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleOlStruct&) const = default;
+ 
+@@ -483,6 +495,7 @@ struct EnrichedTextInputViewHtmlStyleUlStruct {
+   Float marginLeft{0.0};
+   Float gapWidth{0.0};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleUlStruct&) const = default;
+ 
+@@ -534,6 +547,7 @@ struct EnrichedTextInputViewHtmlStyleUlCheckboxStruct {
+   Float marginLeft{0.0};
+   SharedColor boxColor{};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleUlCheckboxStruct&) const = default;
+ 
+@@ -595,6 +609,7 @@ struct EnrichedTextInputViewHtmlStyleStruct {
+   EnrichedTextInputViewHtmlStyleUlStruct ul{};
+   EnrichedTextInputViewHtmlStyleUlCheckboxStruct ulCheckbox{};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewHtmlStyleStruct&) const = default;
+ 
+@@ -697,6 +712,7 @@ struct EnrichedTextInputViewLinkRegexStruct {
+   bool isDisabled{false};
+   bool isDefault{false};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewLinkRegexStruct&) const = default;
+ 
+@@ -750,6 +766,7 @@ static inline folly::dynamic toDynamic(const EnrichedTextInputViewLinkRegexStruc
+ struct EnrichedTextInputViewContextMenuItemsStruct {
+   std::string text{};
+ 
++
+ #ifdef RN_SERIALIZABLE_STATE
+   bool operator==(const EnrichedTextInputViewContextMenuItemsStruct&) const = default;
+ 
+@@ -825,6 +842,8 @@ class EnrichedTextInputViewProps final : public ViewProps {
+ 
+   folly::dynamic getDiffProps(const Props* prevProps) const override;
+   #endif
++
++  
+ };
+ 
+ } // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/java/com/facebook/react/viewmanagers/EnrichedTextInputViewManagerDelegate.java b/node_modules/react-native-enriched/java/com/facebook/react/viewmanagers/EnrichedTextInputViewManagerDelegate.java
+new file mode 100644
+index 0000000..1646e12
+--- /dev/null
++++ b/node_modules/react-native-enriched/java/com/facebook/react/viewmanagers/EnrichedTextInputViewManagerDelegate.java
+@@ -0,0 +1,186 @@
++/**
++* This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++*
++* Do not edit this file as changes may cause incorrect behavior and will be lost
++* once the code is regenerated.
++*
++* @generated by codegen project: GeneratePropsJavaDelegate.js
++*/
++
++package com.facebook.react.viewmanagers;
++
++import android.view.View;
++import androidx.annotation.Nullable;
++import com.facebook.react.bridge.ColorPropConverter;
++import com.facebook.react.bridge.ReadableArray;
++import com.facebook.react.bridge.ReadableMap;
++import com.facebook.react.uimanager.BaseViewManager;
++import com.facebook.react.uimanager.BaseViewManagerDelegate;
++import com.facebook.react.uimanager.LayoutShadowNode;
++
++@SuppressWarnings("deprecation")
++public class EnrichedTextInputViewManagerDelegate<T extends View, U extends BaseViewManager<T, ? extends LayoutShadowNode> & EnrichedTextInputViewManagerInterface<T>> extends BaseViewManagerDelegate<T, U> {
++  public EnrichedTextInputViewManagerDelegate(U viewManager) {
++    super(viewManager);
++  }
++  @Override
++  public void setProperty(T view, String propName, @Nullable Object value) {
++    switch (propName) {
++      case "autoFocus":
++        mViewManager.setAutoFocus(view, value == null ? false : (boolean) value);
++        break;
++      case "editable":
++        mViewManager.setEditable(view, value == null ? false : (boolean) value);
++        break;
++      case "defaultValue":
++        mViewManager.setDefaultValue(view, value == null ? null : (String) value);
++        break;
++      case "placeholder":
++        mViewManager.setPlaceholder(view, value == null ? null : (String) value);
++        break;
++      case "placeholderTextColor":
++        mViewManager.setPlaceholderTextColor(view, ColorPropConverter.getColor(value, view.getContext()));
++        break;
++      case "mentionIndicators":
++        mViewManager.setMentionIndicators(view, (ReadableArray) value);
++        break;
++      case "cursorColor":
++        mViewManager.setCursorColor(view, ColorPropConverter.getColor(value, view.getContext()));
++        break;
++      case "selectionColor":
++        mViewManager.setSelectionColor(view, ColorPropConverter.getColor(value, view.getContext()));
++        break;
++      case "autoCapitalize":
++        mViewManager.setAutoCapitalize(view, value == null ? null : (String) value);
++        break;
++      case "htmlStyle":
++        mViewManager.setHtmlStyle(view, (ReadableMap) value);
++        break;
++      case "scrollEnabled":
++        mViewManager.setScrollEnabled(view, value == null ? false : (boolean) value);
++        break;
++      case "linkRegex":
++        mViewManager.setLinkRegex(view, (ReadableMap) value);
++        break;
++      case "contextMenuItems":
++        mViewManager.setContextMenuItems(view, (ReadableArray) value);
++        break;
++      case "color":
++        mViewManager.setColor(view, ColorPropConverter.getColor(value, view.getContext()));
++        break;
++      case "fontSize":
++        mViewManager.setFontSize(view, value == null ? 0f : ((Double) value).floatValue());
++        break;
++      case "lineHeight":
++        mViewManager.setLineHeight(view, value == null ? 0f : ((Double) value).floatValue());
++        break;
++      case "fontFamily":
++        mViewManager.setFontFamily(view, value == null ? null : (String) value);
++        break;
++      case "fontWeight":
++        mViewManager.setFontWeight(view, value == null ? null : (String) value);
++        break;
++      case "fontStyle":
++        mViewManager.setFontStyle(view, value == null ? null : (String) value);
++        break;
++      case "isOnChangeHtmlSet":
++        mViewManager.setIsOnChangeHtmlSet(view, value == null ? false : (boolean) value);
++        break;
++      case "isOnChangeTextSet":
++        mViewManager.setIsOnChangeTextSet(view, value == null ? false : (boolean) value);
++        break;
++      case "androidExperimentalSynchronousEvents":
++        mViewManager.setAndroidExperimentalSynchronousEvents(view, value == null ? false : (boolean) value);
++        break;
++      case "useHtmlNormalizer":
++        mViewManager.setUseHtmlNormalizer(view, value == null ? false : (boolean) value);
++        break;
++      default:
++        super.setProperty(view, propName, value);
++    }
++  }
++
++  @Override
++  public void receiveCommand(T view, String commandName, ReadableArray args) {
++    switch (commandName) {
++      case "focus":
++        mViewManager.focus(view);
++        break;
++      case "blur":
++        mViewManager.blur(view);
++        break;
++      case "setValue":
++        mViewManager.setValue(view, args.getString(0));
++        break;
++      case "setSelection":
++        mViewManager.setSelection(view, args.getInt(0), args.getInt(1));
++        break;
++      case "toggleBold":
++        mViewManager.toggleBold(view);
++        break;
++      case "toggleItalic":
++        mViewManager.toggleItalic(view);
++        break;
++      case "toggleUnderline":
++        mViewManager.toggleUnderline(view);
++        break;
++      case "toggleStrikeThrough":
++        mViewManager.toggleStrikeThrough(view);
++        break;
++      case "toggleInlineCode":
++        mViewManager.toggleInlineCode(view);
++        break;
++      case "toggleH1":
++        mViewManager.toggleH1(view);
++        break;
++      case "toggleH2":
++        mViewManager.toggleH2(view);
++        break;
++      case "toggleH3":
++        mViewManager.toggleH3(view);
++        break;
++      case "toggleH4":
++        mViewManager.toggleH4(view);
++        break;
++      case "toggleH5":
++        mViewManager.toggleH5(view);
++        break;
++      case "toggleH6":
++        mViewManager.toggleH6(view);
++        break;
++      case "toggleCodeBlock":
++        mViewManager.toggleCodeBlock(view);
++        break;
++      case "toggleBlockQuote":
++        mViewManager.toggleBlockQuote(view);
++        break;
++      case "toggleOrderedList":
++        mViewManager.toggleOrderedList(view);
++        break;
++      case "toggleUnorderedList":
++        mViewManager.toggleUnorderedList(view);
++        break;
++      case "toggleCheckboxList":
++        mViewManager.toggleCheckboxList(view, args.getBoolean(0));
++        break;
++      case "addLink":
++        mViewManager.addLink(view, args.getInt(0), args.getInt(1), args.getString(2), args.getString(3));
++        break;
++      case "removeLink":
++        mViewManager.removeLink(view, args.getInt(0), args.getInt(1));
++        break;
++      case "addImage":
++        mViewManager.addImage(view, args.getString(0), (float) args.getDouble(1), (float) args.getDouble(2));
++        break;
++      case "startMention":
++        mViewManager.startMention(view, args.getString(0));
++        break;
++      case "addMention":
++        mViewManager.addMention(view, args.getString(0), args.getString(1), args.getString(2));
++        break;
++      case "requestHTML":
++        mViewManager.requestHTML(view, args.getInt(0));
++        break;
++    }
++  }
++}
+diff --git a/node_modules/react-native-enriched/java/com/facebook/react/viewmanagers/EnrichedTextInputViewManagerInterface.java b/node_modules/react-native-enriched/java/com/facebook/react/viewmanagers/EnrichedTextInputViewManagerInterface.java
+new file mode 100644
+index 0000000..ddc5617
+--- /dev/null
++++ b/node_modules/react-native-enriched/java/com/facebook/react/viewmanagers/EnrichedTextInputViewManagerInterface.java
+@@ -0,0 +1,68 @@
++/**
++* This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++*
++* Do not edit this file as changes may cause incorrect behavior and will be lost
++* once the code is regenerated.
++*
++* @generated by codegen project: GeneratePropsJavaInterface.js
++*/
++
++package com.facebook.react.viewmanagers;
++
++import android.view.View;
++import androidx.annotation.Nullable;
++import com.facebook.react.bridge.ReadableArray;
++import com.facebook.react.bridge.ReadableMap;
++import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
++
++public interface EnrichedTextInputViewManagerInterface<T extends View> extends ViewManagerWithGeneratedInterface {
++  void setAutoFocus(T view, boolean value);
++  void setEditable(T view, boolean value);
++  void setDefaultValue(T view, @Nullable String value);
++  void setPlaceholder(T view, @Nullable String value);
++  void setPlaceholderTextColor(T view, @Nullable Integer value);
++  void setMentionIndicators(T view, @Nullable ReadableArray value);
++  void setCursorColor(T view, @Nullable Integer value);
++  void setSelectionColor(T view, @Nullable Integer value);
++  void setAutoCapitalize(T view, @Nullable String value);
++  void setHtmlStyle(T view, @Nullable ReadableMap value);
++  void setScrollEnabled(T view, boolean value);
++  void setLinkRegex(T view, @Nullable ReadableMap value);
++  void setContextMenuItems(T view, @Nullable ReadableArray value);
++  void setColor(T view, @Nullable Integer value);
++  void setFontSize(T view, float value);
++  void setLineHeight(T view, float value);
++  void setFontFamily(T view, @Nullable String value);
++  void setFontWeight(T view, @Nullable String value);
++  void setFontStyle(T view, @Nullable String value);
++  void setIsOnChangeHtmlSet(T view, boolean value);
++  void setIsOnChangeTextSet(T view, boolean value);
++  void setAndroidExperimentalSynchronousEvents(T view, boolean value);
++  void setUseHtmlNormalizer(T view, boolean value);
++  void focus(T view);
++  void blur(T view);
++  void setValue(T view, String text);
++  void setSelection(T view, int start, int end);
++  void toggleBold(T view);
++  void toggleItalic(T view);
++  void toggleUnderline(T view);
++  void toggleStrikeThrough(T view);
++  void toggleInlineCode(T view);
++  void toggleH1(T view);
++  void toggleH2(T view);
++  void toggleH3(T view);
++  void toggleH4(T view);
++  void toggleH5(T view);
++  void toggleH6(T view);
++  void toggleCodeBlock(T view);
++  void toggleBlockQuote(T view);
++  void toggleOrderedList(T view);
++  void toggleUnorderedList(T view);
++  void toggleCheckboxList(T view, boolean checked);
++  void addLink(T view, int start, int end, String text, String url);
++  void removeLink(T view, int start, int end);
++  void addImage(T view, String uri, float width, float height);
++  void startMention(T view, String indicator);
++  void addMention(T view, String indicator, String text, String payload);
++  void requestHTML(T view, int requestId);
++}
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ComponentDescriptors.cpp b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ComponentDescriptors.cpp
+new file mode 100644
+index 0000000..2e5279c
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ComponentDescriptors.cpp
+@@ -0,0 +1,22 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateComponentDescriptorCpp.js
++ */
++
++#include "ComponentDescriptors.h"
++#include <react/renderer/core/ConcreteComponentDescriptor.h>
++#include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
++
++namespace facebook::react {
++
++void ReactNativeEnrichedSpec_registerComponentDescriptorsFromCodegen(
++  std::shared_ptr<const ComponentDescriptorProviderRegistry> registry) {
++
++}
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ComponentDescriptors.h b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ComponentDescriptors.h
+new file mode 100644
+index 0000000..9b925c2
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ComponentDescriptors.h
+@@ -0,0 +1,24 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateComponentDescriptorH.js
++ */
++
++#pragma once
++
++#include "ShadowNodes.h"
++#include <react/renderer/core/ConcreteComponentDescriptor.h>
++#include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
++
++namespace facebook::react {
++
++
++
++void ReactNativeEnrichedSpec_registerComponentDescriptorsFromCodegen(
++  std::shared_ptr<const ComponentDescriptorProviderRegistry> registry);
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/EventEmitters.cpp b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/EventEmitters.cpp
+new file mode 100644
+index 0000000..9797db8
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/EventEmitters.cpp
+@@ -0,0 +1,434 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateEventEmitterCpp.js
++ */
++
++#include "EventEmitters.h"
++#include <jsi/JSIDynamic.h>
++
++namespace facebook::react {
++
++void EnrichedTextInputViewEventEmitter::onInputFocus(OnInputFocus event) const {
++  dispatchEvent("inputFocus", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "target", event.target);
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onInputBlur(OnInputBlur event) const {
++  dispatchEvent("inputBlur", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "target", event.target);
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onChangeText(OnChangeText event) const {
++  dispatchEvent("changeText", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "value", event.value);
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onChangeHtml(OnChangeHtml event) const {
++  dispatchEvent("changeHtml", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "value", event.value);
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onChangeState(OnChangeState event) const {
++  dispatchEvent("changeState", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    {
++  auto bold = jsi::Object(runtime);
++  bold.setProperty(runtime, "isActive", event.bold.isActive);
++  bold.setProperty(runtime, "isConflicting", event.bold.isConflicting);
++  bold.setProperty(runtime, "isBlocking", event.bold.isBlocking);
++  payload.setProperty(runtime, "bold", bold);
++}
++{
++  auto italic = jsi::Object(runtime);
++  italic.setProperty(runtime, "isActive", event.italic.isActive);
++  italic.setProperty(runtime, "isConflicting", event.italic.isConflicting);
++  italic.setProperty(runtime, "isBlocking", event.italic.isBlocking);
++  payload.setProperty(runtime, "italic", italic);
++}
++{
++  auto underline = jsi::Object(runtime);
++  underline.setProperty(runtime, "isActive", event.underline.isActive);
++  underline.setProperty(runtime, "isConflicting", event.underline.isConflicting);
++  underline.setProperty(runtime, "isBlocking", event.underline.isBlocking);
++  payload.setProperty(runtime, "underline", underline);
++}
++{
++  auto strikeThrough = jsi::Object(runtime);
++  strikeThrough.setProperty(runtime, "isActive", event.strikeThrough.isActive);
++  strikeThrough.setProperty(runtime, "isConflicting", event.strikeThrough.isConflicting);
++  strikeThrough.setProperty(runtime, "isBlocking", event.strikeThrough.isBlocking);
++  payload.setProperty(runtime, "strikeThrough", strikeThrough);
++}
++{
++  auto inlineCode = jsi::Object(runtime);
++  inlineCode.setProperty(runtime, "isActive", event.inlineCode.isActive);
++  inlineCode.setProperty(runtime, "isConflicting", event.inlineCode.isConflicting);
++  inlineCode.setProperty(runtime, "isBlocking", event.inlineCode.isBlocking);
++  payload.setProperty(runtime, "inlineCode", inlineCode);
++}
++{
++  auto h1 = jsi::Object(runtime);
++  h1.setProperty(runtime, "isActive", event.h1.isActive);
++  h1.setProperty(runtime, "isConflicting", event.h1.isConflicting);
++  h1.setProperty(runtime, "isBlocking", event.h1.isBlocking);
++  payload.setProperty(runtime, "h1", h1);
++}
++{
++  auto h2 = jsi::Object(runtime);
++  h2.setProperty(runtime, "isActive", event.h2.isActive);
++  h2.setProperty(runtime, "isConflicting", event.h2.isConflicting);
++  h2.setProperty(runtime, "isBlocking", event.h2.isBlocking);
++  payload.setProperty(runtime, "h2", h2);
++}
++{
++  auto h3 = jsi::Object(runtime);
++  h3.setProperty(runtime, "isActive", event.h3.isActive);
++  h3.setProperty(runtime, "isConflicting", event.h3.isConflicting);
++  h3.setProperty(runtime, "isBlocking", event.h3.isBlocking);
++  payload.setProperty(runtime, "h3", h3);
++}
++{
++  auto h4 = jsi::Object(runtime);
++  h4.setProperty(runtime, "isActive", event.h4.isActive);
++  h4.setProperty(runtime, "isConflicting", event.h4.isConflicting);
++  h4.setProperty(runtime, "isBlocking", event.h4.isBlocking);
++  payload.setProperty(runtime, "h4", h4);
++}
++{
++  auto h5 = jsi::Object(runtime);
++  h5.setProperty(runtime, "isActive", event.h5.isActive);
++  h5.setProperty(runtime, "isConflicting", event.h5.isConflicting);
++  h5.setProperty(runtime, "isBlocking", event.h5.isBlocking);
++  payload.setProperty(runtime, "h5", h5);
++}
++{
++  auto h6 = jsi::Object(runtime);
++  h6.setProperty(runtime, "isActive", event.h6.isActive);
++  h6.setProperty(runtime, "isConflicting", event.h6.isConflicting);
++  h6.setProperty(runtime, "isBlocking", event.h6.isBlocking);
++  payload.setProperty(runtime, "h6", h6);
++}
++{
++  auto codeBlock = jsi::Object(runtime);
++  codeBlock.setProperty(runtime, "isActive", event.codeBlock.isActive);
++  codeBlock.setProperty(runtime, "isConflicting", event.codeBlock.isConflicting);
++  codeBlock.setProperty(runtime, "isBlocking", event.codeBlock.isBlocking);
++  payload.setProperty(runtime, "codeBlock", codeBlock);
++}
++{
++  auto blockQuote = jsi::Object(runtime);
++  blockQuote.setProperty(runtime, "isActive", event.blockQuote.isActive);
++  blockQuote.setProperty(runtime, "isConflicting", event.blockQuote.isConflicting);
++  blockQuote.setProperty(runtime, "isBlocking", event.blockQuote.isBlocking);
++  payload.setProperty(runtime, "blockQuote", blockQuote);
++}
++{
++  auto orderedList = jsi::Object(runtime);
++  orderedList.setProperty(runtime, "isActive", event.orderedList.isActive);
++  orderedList.setProperty(runtime, "isConflicting", event.orderedList.isConflicting);
++  orderedList.setProperty(runtime, "isBlocking", event.orderedList.isBlocking);
++  payload.setProperty(runtime, "orderedList", orderedList);
++}
++{
++  auto unorderedList = jsi::Object(runtime);
++  unorderedList.setProperty(runtime, "isActive", event.unorderedList.isActive);
++  unorderedList.setProperty(runtime, "isConflicting", event.unorderedList.isConflicting);
++  unorderedList.setProperty(runtime, "isBlocking", event.unorderedList.isBlocking);
++  payload.setProperty(runtime, "unorderedList", unorderedList);
++}
++{
++  auto link = jsi::Object(runtime);
++  link.setProperty(runtime, "isActive", event.link.isActive);
++  link.setProperty(runtime, "isConflicting", event.link.isConflicting);
++  link.setProperty(runtime, "isBlocking", event.link.isBlocking);
++  payload.setProperty(runtime, "link", link);
++}
++{
++  auto image = jsi::Object(runtime);
++  image.setProperty(runtime, "isActive", event.image.isActive);
++  image.setProperty(runtime, "isConflicting", event.image.isConflicting);
++  image.setProperty(runtime, "isBlocking", event.image.isBlocking);
++  payload.setProperty(runtime, "image", image);
++}
++{
++  auto mention = jsi::Object(runtime);
++  mention.setProperty(runtime, "isActive", event.mention.isActive);
++  mention.setProperty(runtime, "isConflicting", event.mention.isConflicting);
++  mention.setProperty(runtime, "isBlocking", event.mention.isBlocking);
++  payload.setProperty(runtime, "mention", mention);
++}
++{
++  auto checkboxList = jsi::Object(runtime);
++  checkboxList.setProperty(runtime, "isActive", event.checkboxList.isActive);
++  checkboxList.setProperty(runtime, "isConflicting", event.checkboxList.isConflicting);
++  checkboxList.setProperty(runtime, "isBlocking", event.checkboxList.isBlocking);
++  payload.setProperty(runtime, "checkboxList", checkboxList);
++}
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onLinkDetected(OnLinkDetected event) const {
++  dispatchEvent("linkDetected", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "text", event.text);
++payload.setProperty(runtime, "url", event.url);
++payload.setProperty(runtime, "start", event.start);
++payload.setProperty(runtime, "end", event.end);
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onMentionDetected(OnMentionDetected event) const {
++  dispatchEvent("mentionDetected", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "text", event.text);
++payload.setProperty(runtime, "indicator", event.indicator);
++payload.setProperty(runtime, "payload", event.payload);
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onMention(OnMention event) const {
++  dispatchEvent("mention", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "indicator", event.indicator);
++payload.setProperty(runtime, "text", jsi::valueFromDynamic(runtime, event.text));
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onChangeSelection(OnChangeSelection event) const {
++  dispatchEvent("changeSelection", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "start", event.start);
++payload.setProperty(runtime, "end", event.end);
++payload.setProperty(runtime, "text", event.text);
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onRequestHtmlResult(OnRequestHtmlResult event) const {
++  dispatchEvent("requestHtmlResult", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "requestId", event.requestId);
++payload.setProperty(runtime, "html", jsi::valueFromDynamic(runtime, event.html));
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onInputKeyPress(OnInputKeyPress event) const {
++  dispatchEvent("inputKeyPress", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "key", event.key);
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onPasteImages(OnPasteImages event) const {
++  dispatchEvent("pasteImages", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    
++    auto images = jsi::Array(runtime, event.images.size());
++    size_t imagesIndex = 0;
++    for (auto imagesValue : event.images) {
++      auto imagesObject = jsi::Object(runtime);
++      imagesObject.setProperty(runtime, "uri", imagesValue.uri);
++imagesObject.setProperty(runtime, "type", imagesValue.type);
++imagesObject.setProperty(runtime, "width", imagesValue.width);
++imagesObject.setProperty(runtime, "height", imagesValue.height);
++      images.setValueAtIndex(runtime, imagesIndex++, imagesObject);
++    }
++    payload.setProperty(runtime, "images", images);
++  
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onContextMenuItemPress(OnContextMenuItemPress event) const {
++  dispatchEvent("contextMenuItemPress", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "itemText", event.itemText);
++payload.setProperty(runtime, "selectedText", event.selectedText);
++payload.setProperty(runtime, "selectionStart", event.selectionStart);
++payload.setProperty(runtime, "selectionEnd", event.selectionEnd);
++{
++  auto styleState = jsi::Object(runtime);
++  {
++    auto bold = jsi::Object(runtime);
++    bold.setProperty(runtime, "isActive", event.styleState.bold.isActive);
++    bold.setProperty(runtime, "isConflicting", event.styleState.bold.isConflicting);
++    bold.setProperty(runtime, "isBlocking", event.styleState.bold.isBlocking);
++    styleState.setProperty(runtime, "bold", bold);
++  }
++  {
++    auto italic = jsi::Object(runtime);
++    italic.setProperty(runtime, "isActive", event.styleState.italic.isActive);
++    italic.setProperty(runtime, "isConflicting", event.styleState.italic.isConflicting);
++    italic.setProperty(runtime, "isBlocking", event.styleState.italic.isBlocking);
++    styleState.setProperty(runtime, "italic", italic);
++  }
++  {
++    auto underline = jsi::Object(runtime);
++    underline.setProperty(runtime, "isActive", event.styleState.underline.isActive);
++    underline.setProperty(runtime, "isConflicting", event.styleState.underline.isConflicting);
++    underline.setProperty(runtime, "isBlocking", event.styleState.underline.isBlocking);
++    styleState.setProperty(runtime, "underline", underline);
++  }
++  {
++    auto strikeThrough = jsi::Object(runtime);
++    strikeThrough.setProperty(runtime, "isActive", event.styleState.strikeThrough.isActive);
++    strikeThrough.setProperty(runtime, "isConflicting", event.styleState.strikeThrough.isConflicting);
++    strikeThrough.setProperty(runtime, "isBlocking", event.styleState.strikeThrough.isBlocking);
++    styleState.setProperty(runtime, "strikeThrough", strikeThrough);
++  }
++  {
++    auto inlineCode = jsi::Object(runtime);
++    inlineCode.setProperty(runtime, "isActive", event.styleState.inlineCode.isActive);
++    inlineCode.setProperty(runtime, "isConflicting", event.styleState.inlineCode.isConflicting);
++    inlineCode.setProperty(runtime, "isBlocking", event.styleState.inlineCode.isBlocking);
++    styleState.setProperty(runtime, "inlineCode", inlineCode);
++  }
++  {
++    auto h1 = jsi::Object(runtime);
++    h1.setProperty(runtime, "isActive", event.styleState.h1.isActive);
++    h1.setProperty(runtime, "isConflicting", event.styleState.h1.isConflicting);
++    h1.setProperty(runtime, "isBlocking", event.styleState.h1.isBlocking);
++    styleState.setProperty(runtime, "h1", h1);
++  }
++  {
++    auto h2 = jsi::Object(runtime);
++    h2.setProperty(runtime, "isActive", event.styleState.h2.isActive);
++    h2.setProperty(runtime, "isConflicting", event.styleState.h2.isConflicting);
++    h2.setProperty(runtime, "isBlocking", event.styleState.h2.isBlocking);
++    styleState.setProperty(runtime, "h2", h2);
++  }
++  {
++    auto h3 = jsi::Object(runtime);
++    h3.setProperty(runtime, "isActive", event.styleState.h3.isActive);
++    h3.setProperty(runtime, "isConflicting", event.styleState.h3.isConflicting);
++    h3.setProperty(runtime, "isBlocking", event.styleState.h3.isBlocking);
++    styleState.setProperty(runtime, "h3", h3);
++  }
++  {
++    auto h4 = jsi::Object(runtime);
++    h4.setProperty(runtime, "isActive", event.styleState.h4.isActive);
++    h4.setProperty(runtime, "isConflicting", event.styleState.h4.isConflicting);
++    h4.setProperty(runtime, "isBlocking", event.styleState.h4.isBlocking);
++    styleState.setProperty(runtime, "h4", h4);
++  }
++  {
++    auto h5 = jsi::Object(runtime);
++    h5.setProperty(runtime, "isActive", event.styleState.h5.isActive);
++    h5.setProperty(runtime, "isConflicting", event.styleState.h5.isConflicting);
++    h5.setProperty(runtime, "isBlocking", event.styleState.h5.isBlocking);
++    styleState.setProperty(runtime, "h5", h5);
++  }
++  {
++    auto h6 = jsi::Object(runtime);
++    h6.setProperty(runtime, "isActive", event.styleState.h6.isActive);
++    h6.setProperty(runtime, "isConflicting", event.styleState.h6.isConflicting);
++    h6.setProperty(runtime, "isBlocking", event.styleState.h6.isBlocking);
++    styleState.setProperty(runtime, "h6", h6);
++  }
++  {
++    auto codeBlock = jsi::Object(runtime);
++    codeBlock.setProperty(runtime, "isActive", event.styleState.codeBlock.isActive);
++    codeBlock.setProperty(runtime, "isConflicting", event.styleState.codeBlock.isConflicting);
++    codeBlock.setProperty(runtime, "isBlocking", event.styleState.codeBlock.isBlocking);
++    styleState.setProperty(runtime, "codeBlock", codeBlock);
++  }
++  {
++    auto blockQuote = jsi::Object(runtime);
++    blockQuote.setProperty(runtime, "isActive", event.styleState.blockQuote.isActive);
++    blockQuote.setProperty(runtime, "isConflicting", event.styleState.blockQuote.isConflicting);
++    blockQuote.setProperty(runtime, "isBlocking", event.styleState.blockQuote.isBlocking);
++    styleState.setProperty(runtime, "blockQuote", blockQuote);
++  }
++  {
++    auto orderedList = jsi::Object(runtime);
++    orderedList.setProperty(runtime, "isActive", event.styleState.orderedList.isActive);
++    orderedList.setProperty(runtime, "isConflicting", event.styleState.orderedList.isConflicting);
++    orderedList.setProperty(runtime, "isBlocking", event.styleState.orderedList.isBlocking);
++    styleState.setProperty(runtime, "orderedList", orderedList);
++  }
++  {
++    auto unorderedList = jsi::Object(runtime);
++    unorderedList.setProperty(runtime, "isActive", event.styleState.unorderedList.isActive);
++    unorderedList.setProperty(runtime, "isConflicting", event.styleState.unorderedList.isConflicting);
++    unorderedList.setProperty(runtime, "isBlocking", event.styleState.unorderedList.isBlocking);
++    styleState.setProperty(runtime, "unorderedList", unorderedList);
++  }
++  {
++    auto link = jsi::Object(runtime);
++    link.setProperty(runtime, "isActive", event.styleState.link.isActive);
++    link.setProperty(runtime, "isConflicting", event.styleState.link.isConflicting);
++    link.setProperty(runtime, "isBlocking", event.styleState.link.isBlocking);
++    styleState.setProperty(runtime, "link", link);
++  }
++  {
++    auto image = jsi::Object(runtime);
++    image.setProperty(runtime, "isActive", event.styleState.image.isActive);
++    image.setProperty(runtime, "isConflicting", event.styleState.image.isConflicting);
++    image.setProperty(runtime, "isBlocking", event.styleState.image.isBlocking);
++    styleState.setProperty(runtime, "image", image);
++  }
++  {
++    auto mention = jsi::Object(runtime);
++    mention.setProperty(runtime, "isActive", event.styleState.mention.isActive);
++    mention.setProperty(runtime, "isConflicting", event.styleState.mention.isConflicting);
++    mention.setProperty(runtime, "isBlocking", event.styleState.mention.isBlocking);
++    styleState.setProperty(runtime, "mention", mention);
++  }
++  {
++    auto checkboxList = jsi::Object(runtime);
++    checkboxList.setProperty(runtime, "isActive", event.styleState.checkboxList.isActive);
++    checkboxList.setProperty(runtime, "isConflicting", event.styleState.checkboxList.isConflicting);
++    checkboxList.setProperty(runtime, "isBlocking", event.styleState.checkboxList.isBlocking);
++    styleState.setProperty(runtime, "checkboxList", checkboxList);
++  }
++  payload.setProperty(runtime, "styleState", styleState);
++}
++    return payload;
++  });
++}
++
++
++void EnrichedTextInputViewEventEmitter::onInputScroll(OnInputScroll event) const {
++  dispatchEvent("inputScroll", [event=std::move(event)](jsi::Runtime &runtime) {
++    auto payload = jsi::Object(runtime);
++    payload.setProperty(runtime, "scrollY", event.scrollY);
++    return payload;
++  });
++}
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/EventEmitters.h b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/EventEmitters.h
+new file mode 100644
+index 0000000..f60a6f0
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/EventEmitters.h
+@@ -0,0 +1,391 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateEventEmitterH.js
++ */
++#pragma once
++
++#include <react/renderer/components/view/ViewEventEmitter.h>
++#include <folly/dynamic.h>
++
++namespace facebook::react {
++class EnrichedTextInputViewEventEmitter : public ViewEventEmitter {
++ public:
++  using ViewEventEmitter::ViewEventEmitter;
++
++  struct OnInputFocus {
++      int target;
++    };
++
++  struct OnInputBlur {
++      int target;
++    };
++
++  struct OnChangeText {
++      std::string value;
++    };
++
++  struct OnChangeHtml {
++      std::string value;
++    };
++
++  struct OnChangeStateBold {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateItalic {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateUnderline {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateStrikeThrough {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateInlineCode {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateH1 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateH2 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateH3 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateH4 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateH5 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateH6 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateCodeBlock {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateBlockQuote {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateOrderedList {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateUnorderedList {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateLink {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateImage {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateMention {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeStateCheckboxList {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnChangeState {
++      OnChangeStateBold bold;
++    OnChangeStateItalic italic;
++    OnChangeStateUnderline underline;
++    OnChangeStateStrikeThrough strikeThrough;
++    OnChangeStateInlineCode inlineCode;
++    OnChangeStateH1 h1;
++    OnChangeStateH2 h2;
++    OnChangeStateH3 h3;
++    OnChangeStateH4 h4;
++    OnChangeStateH5 h5;
++    OnChangeStateH6 h6;
++    OnChangeStateCodeBlock codeBlock;
++    OnChangeStateBlockQuote blockQuote;
++    OnChangeStateOrderedList orderedList;
++    OnChangeStateUnorderedList unorderedList;
++    OnChangeStateLink link;
++    OnChangeStateImage image;
++    OnChangeStateMention mention;
++    OnChangeStateCheckboxList checkboxList;
++    };
++
++  struct OnLinkDetected {
++      std::string text;
++    std::string url;
++    int start;
++    int end;
++    };
++
++  struct OnMentionDetected {
++      std::string text;
++    std::string indicator;
++    std::string payload;
++    };
++
++  struct OnMention {
++      std::string indicator;
++    folly::dynamic text;
++    };
++
++  struct OnChangeSelection {
++      int start;
++    int end;
++    std::string text;
++    };
++
++  struct OnRequestHtmlResult {
++      int requestId;
++    folly::dynamic html;
++    };
++
++  struct OnInputKeyPress {
++      std::string key;
++    };
++
++  struct OnPasteImagesImages {
++      std::string uri;
++    std::string type;
++    Float width;
++    Float height;
++    };
++
++  struct OnPasteImages {
++      std::vector<OnPasteImagesImages> images;
++    };
++
++  struct OnContextMenuItemPressStyleStateBold {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateItalic {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateUnderline {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateStrikeThrough {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateInlineCode {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateH1 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateH2 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateH3 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateH4 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateH5 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateH6 {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateCodeBlock {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateBlockQuote {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateOrderedList {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateUnorderedList {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateLink {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateImage {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateMention {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleStateCheckboxList {
++      bool isActive;
++    bool isConflicting;
++    bool isBlocking;
++    };
++
++  struct OnContextMenuItemPressStyleState {
++      OnContextMenuItemPressStyleStateBold bold;
++    OnContextMenuItemPressStyleStateItalic italic;
++    OnContextMenuItemPressStyleStateUnderline underline;
++    OnContextMenuItemPressStyleStateStrikeThrough strikeThrough;
++    OnContextMenuItemPressStyleStateInlineCode inlineCode;
++    OnContextMenuItemPressStyleStateH1 h1;
++    OnContextMenuItemPressStyleStateH2 h2;
++    OnContextMenuItemPressStyleStateH3 h3;
++    OnContextMenuItemPressStyleStateH4 h4;
++    OnContextMenuItemPressStyleStateH5 h5;
++    OnContextMenuItemPressStyleStateH6 h6;
++    OnContextMenuItemPressStyleStateCodeBlock codeBlock;
++    OnContextMenuItemPressStyleStateBlockQuote blockQuote;
++    OnContextMenuItemPressStyleStateOrderedList orderedList;
++    OnContextMenuItemPressStyleStateUnorderedList unorderedList;
++    OnContextMenuItemPressStyleStateLink link;
++    OnContextMenuItemPressStyleStateImage image;
++    OnContextMenuItemPressStyleStateMention mention;
++    OnContextMenuItemPressStyleStateCheckboxList checkboxList;
++    };
++
++  struct OnContextMenuItemPress {
++      std::string itemText;
++    std::string selectedText;
++    int selectionStart;
++    int selectionEnd;
++    OnContextMenuItemPressStyleState styleState;
++    };
++
++  struct OnInputScroll {
++      Float scrollY;
++    };
++  void onInputFocus(OnInputFocus value) const;
++
++  void onInputBlur(OnInputBlur value) const;
++
++  void onChangeText(OnChangeText value) const;
++
++  void onChangeHtml(OnChangeHtml value) const;
++
++  void onChangeState(OnChangeState value) const;
++
++  void onLinkDetected(OnLinkDetected value) const;
++
++  void onMentionDetected(OnMentionDetected value) const;
++
++  void onMention(OnMention value) const;
++
++  void onChangeSelection(OnChangeSelection value) const;
++
++  void onRequestHtmlResult(OnRequestHtmlResult value) const;
++
++  void onInputKeyPress(OnInputKeyPress value) const;
++
++  void onPasteImages(OnPasteImages value) const;
++
++  void onContextMenuItemPress(OnContextMenuItemPress value) const;
++
++  void onInputScroll(OnInputScroll value) const;
++};
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/Props.cpp b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/Props.cpp
+new file mode 100644
+index 0000000..04b33f9
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/Props.cpp
+@@ -0,0 +1,158 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GeneratePropsCpp.js
++ */
++
++#include "Props.h"
++#include <folly/dynamic.h>
++#include <react/renderer/core/PropsParserContext.h>
++#include <react/renderer/core/propsConversions.h>
++
++namespace facebook::react {
++
++EnrichedTextInputViewProps::EnrichedTextInputViewProps(
++    const PropsParserContext &context,
++    const EnrichedTextInputViewProps &sourceProps,
++    const RawProps &rawProps): ViewProps(context, sourceProps, rawProps),
++
++    autoFocus(convertRawProp(context, rawProps, "autoFocus", sourceProps.autoFocus, {false})),
++    editable(convertRawProp(context, rawProps, "editable", sourceProps.editable, {false})),
++    defaultValue(convertRawProp(context, rawProps, "defaultValue", sourceProps.defaultValue, {})),
++    placeholder(convertRawProp(context, rawProps, "placeholder", sourceProps.placeholder, {})),
++    placeholderTextColor(convertRawProp(context, rawProps, "placeholderTextColor", sourceProps.placeholderTextColor, {})),
++    mentionIndicators(convertRawProp(context, rawProps, "mentionIndicators", sourceProps.mentionIndicators, {})),
++    cursorColor(convertRawProp(context, rawProps, "cursorColor", sourceProps.cursorColor, {})),
++    selectionColor(convertRawProp(context, rawProps, "selectionColor", sourceProps.selectionColor, {})),
++    autoCapitalize(convertRawProp(context, rawProps, "autoCapitalize", sourceProps.autoCapitalize, {})),
++    htmlStyle(convertRawProp(context, rawProps, "htmlStyle", sourceProps.htmlStyle, {})),
++    scrollEnabled(convertRawProp(context, rawProps, "scrollEnabled", sourceProps.scrollEnabled, {false})),
++    linkRegex(convertRawProp(context, rawProps, "linkRegex", sourceProps.linkRegex, {})),
++    contextMenuItems(convertRawProp(context, rawProps, "contextMenuItems", sourceProps.contextMenuItems, {})),
++    color(convertRawProp(context, rawProps, "color", sourceProps.color, {})),
++    fontSize(convertRawProp(context, rawProps, "fontSize", sourceProps.fontSize, {0.0})),
++    lineHeight(convertRawProp(context, rawProps, "lineHeight", sourceProps.lineHeight, {0.0})),
++    fontFamily(convertRawProp(context, rawProps, "fontFamily", sourceProps.fontFamily, {})),
++    fontWeight(convertRawProp(context, rawProps, "fontWeight", sourceProps.fontWeight, {})),
++    fontStyle(convertRawProp(context, rawProps, "fontStyle", sourceProps.fontStyle, {})),
++    isOnChangeHtmlSet(convertRawProp(context, rawProps, "isOnChangeHtmlSet", sourceProps.isOnChangeHtmlSet, {false})),
++    isOnChangeTextSet(convertRawProp(context, rawProps, "isOnChangeTextSet", sourceProps.isOnChangeTextSet, {false})),
++    androidExperimentalSynchronousEvents(convertRawProp(context, rawProps, "androidExperimentalSynchronousEvents", sourceProps.androidExperimentalSynchronousEvents, {false})),
++    useHtmlNormalizer(convertRawProp(context, rawProps, "useHtmlNormalizer", sourceProps.useHtmlNormalizer, {false})) {}
++    
++#ifdef RN_SERIALIZABLE_STATE
++ComponentName EnrichedTextInputViewProps::getDiffPropsImplementationTarget() const {
++  return "EnrichedTextInputView";
++}
++
++folly::dynamic EnrichedTextInputViewProps::getDiffProps(
++    const Props* prevProps) const {
++  static const auto defaultProps = EnrichedTextInputViewProps();
++  const EnrichedTextInputViewProps* oldProps = prevProps == nullptr
++      ? &defaultProps
++      : static_cast<const EnrichedTextInputViewProps*>(prevProps);
++  if (this == oldProps) {
++    return folly::dynamic::object();
++  }
++  folly::dynamic result = HostPlatformViewProps::getDiffProps(prevProps);
++  
++  if (autoFocus != oldProps->autoFocus) {
++    result["autoFocus"] = autoFocus;
++  }
++    
++  if (editable != oldProps->editable) {
++    result["editable"] = editable;
++  }
++    
++  if (defaultValue != oldProps->defaultValue) {
++    result["defaultValue"] = defaultValue;
++  }
++    
++  if (placeholder != oldProps->placeholder) {
++    result["placeholder"] = placeholder;
++  }
++    
++  if (placeholderTextColor != oldProps->placeholderTextColor) {
++    result["placeholderTextColor"] = *placeholderTextColor;
++  }
++    
++  if (mentionIndicators != oldProps->mentionIndicators) {
++    result["mentionIndicators"] = toDynamic(mentionIndicators);
++  }
++    
++  if (cursorColor != oldProps->cursorColor) {
++    result["cursorColor"] = *cursorColor;
++  }
++    
++  if (selectionColor != oldProps->selectionColor) {
++    result["selectionColor"] = *selectionColor;
++  }
++    
++  if (autoCapitalize != oldProps->autoCapitalize) {
++    result["autoCapitalize"] = autoCapitalize;
++  }
++    
++  if (htmlStyle != oldProps->htmlStyle) {
++    result["htmlStyle"] = toDynamic(htmlStyle);
++  }
++    
++  if (scrollEnabled != oldProps->scrollEnabled) {
++    result["scrollEnabled"] = scrollEnabled;
++  }
++    
++  if (linkRegex != oldProps->linkRegex) {
++    result["linkRegex"] = toDynamic(linkRegex);
++  }
++    
++  if (contextMenuItems != oldProps->contextMenuItems) {
++    result["contextMenuItems"] = toDynamic(contextMenuItems);
++  }
++    
++  if (color != oldProps->color) {
++    result["color"] = *color;
++  }
++    
++  if ((fontSize != oldProps->fontSize) && !(std::isnan(fontSize) && std::isnan(oldProps->fontSize))) {
++    result["fontSize"] = fontSize;
++  }
++    
++  if ((lineHeight != oldProps->lineHeight) && !(std::isnan(lineHeight) && std::isnan(oldProps->lineHeight))) {
++    result["lineHeight"] = lineHeight;
++  }
++    
++  if (fontFamily != oldProps->fontFamily) {
++    result["fontFamily"] = fontFamily;
++  }
++    
++  if (fontWeight != oldProps->fontWeight) {
++    result["fontWeight"] = fontWeight;
++  }
++    
++  if (fontStyle != oldProps->fontStyle) {
++    result["fontStyle"] = fontStyle;
++  }
++    
++  if (isOnChangeHtmlSet != oldProps->isOnChangeHtmlSet) {
++    result["isOnChangeHtmlSet"] = isOnChangeHtmlSet;
++  }
++    
++  if (isOnChangeTextSet != oldProps->isOnChangeTextSet) {
++    result["isOnChangeTextSet"] = isOnChangeTextSet;
++  }
++    
++  if (androidExperimentalSynchronousEvents != oldProps->androidExperimentalSynchronousEvents) {
++    result["androidExperimentalSynchronousEvents"] = androidExperimentalSynchronousEvents;
++  }
++    
++  if (useHtmlNormalizer != oldProps->useHtmlNormalizer) {
++    result["useHtmlNormalizer"] = useHtmlNormalizer;
++  }
++  return result;
++}
++#endif
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/Props.h b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/Props.h
+new file mode 100644
+index 0000000..96868ea
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/Props.h
+@@ -0,0 +1,849 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GeneratePropsH.js
++ */
++#pragma once
++
++#include <folly/dynamic.h>
++#include <react/renderer/components/view/ViewProps.h>
++#include <react/renderer/core/PropsParserContext.h>
++#include <react/renderer/core/propsConversions.h>
++#include <react/renderer/debug/DebugStringConvertible.h>
++#include <react/renderer/graphics/Color.h>
++#include <vector>
++
++namespace facebook::react {
++
++struct EnrichedTextInputViewHtmlStyleH1Struct {
++  Float fontSize{0.0};
++  bool bold{false};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleH1Struct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["fontSize"] = fontSize;
++    result["bold"] = bold;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleH1Struct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_fontSize = map.find("fontSize");
++  if (tmp_fontSize != map.end()) {
++    fromRawValue(context, tmp_fontSize->second, result.fontSize);
++  }
++  auto tmp_bold = map.find("bold");
++  if (tmp_bold != map.end()) {
++    fromRawValue(context, tmp_bold->second, result.bold);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleH1Struct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleH1Struct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleH1Struct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleH2Struct {
++  Float fontSize{0.0};
++  bool bold{false};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleH2Struct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["fontSize"] = fontSize;
++    result["bold"] = bold;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleH2Struct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_fontSize = map.find("fontSize");
++  if (tmp_fontSize != map.end()) {
++    fromRawValue(context, tmp_fontSize->second, result.fontSize);
++  }
++  auto tmp_bold = map.find("bold");
++  if (tmp_bold != map.end()) {
++    fromRawValue(context, tmp_bold->second, result.bold);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleH2Struct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleH2Struct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleH2Struct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleH3Struct {
++  Float fontSize{0.0};
++  bool bold{false};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleH3Struct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["fontSize"] = fontSize;
++    result["bold"] = bold;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleH3Struct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_fontSize = map.find("fontSize");
++  if (tmp_fontSize != map.end()) {
++    fromRawValue(context, tmp_fontSize->second, result.fontSize);
++  }
++  auto tmp_bold = map.find("bold");
++  if (tmp_bold != map.end()) {
++    fromRawValue(context, tmp_bold->second, result.bold);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleH3Struct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleH3Struct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleH3Struct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleH4Struct {
++  Float fontSize{0.0};
++  bool bold{false};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleH4Struct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["fontSize"] = fontSize;
++    result["bold"] = bold;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleH4Struct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_fontSize = map.find("fontSize");
++  if (tmp_fontSize != map.end()) {
++    fromRawValue(context, tmp_fontSize->second, result.fontSize);
++  }
++  auto tmp_bold = map.find("bold");
++  if (tmp_bold != map.end()) {
++    fromRawValue(context, tmp_bold->second, result.bold);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleH4Struct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleH4Struct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleH4Struct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleH5Struct {
++  Float fontSize{0.0};
++  bool bold{false};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleH5Struct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["fontSize"] = fontSize;
++    result["bold"] = bold;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleH5Struct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_fontSize = map.find("fontSize");
++  if (tmp_fontSize != map.end()) {
++    fromRawValue(context, tmp_fontSize->second, result.fontSize);
++  }
++  auto tmp_bold = map.find("bold");
++  if (tmp_bold != map.end()) {
++    fromRawValue(context, tmp_bold->second, result.bold);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleH5Struct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleH5Struct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleH5Struct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleH6Struct {
++  Float fontSize{0.0};
++  bool bold{false};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleH6Struct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["fontSize"] = fontSize;
++    result["bold"] = bold;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleH6Struct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_fontSize = map.find("fontSize");
++  if (tmp_fontSize != map.end()) {
++    fromRawValue(context, tmp_fontSize->second, result.fontSize);
++  }
++  auto tmp_bold = map.find("bold");
++  if (tmp_bold != map.end()) {
++    fromRawValue(context, tmp_bold->second, result.bold);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleH6Struct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleH6Struct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleH6Struct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleBlockquoteStruct {
++  SharedColor borderColor{};
++  Float borderWidth{0.0};
++  Float gapWidth{0.0};
++  SharedColor color{};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleBlockquoteStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["borderColor"] = ::facebook::react::toDynamic(borderColor);
++    result["borderWidth"] = borderWidth;
++    result["gapWidth"] = gapWidth;
++    result["color"] = ::facebook::react::toDynamic(color);
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleBlockquoteStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_borderColor = map.find("borderColor");
++  if (tmp_borderColor != map.end()) {
++    fromRawValue(context, tmp_borderColor->second, result.borderColor);
++  }
++  auto tmp_borderWidth = map.find("borderWidth");
++  if (tmp_borderWidth != map.end()) {
++    fromRawValue(context, tmp_borderWidth->second, result.borderWidth);
++  }
++  auto tmp_gapWidth = map.find("gapWidth");
++  if (tmp_gapWidth != map.end()) {
++    fromRawValue(context, tmp_gapWidth->second, result.gapWidth);
++  }
++  auto tmp_color = map.find("color");
++  if (tmp_color != map.end()) {
++    fromRawValue(context, tmp_color->second, result.color);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleBlockquoteStruct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleBlockquoteStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleBlockquoteStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleCodeblockStruct {
++  SharedColor color{};
++  Float borderRadius{0.0};
++  SharedColor backgroundColor{};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleCodeblockStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["color"] = ::facebook::react::toDynamic(color);
++    result["borderRadius"] = borderRadius;
++    result["backgroundColor"] = ::facebook::react::toDynamic(backgroundColor);
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleCodeblockStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_color = map.find("color");
++  if (tmp_color != map.end()) {
++    fromRawValue(context, tmp_color->second, result.color);
++  }
++  auto tmp_borderRadius = map.find("borderRadius");
++  if (tmp_borderRadius != map.end()) {
++    fromRawValue(context, tmp_borderRadius->second, result.borderRadius);
++  }
++  auto tmp_backgroundColor = map.find("backgroundColor");
++  if (tmp_backgroundColor != map.end()) {
++    fromRawValue(context, tmp_backgroundColor->second, result.backgroundColor);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleCodeblockStruct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleCodeblockStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleCodeblockStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleCodeStruct {
++  SharedColor color{};
++  SharedColor backgroundColor{};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleCodeStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["color"] = ::facebook::react::toDynamic(color);
++    result["backgroundColor"] = ::facebook::react::toDynamic(backgroundColor);
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleCodeStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_color = map.find("color");
++  if (tmp_color != map.end()) {
++    fromRawValue(context, tmp_color->second, result.color);
++  }
++  auto tmp_backgroundColor = map.find("backgroundColor");
++  if (tmp_backgroundColor != map.end()) {
++    fromRawValue(context, tmp_backgroundColor->second, result.backgroundColor);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleCodeStruct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleCodeStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleCodeStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleAStruct {
++  SharedColor color{};
++  std::string textDecorationLine{};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleAStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["color"] = ::facebook::react::toDynamic(color);
++    result["textDecorationLine"] = textDecorationLine;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleAStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_color = map.find("color");
++  if (tmp_color != map.end()) {
++    fromRawValue(context, tmp_color->second, result.color);
++  }
++  auto tmp_textDecorationLine = map.find("textDecorationLine");
++  if (tmp_textDecorationLine != map.end()) {
++    fromRawValue(context, tmp_textDecorationLine->second, result.textDecorationLine);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleAStruct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleAStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleAStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleOlStruct {
++  Float gapWidth{0.0};
++  Float marginLeft{0.0};
++  std::string markerFontWeight{};
++  SharedColor markerColor{};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleOlStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["gapWidth"] = gapWidth;
++    result["marginLeft"] = marginLeft;
++    result["markerFontWeight"] = markerFontWeight;
++    result["markerColor"] = ::facebook::react::toDynamic(markerColor);
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleOlStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_gapWidth = map.find("gapWidth");
++  if (tmp_gapWidth != map.end()) {
++    fromRawValue(context, tmp_gapWidth->second, result.gapWidth);
++  }
++  auto tmp_marginLeft = map.find("marginLeft");
++  if (tmp_marginLeft != map.end()) {
++    fromRawValue(context, tmp_marginLeft->second, result.marginLeft);
++  }
++  auto tmp_markerFontWeight = map.find("markerFontWeight");
++  if (tmp_markerFontWeight != map.end()) {
++    fromRawValue(context, tmp_markerFontWeight->second, result.markerFontWeight);
++  }
++  auto tmp_markerColor = map.find("markerColor");
++  if (tmp_markerColor != map.end()) {
++    fromRawValue(context, tmp_markerColor->second, result.markerColor);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleOlStruct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleOlStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleOlStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleUlStruct {
++  SharedColor bulletColor{};
++  Float bulletSize{0.0};
++  Float marginLeft{0.0};
++  Float gapWidth{0.0};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleUlStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["bulletColor"] = ::facebook::react::toDynamic(bulletColor);
++    result["bulletSize"] = bulletSize;
++    result["marginLeft"] = marginLeft;
++    result["gapWidth"] = gapWidth;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleUlStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_bulletColor = map.find("bulletColor");
++  if (tmp_bulletColor != map.end()) {
++    fromRawValue(context, tmp_bulletColor->second, result.bulletColor);
++  }
++  auto tmp_bulletSize = map.find("bulletSize");
++  if (tmp_bulletSize != map.end()) {
++    fromRawValue(context, tmp_bulletSize->second, result.bulletSize);
++  }
++  auto tmp_marginLeft = map.find("marginLeft");
++  if (tmp_marginLeft != map.end()) {
++    fromRawValue(context, tmp_marginLeft->second, result.marginLeft);
++  }
++  auto tmp_gapWidth = map.find("gapWidth");
++  if (tmp_gapWidth != map.end()) {
++    fromRawValue(context, tmp_gapWidth->second, result.gapWidth);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleUlStruct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleUlStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleUlStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleUlCheckboxStruct {
++  Float gapWidth{0.0};
++  Float boxSize{0.0};
++  Float marginLeft{0.0};
++  SharedColor boxColor{};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleUlCheckboxStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["gapWidth"] = gapWidth;
++    result["boxSize"] = boxSize;
++    result["marginLeft"] = marginLeft;
++    result["boxColor"] = ::facebook::react::toDynamic(boxColor);
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleUlCheckboxStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_gapWidth = map.find("gapWidth");
++  if (tmp_gapWidth != map.end()) {
++    fromRawValue(context, tmp_gapWidth->second, result.gapWidth);
++  }
++  auto tmp_boxSize = map.find("boxSize");
++  if (tmp_boxSize != map.end()) {
++    fromRawValue(context, tmp_boxSize->second, result.boxSize);
++  }
++  auto tmp_marginLeft = map.find("marginLeft");
++  if (tmp_marginLeft != map.end()) {
++    fromRawValue(context, tmp_marginLeft->second, result.marginLeft);
++  }
++  auto tmp_boxColor = map.find("boxColor");
++  if (tmp_boxColor != map.end()) {
++    fromRawValue(context, tmp_boxColor->second, result.boxColor);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleUlCheckboxStruct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleUlCheckboxStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleUlCheckboxStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewHtmlStyleStruct {
++  EnrichedTextInputViewHtmlStyleH1Struct h1{};
++  EnrichedTextInputViewHtmlStyleH2Struct h2{};
++  EnrichedTextInputViewHtmlStyleH3Struct h3{};
++  EnrichedTextInputViewHtmlStyleH4Struct h4{};
++  EnrichedTextInputViewHtmlStyleH5Struct h5{};
++  EnrichedTextInputViewHtmlStyleH6Struct h6{};
++  EnrichedTextInputViewHtmlStyleBlockquoteStruct blockquote{};
++  EnrichedTextInputViewHtmlStyleCodeblockStruct codeblock{};
++  EnrichedTextInputViewHtmlStyleCodeStruct code{};
++  EnrichedTextInputViewHtmlStyleAStruct a{};
++  folly::dynamic mention{};
++  EnrichedTextInputViewHtmlStyleOlStruct ol{};
++  EnrichedTextInputViewHtmlStyleUlStruct ul{};
++  EnrichedTextInputViewHtmlStyleUlCheckboxStruct ulCheckbox{};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewHtmlStyleStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["h1"] = ::facebook::react::toDynamic(h1);
++    result["h2"] = ::facebook::react::toDynamic(h2);
++    result["h3"] = ::facebook::react::toDynamic(h3);
++    result["h4"] = ::facebook::react::toDynamic(h4);
++    result["h5"] = ::facebook::react::toDynamic(h5);
++    result["h6"] = ::facebook::react::toDynamic(h6);
++    result["blockquote"] = ::facebook::react::toDynamic(blockquote);
++    result["codeblock"] = ::facebook::react::toDynamic(codeblock);
++    result["code"] = ::facebook::react::toDynamic(code);
++    result["a"] = ::facebook::react::toDynamic(a);
++    result["mention"] = mention;
++    result["ol"] = ::facebook::react::toDynamic(ol);
++    result["ul"] = ::facebook::react::toDynamic(ul);
++    result["ulCheckbox"] = ::facebook::react::toDynamic(ulCheckbox);
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewHtmlStyleStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_h1 = map.find("h1");
++  if (tmp_h1 != map.end()) {
++    fromRawValue(context, tmp_h1->second, result.h1);
++  }
++  auto tmp_h2 = map.find("h2");
++  if (tmp_h2 != map.end()) {
++    fromRawValue(context, tmp_h2->second, result.h2);
++  }
++  auto tmp_h3 = map.find("h3");
++  if (tmp_h3 != map.end()) {
++    fromRawValue(context, tmp_h3->second, result.h3);
++  }
++  auto tmp_h4 = map.find("h4");
++  if (tmp_h4 != map.end()) {
++    fromRawValue(context, tmp_h4->second, result.h4);
++  }
++  auto tmp_h5 = map.find("h5");
++  if (tmp_h5 != map.end()) {
++    fromRawValue(context, tmp_h5->second, result.h5);
++  }
++  auto tmp_h6 = map.find("h6");
++  if (tmp_h6 != map.end()) {
++    fromRawValue(context, tmp_h6->second, result.h6);
++  }
++  auto tmp_blockquote = map.find("blockquote");
++  if (tmp_blockquote != map.end()) {
++    fromRawValue(context, tmp_blockquote->second, result.blockquote);
++  }
++  auto tmp_codeblock = map.find("codeblock");
++  if (tmp_codeblock != map.end()) {
++    fromRawValue(context, tmp_codeblock->second, result.codeblock);
++  }
++  auto tmp_code = map.find("code");
++  if (tmp_code != map.end()) {
++    fromRawValue(context, tmp_code->second, result.code);
++  }
++  auto tmp_a = map.find("a");
++  if (tmp_a != map.end()) {
++    fromRawValue(context, tmp_a->second, result.a);
++  }
++  auto tmp_mention = map.find("mention");
++  if (tmp_mention != map.end()) {
++    fromRawValue(context, tmp_mention->second, result.mention);
++  }
++  auto tmp_ol = map.find("ol");
++  if (tmp_ol != map.end()) {
++    fromRawValue(context, tmp_ol->second, result.ol);
++  }
++  auto tmp_ul = map.find("ul");
++  if (tmp_ul != map.end()) {
++    fromRawValue(context, tmp_ul->second, result.ul);
++  }
++  auto tmp_ulCheckbox = map.find("ulCheckbox");
++  if (tmp_ulCheckbox != map.end()) {
++    fromRawValue(context, tmp_ulCheckbox->second, result.ulCheckbox);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewHtmlStyleStruct &value) {
++  return "[Object EnrichedTextInputViewHtmlStyleStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewHtmlStyleStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewLinkRegexStruct {
++  std::string pattern{};
++  bool caseInsensitive{false};
++  bool dotAll{false};
++  bool isDisabled{false};
++  bool isDefault{false};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewLinkRegexStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["pattern"] = pattern;
++    result["caseInsensitive"] = caseInsensitive;
++    result["dotAll"] = dotAll;
++    result["isDisabled"] = isDisabled;
++    result["isDefault"] = isDefault;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewLinkRegexStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_pattern = map.find("pattern");
++  if (tmp_pattern != map.end()) {
++    fromRawValue(context, tmp_pattern->second, result.pattern);
++  }
++  auto tmp_caseInsensitive = map.find("caseInsensitive");
++  if (tmp_caseInsensitive != map.end()) {
++    fromRawValue(context, tmp_caseInsensitive->second, result.caseInsensitive);
++  }
++  auto tmp_dotAll = map.find("dotAll");
++  if (tmp_dotAll != map.end()) {
++    fromRawValue(context, tmp_dotAll->second, result.dotAll);
++  }
++  auto tmp_isDisabled = map.find("isDisabled");
++  if (tmp_isDisabled != map.end()) {
++    fromRawValue(context, tmp_isDisabled->second, result.isDisabled);
++  }
++  auto tmp_isDefault = map.find("isDefault");
++  if (tmp_isDefault != map.end()) {
++    fromRawValue(context, tmp_isDefault->second, result.isDefault);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewLinkRegexStruct &value) {
++  return "[Object EnrichedTextInputViewLinkRegexStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewLinkRegexStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++struct EnrichedTextInputViewContextMenuItemsStruct {
++  std::string text{};
++
++
++#ifdef RN_SERIALIZABLE_STATE
++  bool operator==(const EnrichedTextInputViewContextMenuItemsStruct&) const = default;
++
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["text"] = text;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, EnrichedTextInputViewContextMenuItemsStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_text = map.find("text");
++  if (tmp_text != map.end()) {
++    fromRawValue(context, tmp_text->second, result.text);
++  }
++}
++
++static inline std::string toString(const EnrichedTextInputViewContextMenuItemsStruct &value) {
++  return "[Object EnrichedTextInputViewContextMenuItemsStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const EnrichedTextInputViewContextMenuItemsStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, std::vector<EnrichedTextInputViewContextMenuItemsStruct> &result) {
++  auto items = (std::vector<RawValue>)value;
++  for (const auto &item : items) {
++    EnrichedTextInputViewContextMenuItemsStruct newItem;
++    fromRawValue(context, item, newItem);
++    result.emplace_back(newItem);
++  }
++}
++
++class EnrichedTextInputViewProps final : public ViewProps {
++ public:
++  EnrichedTextInputViewProps() = default;
++  EnrichedTextInputViewProps(const PropsParserContext& context, const EnrichedTextInputViewProps &sourceProps, const RawProps &rawProps);
++
++#pragma mark - Props
++
++  bool autoFocus{false};
++  bool editable{false};
++  std::string defaultValue{};
++  std::string placeholder{};
++  SharedColor placeholderTextColor{};
++  std::vector<std::string> mentionIndicators{};
++  SharedColor cursorColor{};
++  SharedColor selectionColor{};
++  std::string autoCapitalize{};
++  EnrichedTextInputViewHtmlStyleStruct htmlStyle{};
++  bool scrollEnabled{false};
++  EnrichedTextInputViewLinkRegexStruct linkRegex{};
++  std::vector<EnrichedTextInputViewContextMenuItemsStruct> contextMenuItems{};
++  SharedColor color{};
++  Float fontSize{0.0};
++  Float lineHeight{0.0};
++  std::string fontFamily{};
++  std::string fontWeight{};
++  std::string fontStyle{};
++  bool isOnChangeHtmlSet{false};
++  bool isOnChangeTextSet{false};
++  bool androidExperimentalSynchronousEvents{false};
++  bool useHtmlNormalizer{false};
++
++  #ifdef RN_SERIALIZABLE_STATE
++  ComponentName getDiffPropsImplementationTarget() const override;
++
++  folly::dynamic getDiffProps(const Props* prevProps) const override;
++  #endif
++
++  
++};
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ShadowNodes.cpp b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ShadowNodes.cpp
+new file mode 100644
+index 0000000..feadde3
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ShadowNodes.cpp
+@@ -0,0 +1,17 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateShadowNodeCpp.js
++ */
++
++#include "ShadowNodes.h"
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ShadowNodes.h b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ShadowNodes.h
+new file mode 100644
+index 0000000..615dfa6
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/ShadowNodes.h
+@@ -0,0 +1,23 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateShadowNodeH.js
++ */
++
++#pragma once
++
++#include "EventEmitters.h"
++#include "Props.h"
++#include "States.h"
++#include <react/renderer/components/view/ConcreteViewShadowNode.h>
++#include <jsi/jsi.h>
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/States.cpp b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/States.cpp
+new file mode 100644
+index 0000000..1dbb184
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/States.cpp
+@@ -0,0 +1,16 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateStateCpp.js
++ */
++#include "States.h"
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/States.h b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/States.h
+new file mode 100644
+index 0000000..2e55bce
+--- /dev/null
++++ b/node_modules/react-native-enriched/jni/react/renderer/components/ReactNativeEnrichedSpec/States.h
+@@ -0,0 +1,20 @@
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateStateH.js
++ */
++#pragma once
++
++#include <react/renderer/core/StateData.h>
++#ifdef RN_SERIALIZABLE_STATE
++#include <folly/dynamic.h>
++#endif
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+\ No newline at end of file
+diff --git a/node_modules/react-native-enriched/lib/module/EnrichedTextInput.js b/node_modules/react-native-enriched/lib/module/EnrichedTextInput.js
+index da75a30..0dfe053 100644
+--- a/node_modules/react-native-enriched/lib/module/EnrichedTextInput.js
++++ b/node_modules/react-native-enriched/lib/module/EnrichedTextInput.js
+@@ -36,6 +36,7 @@ export const EnrichedTextInput = ({
+   onEndMention,
+   onChangeSelection,
+   onKeyPress,
++  onScroll,
+   contextMenuItems,
+   androidExperimentalSynchronousEvents = false,
+   useHtmlNormalizer = false,
+@@ -279,6 +280,7 @@ export const EnrichedTextInput = ({
+     onChangeSelection: onChangeSelection,
+     onRequestHtmlResult: handleRequestHtmlResult,
+     onInputKeyPress: onKeyPress,
++    onInputScroll: onScroll,
+     contextMenuItems: nativeContextMenuItems,
+     onContextMenuItemPress: handleContextMenuItemPress,
+     androidExperimentalSynchronousEvents: androidExperimentalSynchronousEvents,
+diff --git a/node_modules/react-native-enriched/lib/module/spec/EnrichedTextInputNativeComponent.ts b/node_modules/react-native-enriched/lib/module/spec/EnrichedTextInputNativeComponent.ts
+index 8bf5186..9ac20b3 100644
+--- a/node_modules/react-native-enriched/lib/module/spec/EnrichedTextInputNativeComponent.ts
++++ b/node_modules/react-native-enriched/lib/module/spec/EnrichedTextInputNativeComponent.ts
+@@ -291,6 +291,12 @@ export interface OnPasteImagesEvent {
+   }[];
+ }
+ 
++export interface OnScrollEvent {
++  scrollY: Float;
++  contentHeight: Float;
++  layoutHeight: Float;
++}
++
+ type Heading = {
+   fontSize?: Float;
+   bold?: boolean;
+@@ -375,6 +381,7 @@ export interface NativeProps extends ViewProps {
+   onInputKeyPress?: DirectEventHandler<OnKeyPressEvent>;
+   onPasteImages?: DirectEventHandler<OnPasteImagesEvent>;
+   onContextMenuItemPress?: DirectEventHandler<OnContextMenuItemPressEvent>;
++  onInputScroll?: DirectEventHandler<OnScrollEvent>;
+ 
+   // Style related props - used for generating proper setters in component's manager
+   // These should not be passed as regular props
+diff --git a/node_modules/react-native-enriched/lib/typescript/src/EnrichedTextInput.d.ts b/node_modules/react-native-enriched/lib/typescript/src/EnrichedTextInput.d.ts
+index d3b12ec..7fdff43 100644
+--- a/node_modules/react-native-enriched/lib/typescript/src/EnrichedTextInput.d.ts
++++ b/node_modules/react-native-enriched/lib/typescript/src/EnrichedTextInput.d.ts
+@@ -1,5 +1,5 @@
+ import { type RefObject } from 'react';
+-import { type OnChangeHtmlEvent, type OnChangeSelectionEvent, type OnChangeStateEvent, type OnChangeTextEvent, type OnLinkDetected, type OnMentionDetected, type OnKeyPressEvent, type OnPasteImagesEvent } from './spec/EnrichedTextInputNativeComponent';
++import { type OnChangeHtmlEvent, type OnChangeSelectionEvent, type OnChangeStateEvent, type OnChangeTextEvent, type OnLinkDetected, type OnMentionDetected, type OnKeyPressEvent, type OnPasteImagesEvent, type OnScrollEvent } from './spec/EnrichedTextInputNativeComponent';
+ import type { ColorValue, NativeMethods, NativeSyntheticEvent, TargetedEvent, TextStyle, ViewProps, ViewStyle } from 'react-native';
+ import type { HtmlStyle } from './types';
+ export type FocusEvent = NativeSyntheticEvent<TargetedEvent>;
+@@ -76,6 +76,7 @@ export interface EnrichedTextInputProps extends Omit<ViewProps, 'children'> {
+     onChangeSelection?: (e: NativeSyntheticEvent<OnChangeSelectionEvent>) => void;
+     onKeyPress?: (e: NativeSyntheticEvent<OnKeyPressEvent>) => void;
+     onPasteImages?: (e: NativeSyntheticEvent<OnPasteImagesEvent>) => void;
++    onScroll?: (e: NativeSyntheticEvent<OnScrollEvent>) => void;
+     contextMenuItems?: ContextMenuItem[];
+     /**
+      * If true, Android will use experimental synchronous events.
+diff --git a/node_modules/react-native-enriched/lib/typescript/src/spec/EnrichedTextInputNativeComponent.d.ts b/node_modules/react-native-enriched/lib/typescript/src/spec/EnrichedTextInputNativeComponent.d.ts
+index 49febd7..7f7fbf5 100644
+--- a/node_modules/react-native-enriched/lib/typescript/src/spec/EnrichedTextInputNativeComponent.d.ts
++++ b/node_modules/react-native-enriched/lib/typescript/src/spec/EnrichedTextInputNativeComponent.d.ts
+@@ -266,6 +266,11 @@ export interface OnPasteImagesEvent {
+         height: Float;
+     }[];
+ }
++export interface OnScrollEvent {
++    scrollY: Float;
++    contentHeight: Float;
++    layoutHeight: Float;
++}
+ type Heading = {
+     fontSize?: Float;
+     bold?: boolean;
+@@ -343,6 +348,7 @@ export interface NativeProps extends ViewProps {
+     onInputKeyPress?: DirectEventHandler<OnKeyPressEvent>;
+     onPasteImages?: DirectEventHandler<OnPasteImagesEvent>;
+     onContextMenuItemPress?: DirectEventHandler<OnContextMenuItemPressEvent>;
++    onInputScroll?: DirectEventHandler<OnScrollEvent>;
+     color?: ColorValue;
+     fontSize?: Float;
+     lineHeight?: Float;
+diff --git a/node_modules/react-native-enriched/src/EnrichedTextInput.tsx b/node_modules/react-native-enriched/src/EnrichedTextInput.tsx
+index ed6063e..3a95fd8 100644
+--- a/node_modules/react-native-enriched/src/EnrichedTextInput.tsx
++++ b/node_modules/react-native-enriched/src/EnrichedTextInput.tsx
+@@ -22,6 +22,7 @@ import EnrichedTextInputNativeComponent, {
+   type OnRequestHtmlResultEvent,
+   type OnKeyPressEvent,
+   type OnPasteImagesEvent,
++  type OnScrollEvent,
+ } from './spec/EnrichedTextInputNativeComponent';
+ import type {
+   ColorValue,
+@@ -127,6 +128,7 @@ export interface EnrichedTextInputProps extends Omit<ViewProps, 'children'> {
+   onChangeSelection?: (e: NativeSyntheticEvent<OnChangeSelectionEvent>) => void;
+   onKeyPress?: (e: NativeSyntheticEvent<OnKeyPressEvent>) => void;
+   onPasteImages?: (e: NativeSyntheticEvent<OnPasteImagesEvent>) => void;
++  onScroll?: (e: NativeSyntheticEvent<OnScrollEvent>) => void;
+   contextMenuItems?: ContextMenuItem[];
+   /**
+    * If true, Android will use experimental synchronous events.
+@@ -185,6 +187,7 @@ export const EnrichedTextInput = ({
+   onEndMention,
+   onChangeSelection,
+   onKeyPress,
++  onScroll,
+   contextMenuItems,
+   androidExperimentalSynchronousEvents = false,
+   useHtmlNormalizer = false,
+@@ -453,6 +456,7 @@ export const EnrichedTextInput = ({
+       onChangeSelection={onChangeSelection}
+       onRequestHtmlResult={handleRequestHtmlResult}
+       onInputKeyPress={onKeyPress}
++      onInputScroll={onScroll}
+       contextMenuItems={nativeContextMenuItems}
+       onContextMenuItemPress={handleContextMenuItemPress}
+       androidExperimentalSynchronousEvents={
+diff --git a/node_modules/react-native-enriched/src/spec/EnrichedTextInputNativeComponent.ts b/node_modules/react-native-enriched/src/spec/EnrichedTextInputNativeComponent.ts
+index 8bf5186..9ac20b3 100644
+--- a/node_modules/react-native-enriched/src/spec/EnrichedTextInputNativeComponent.ts
++++ b/node_modules/react-native-enriched/src/spec/EnrichedTextInputNativeComponent.ts
+@@ -291,6 +291,12 @@ export interface OnPasteImagesEvent {
+   }[];
+ }
+ 
++export interface OnScrollEvent {
++  scrollY: Float;
++  contentHeight: Float;
++  layoutHeight: Float;
++}
++
+ type Heading = {
+   fontSize?: Float;
+   bold?: boolean;
+@@ -375,6 +381,7 @@ export interface NativeProps extends ViewProps {
+   onInputKeyPress?: DirectEventHandler<OnKeyPressEvent>;
+   onPasteImages?: DirectEventHandler<OnPasteImagesEvent>;
+   onContextMenuItemPress?: DirectEventHandler<OnContextMenuItemPressEvent>;
++  onInputScroll?: DirectEventHandler<OnScrollEvent>;
+ 
+   // Style related props - used for generating proper setters in component's manager
+   // These should not be passed as regular props

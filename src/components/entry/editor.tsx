@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from 'heroui-native';
 import {
 	Bold,
@@ -20,7 +21,12 @@ import {
 	type EnrichedTextInputInstance,
 	type OnChangeStateEvent,
 } from 'react-native-enriched';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+	useAnimatedStyle,
+	useDerivedValue,
+	useSharedValue,
+	withTiming,
+} from 'react-native-reanimated';
 
 import {
 	TranscriptionButton,
@@ -84,7 +90,30 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 	const [styleState, setStyleState] = useState<OnChangeStateEvent | null>(null);
 	const keyboardProgress = useKeyboardVisible();
 
-	const { foreground, accent, muted, selection, surface, editorFont } = useThemeColors();
+	const scrollY = useSharedValue(0);
+	const contentHeight = useSharedValue(0);
+	const layoutHeight = useSharedValue(0);
+
+	const topGradientOpacity = useDerivedValue(() =>
+		withTiming(scrollY.value > 0 ? 1 : 0, { duration: 200 }),
+	);
+	const bottomGradientOpacity = useDerivedValue(() =>
+		withTiming(
+			contentHeight.value > 0 && scrollY.value + layoutHeight.value < contentHeight.value - 1
+				? 1
+				: 0,
+			{ duration: 200 },
+		),
+	);
+	const topGradientStyle = useAnimatedStyle(() => ({
+		opacity: topGradientOpacity.value,
+	}));
+	const bottomGradientStyle = useAnimatedStyle(() => ({
+		opacity: bottomGradientOpacity.value,
+	}));
+
+	const { foreground, accent, muted, selection, surface, editorFont, background } =
+		useThemeColors();
 	const transcription = useEditorTranscription({ editorRef: ref });
 	const htmlStyle = useMemo(
 		() => buildHtmlStyle({ foreground, accent, muted, surface }),
@@ -115,28 +144,54 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 
 	return (
 		<KeyboardAvoidingView className="flex-1" behavior={'padding'}>
-			<EnrichedTextInput
-				ref={ref}
-				defaultValue={defaultValue}
-				placeholder={placeholder ?? `What's on your mind?`}
-				placeholderTextColor={muted}
-				cursorColor={accent}
-				selectionColor={selection}
-				onChangeState={handleStateChange}
-				onChangeHtml={(e) => onChangeHtml?.(e.nativeEvent.value)}
-				onChangeText={(e) => onChangeText?.(e.nativeEvent.value)}
-				style={{
-					flex: 1,
-					fontFamily: editorFont,
-					color: foreground,
-					lineHeight: 28,
-					padding: 24,
-					paddingTop: 0,
-				}}
-				htmlStyle={htmlStyle}
-			/>
+			<View className="flex-1 relative">
+				<EnrichedTextInput
+					ref={ref}
+					defaultValue={defaultValue}
+					placeholder={placeholder ?? `What's on your mind?`}
+					placeholderTextColor={muted}
+					cursorColor={accent}
+					selectionColor={selection}
+					onChangeState={handleStateChange}
+					onChangeHtml={(e) => onChangeHtml?.(e.nativeEvent.value)}
+					onChangeText={(e) => onChangeText?.(e.nativeEvent.value)}
+					onScroll={(e) => {
+						scrollY.value = e.nativeEvent.scrollY;
+						contentHeight.value = e.nativeEvent.contentHeight;
+						layoutHeight.value = e.nativeEvent.layoutHeight;
+					}}
+					style={{
+						flex: 1,
+						fontFamily: editorFont,
+						color: foreground,
+						lineHeight: 28,
+						padding: 24,
+						paddingTop: 0,
+					}}
+					htmlStyle={htmlStyle}
+				/>
 
-			<TranscriptionLiveText transcription={transcription} />
+				<Animated.View
+					pointerEvents="none"
+					style={[
+						{ position: 'absolute', top: 0, left: 0, right: 0, height: 48 },
+						topGradientStyle,
+					]}
+				>
+					<LinearGradient colors={[background, `${background}00`]} style={{ flex: 1 }} />
+				</Animated.View>
+				<Animated.View
+					pointerEvents="none"
+					style={[
+						{ position: 'absolute', bottom: 24, left: 0, right: 0, height: 48 },
+						bottomGradientStyle,
+					]}
+				>
+					<LinearGradient colors={[`${background}00`, background]} style={{ flex: 1 }} />
+				</Animated.View>
+			</View>
+
+			{transcription && <TranscriptionLiveText transcription={transcription} />}
 
 			<Animated.View
 				className="flex-row items-center border-t border-border"
