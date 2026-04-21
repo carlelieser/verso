@@ -22,10 +22,16 @@ Check out the [latest release](https://github.com/carlelieser/verso/releases/lat
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/journals-list.png" width="24%" alt="Journals"/>
-  <img src="docs/screenshots/journal-detail.png" width="24%" alt="Journal detail"/>
-  <img src="docs/screenshots/entry-composer-mood-wheel.png" width="24%" alt="Mood wheel"/>
-  <img src="docs/screenshots/entry-viewer.png" width="24%" alt="Entry viewer"/>
+  <img src="docs/screenshots/journals.png" width="24%" alt="Journals"/>
+  <img src="docs/screenshots/new-entry.png" width="24%" alt="New entry"/>
+  <img src="docs/screenshots/mood-picker.png" width="24%" alt="Mood picker"/>
+  <img src="docs/screenshots/entry-view.png" width="24%" alt="Entry view"/>
+</p>
+<p align="center">
+  <img src="docs/screenshots/editor.png" width="24%" alt="Editor"/>
+  <img src="docs/screenshots/attachments.png" width="24%" alt="Attachments"/>
+  <img src="docs/screenshots/history.png" width="24%" alt="History"/>
+  <img src="docs/screenshots/settings.png" width="24%" alt="Settings"/>
 </p>
 
 ## License
