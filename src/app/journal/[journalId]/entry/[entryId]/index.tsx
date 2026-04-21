@@ -20,7 +20,7 @@ import { useJournals } from '@/hooks/use-journals';
 import { useMoveEntry } from '@/hooks/use-move-entry';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { EntryDetail } from '@/types/entry';
-import { formatRelativeDate } from '@/utils/date';
+import { formatFullDate, formatRelativeDate } from '@/utils/date';
 
 function EntryContent({
 	entry,
@@ -39,9 +39,12 @@ function EntryContent({
 			contentContainerClassName="px-5 gap-4"
 			contentContainerStyle={{ paddingBottom: contentInsetBottom }}
 		>
-			<Text className="text-4xl font-heading text-foreground mb-4 pb-2">
-				{formatRelativeDate(entry.createdAt)}
-			</Text>
+			<View className="mb-4 pb-2">
+				<Text className="text-4xl font-heading text-foreground">
+					{formatRelativeDate(entry.createdAt)}
+				</Text>
+				<Text className="text-sm text-muted mt-1">{formatFullDate(entry.createdAt)}</Text>
+			</View>
 
 			{entry.emotions.length > 0 ? (
 				<Section label="Mood">

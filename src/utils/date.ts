@@ -1,5 +1,14 @@
 export const ONE_DAY_MS = 86_400_000;
 
+export function formatFullDate(timestamp: number): string {
+	return new Date(timestamp).toLocaleDateString('en-US', {
+		weekday: 'long',
+		month: 'long',
+		day: 'numeric',
+		year: 'numeric',
+	});
+}
+
 export function formatRelativeDate(timestamp: number): string {
 	const date = new Date(timestamp);
 	const now = new Date();
