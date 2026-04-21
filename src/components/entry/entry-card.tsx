@@ -1,18 +1,16 @@
-import { Card } from 'heroui-native';
+import { Card, type SurfaceVariant } from 'heroui-native';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 
 import type { EntrySummaryWithJournal } from '@/types/entry';
 import { formatRelativeDate } from '@/utils/date';
 
-type CardVariant = 'default' | 'secondary' | 'tertiary' | 'transparent';
-
 interface EntryCardProps {
 	readonly entry: EntrySummaryWithJournal;
 	readonly onPress: () => void;
 	readonly onLongPress?: () => void;
 	readonly showJournalName?: boolean;
-	readonly variant?: CardVariant;
+	readonly variant?: SurfaceVariant;
 }
 
 function countWords(text: string): number {

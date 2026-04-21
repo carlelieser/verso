@@ -1,4 +1,4 @@
-import { Card } from 'heroui-native';
+import { Card, type SurfaceVariant } from 'heroui-native';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -7,8 +7,6 @@ import { getJournalIcon } from '@/constants/journal-icons';
 import type { Journal } from '@/types/journal';
 import { formatJournalMeta } from '@/utils/format-journal-meta';
 
-type CardVariant = 'default' | 'secondary' | 'tertiary' | 'transparent';
-
 interface JournalCardProps {
 	readonly journal: Journal;
 	readonly className?: string;
@@ -16,7 +14,7 @@ interface JournalCardProps {
 	readonly isDefault?: boolean;
 	readonly onPress: () => void;
 	readonly onLongPress?: () => void;
-	readonly variant?: CardVariant;
+	readonly variant?: SurfaceVariant;
 }
 
 export function JournalCard({
