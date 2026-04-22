@@ -198,7 +198,7 @@ export default function JournalDetailScreen(): React.JSX.Element {
 				<Text className="text-5xl font-heading text-foreground pb-2">
 					{journal?.name ?? 'Journal'}
 				</Text>
-				<Text className="text-xs text-muted">{subtitle}</Text>
+				<Text className="text-xs text-muted font-medium">{subtitle}</Text>
 			</View>
 		</View>
 	);

@@ -12,7 +12,7 @@ index 9a03613..c2c3b1a 100644
  
    private void startBlockquote(Editable text) {
 diff --git a/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/EnrichedTextInputView.kt b/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/EnrichedTextInputView.kt
-index 851e290..738ffc4 100644
+index 851e290..d12d698 100644
 --- a/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/EnrichedTextInputView.kt
 +++ b/node_modules/react-native-enriched/android/src/main/java/com/swmansion/enriched/textinput/EnrichedTextInputView.kt
 @@ -42,6 +42,7 @@ import com.swmansion.enriched.textinput.events.MentionHandler
@@ -23,14 +23,15 @@ index 851e290..738ffc4 100644
  import com.swmansion.enriched.textinput.events.OnRequestHtmlResultEvent
  import com.swmansion.enriched.textinput.spans.EnrichedInputH1Span
  import com.swmansion.enriched.textinput.spans.EnrichedInputH2Span
-@@ -216,6 +217,23 @@ class EnrichedTextInputView : AppCompatEditText {
+@@ -216,6 +217,24 @@ class EnrichedTextInputView : AppCompatEditText {
  
    override fun canScrollHorizontally(direction: Int): Boolean = scrollEnabled
  
 +  override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
 +    super.onScrollChanged(l, t, oldl, oldt)
-+    val surfaceId = UIManagerHelper.getSurfaceId(context)
-+    val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(context, id)
++    val reactContext = context as ReactContext
++    val surfaceId = UIManagerHelper.getSurfaceId(reactContext)
++    val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
 +    val contentHeight = (layout?.height ?: 0) + paddingTop + paddingBottom
 +    dispatcher?.dispatchEvent(
 +      OnInputScrollEvent(

@@ -39,11 +39,13 @@ function EntryContent({
 			contentContainerClassName="px-5 gap-4"
 			contentContainerStyle={{ paddingBottom: contentInsetBottom }}
 		>
-			<View className="mb-4 pb-2">
-				<Text className="text-4xl font-heading text-foreground">
+			<View className="mb-4">
+				<Text className="text-4xl font-heading text-foreground pb-2">
 					{formatRelativeDate(entry.createdAt)}
 				</Text>
-				<Text className="text-sm text-muted mt-1">{formatFullDate(entry.createdAt)}</Text>
+				<Text className="text-sm text-muted font-medium">
+					{formatFullDate(entry.createdAt)}
+				</Text>
 			</View>
 
 			{entry.emotions.length > 0 ? (
