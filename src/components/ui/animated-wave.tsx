@@ -75,6 +75,8 @@ interface AutoSizedWaveProps extends Omit<AnimatedWaveProps, 'width'> {
 }
 
 /** Measures its container width and renders an `AnimatedWave` that fills it. */
+const WAVE_RIGHT_OVERSHOOT = 1;
+
 export function AutoSizedWave({
 	height,
 	containerStyle,
@@ -88,7 +90,11 @@ export function AutoSizedWave({
 
 	return (
 		<View style={[{ height, overflow: 'hidden' }, containerStyle]} onLayout={handleLayout}>
-			<AnimatedWave width={width} height={height} {...waveProps} />
+			<AnimatedWave
+				width={width + WAVE_RIGHT_OVERSHOOT}
+				height={height}
+				{...waveProps}
+			/>
 		</View>
 	);
 }
