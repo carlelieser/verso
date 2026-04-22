@@ -69,5 +69,8 @@ export function useBottomSheet(options?: UseBottomSheetOptions): UseBottomSheetR
 		[dismiss, renderBackdrop, surface, muted, options?.maxDynamicContentSize],
 	);
 
-	return { ref, isOpen, open, close, sheetProps };
+	return useMemo(
+		() => ({ ref, isOpen, open, close, sheetProps }),
+		[isOpen, open, close, sheetProps],
+	);
 }

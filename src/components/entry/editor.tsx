@@ -13,7 +13,15 @@ import {
 	Strikethrough,
 	Underline,
 } from 'lucide-react-native';
-import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, {
+	forwardRef,
+	memo,
+	useCallback,
+	useImperativeHandle,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
 import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import {
@@ -138,9 +146,54 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 		},
 	}));
 
-	const handleStateChange = (e: NativeSyntheticEvent<OnChangeStateEvent>): void => {
+	const handleStateChange = useCallback((e: NativeSyntheticEvent<OnChangeStateEvent>): void => {
 		setStyleState(e.nativeEvent);
-	};
+	}, []);
+
+	const handleChangeHtml = useCallback(
+		(e: NativeSyntheticEvent<{ value: string }>): void => {
+			onChangeHtml?.(e.nativeEvent.value);
+		},
+		[onChangeHtml],
+	);
+
+	const handleChangeText = useCallback(
+		(e: NativeSyntheticEvent<{ value: string }>): void => {
+			onChangeText?.(e.nativeEvent.value);
+		},
+		[onChangeText],
+	);
+
+	const handleScroll = useCallback(
+		(
+			e: NativeSyntheticEvent<{
+				scrollY: number;
+				contentHeight: number;
+				layoutHeight: number;
+			}>,
+		): void => {
+			scrollY.value = e.nativeEvent.scrollY;
+			contentHeight.value = e.nativeEvent.contentHeight;
+			layoutHeight.value = e.nativeEvent.layoutHeight;
+		},
+		[scrollY, contentHeight, layoutHeight],
+	);
+
+	const inputStyle = useMemo(
+		() => ({
+			flex: 1,
+			fontFamily: editorFont,
+			color: foreground,
+			lineHeight: 28,
+			padding: 24,
+			paddingTop: 0,
+		}),
+		[editorFont, foreground],
+	);
+
+	const handleBlur = useCallback(() => {
+		ref.current?.blur();
+	}, []);
 
 	return (
 		<KeyboardAvoidingView className="flex-1" behavior={'padding'}>
@@ -153,21 +206,10 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 					cursorColor={accent}
 					selectionColor={selection}
 					onChangeState={handleStateChange}
-					onChangeHtml={(e) => onChangeHtml?.(e.nativeEvent.value)}
-					onChangeText={(e) => onChangeText?.(e.nativeEvent.value)}
-					onScroll={(e) => {
-						scrollY.value = e.nativeEvent.scrollY;
-						contentHeight.value = e.nativeEvent.contentHeight;
-						layoutHeight.value = e.nativeEvent.layoutHeight;
-					}}
-					style={{
-						flex: 1,
-						fontFamily: editorFont,
-						color: foreground,
-						lineHeight: 28,
-						padding: 24,
-						paddingTop: 0,
-					}}
+					onChangeHtml={handleChangeHtml}
+					onChangeText={handleChangeText}
+					onScroll={handleScroll}
+					style={inputStyle}
 					htmlStyle={htmlStyle}
 				/>
 
@@ -183,7 +225,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 				<Animated.View
 					pointerEvents="none"
 					style={[
-						{ position: 'absolute', bottom: 24, left: 0, right: 0, height: 48 },
+						// bottom: 23 (not 24) compensates for a rendering issue where font shows under the gradient
+						{ position: 'absolute', bottom: 23, left: 0, right: 0, height: 48 },
 						bottomGradientStyle,
 					]}
 				>
@@ -191,51 +234,115 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
 				</Animated.View>
 			</View>
 
-			{transcription && <TranscriptionLiveText transcription={transcription} />}
+			<TranscriptionLiveText transcription={transcription} />
 
 			<Animated.View
 				className="flex-row items-center border-t border-border"
 				style={formatBarAnimatedStyle}
 			>
-				<ScrollView
-					horizontal
-					showsHorizontalScrollIndicator={false}
-					keyboardShouldPersistTaps="always"
-					contentContainerStyle={{
-						paddingHorizontal: 8,
-						paddingVertical: 6,
-						gap: 2,
-					}}
-					className="flex-1"
-				>
-					{FORMAT_ACTIONS.map((action) => {
-						const isActive = styleState?.[action.stateKey]?.isActive ?? false;
-						const IconComponent = action.icon;
-
-						return (
-							<Button
-								key={action.key}
-								variant="ghost"
-								isIconOnly
-								onPress={() => {
-									if (ref.current) {
-										action.toggle(ref.current);
-									}
-								}}
-								style={isActive ? { backgroundColor: surface } : undefined}
-							>
-								<IconComponent size={18} color={isActive ? accent : muted} />
-							</Button>
-						);
-					})}
-				</ScrollView>
+				<FormatToolbar
+					styleState={styleState}
+					editorRef={ref}
+					accent={accent}
+					muted={muted}
+					surface={surface}
+				/>
 				<View className={'flex-row items-center border-l border-border bg-background'}>
 					<TranscriptionButton transcription={transcription} />
-					<Button variant="ghost" isIconOnly onPress={() => ref.current?.blur()}>
+					<Button variant="ghost" isIconOnly onPress={handleBlur}>
 						<ChevronDown size={18} color={muted} />
 					</Button>
 				</View>
 			</Animated.View>
 		</KeyboardAvoidingView>
+	);
+});
+
+interface FormatToolbarProps {
+	readonly styleState: OnChangeStateEvent | null;
+	readonly editorRef: React.RefObject<EnrichedTextInputInstance | null>;
+	readonly accent: string;
+	readonly muted: string;
+	readonly surface: string;
+}
+
+const FormatToolbar = memo(function FormatToolbar({
+	styleState,
+	editorRef,
+	accent,
+	muted,
+	surface,
+}: FormatToolbarProps): React.JSX.Element {
+	return (
+		<ScrollView
+			horizontal
+			showsHorizontalScrollIndicator={false}
+			keyboardShouldPersistTaps="always"
+			contentContainerStyle={FORMAT_BAR_CONTENT_STYLE}
+			className="flex-1"
+		>
+			{FORMAT_ACTIONS.map((action) => {
+				const isActive = styleState?.[action.stateKey]?.isActive ?? false;
+				return (
+					<FormatButton
+						key={action.key}
+						action={action}
+						isActive={isActive}
+						editorRef={editorRef}
+						accent={accent}
+						muted={muted}
+						surface={surface}
+					/>
+				);
+			})}
+		</ScrollView>
+	);
+});
+
+const FORMAT_BAR_CONTENT_STYLE = {
+	paddingHorizontal: 8,
+	paddingVertical: 6,
+	gap: 2,
+} as const;
+
+const ACTIVE_BUTTON_STYLE_CACHE = new Map<string, { backgroundColor: string }>();
+const getActiveButtonStyle = (surface: string): { backgroundColor: string } => {
+	const cached = ACTIVE_BUTTON_STYLE_CACHE.get(surface);
+	if (cached) return cached;
+	const style = { backgroundColor: surface };
+	ACTIVE_BUTTON_STYLE_CACHE.set(surface, style);
+	return style;
+};
+
+interface FormatButtonProps {
+	readonly action: FormatAction;
+	readonly isActive: boolean;
+	readonly editorRef: React.RefObject<EnrichedTextInputInstance | null>;
+	readonly accent: string;
+	readonly muted: string;
+	readonly surface: string;
+}
+
+const FormatButton = memo(function FormatButton({
+	action,
+	isActive,
+	editorRef,
+	accent,
+	muted,
+	surface,
+}: FormatButtonProps): React.JSX.Element {
+	const handlePress = useCallback(() => {
+		if (editorRef.current) {
+			action.toggle(editorRef.current);
+		}
+	}, [action, editorRef]);
+
+	const IconComponent = action.icon;
+	const style = isActive ? getActiveButtonStyle(surface) : undefined;
+
+	return (
+		<Button variant="ghost" isIconOnly onPress={handlePress} style={style}>
+			<IconComponent size={18} color={isActive ? accent : muted} />
+		</Button>
 	);
 });

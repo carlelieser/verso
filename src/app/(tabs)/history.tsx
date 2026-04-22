@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Clock, Search } from 'lucide-react-native';
-import React, { useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
+import type { ListRenderItem } from 'react-native';
 
 import { EntryCard } from '@/components/entry/entry-card';
 import { MoveToJournalSheet } from '@/components/entry/move-to-journal-sheet';
@@ -65,31 +66,21 @@ export default function HistoryScreen(): React.JSX.Element {
 	const sort = useSort({ options: sortOptions, defaultKey: 'createdAt' });
 	const sortedEntries = useMemo(() => sort.sort(entries) ?? [], [sort, entries]);
 
+	const renderItem = useCallback<ListRenderItem<EntrySummaryWithJournal>>(
+		({ item }) => <EntryRow entry={item} onLongPress={handleLongPress} />,
+		[handleLongPress],
+	);
+
 	return (
 		<Screen title="History" showBackButton={false}>
 			<SearchableList
 				data={sortedEntries}
-				keyExtractor={(item) => item.id}
-				renderItem={({ item }) => (
-					<EntryCard
-						entry={item}
-						showJournalName
-						onPress={() => router.push(`/journal/${item.journalId}/entry/${item.id}`)}
-						onLongPress={() => handleLongPress(item)}
-					/>
-				)}
+				keyExtractor={entryKeyExtractor}
+				renderItem={renderItem}
 				onQueryChange={debouncedSearch}
 				searchPlaceholder="Search entries..."
-				emptyState={{
-					icon: Clock,
-					title: 'No entries yet',
-					description: 'Your journal entries will appear here.',
-				}}
-				noResultsState={{
-					icon: Search,
-					title: 'No results',
-					description: 'Try a different search term.',
-				}}
+				emptyState={EMPTY_STATE}
+				noResultsState={NO_RESULTS_STATE}
 				headerAction={<SortMenu sort={sort} />}
 			/>
 
@@ -117,3 +108,41 @@ export default function HistoryScreen(): React.JSX.Element {
 		</Screen>
 	);
 }
+
+const entryKeyExtractor = (item: EntrySummaryWithJournal): string => item.id;
+
+const EMPTY_STATE = {
+	icon: Clock,
+	title: 'No entries yet',
+	description: 'Your journal entries will appear here.',
+} as const;
+
+const NO_RESULTS_STATE = {
+	icon: Search,
+	title: 'No results',
+	description: 'Try a different search term.',
+} as const;
+
+interface EntryRowProps {
+	readonly entry: EntrySummaryWithJournal;
+	readonly onLongPress: (item: EntrySummaryWithJournal) => void;
+}
+
+const EntryRow = memo(function EntryRow({ entry, onLongPress }: EntryRowProps): React.JSX.Element {
+	const handlePress = useCallback(() => {
+		router.push(`/journal/${entry.journalId}/entry/${entry.id}`);
+	}, [entry.journalId, entry.id]);
+
+	const handleLongPress = useCallback(() => {
+		onLongPress(entry);
+	}, [onLongPress, entry]);
+
+	return (
+		<EntryCard
+			entry={entry}
+			showJournalName
+			onPress={handlePress}
+			onLongPress={handleLongPress}
+		/>
+	);
+});

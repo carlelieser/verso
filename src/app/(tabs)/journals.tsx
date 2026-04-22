@@ -11,7 +11,8 @@ import {
 	Star,
 	Trash2,
 } from 'lucide-react-native';
-import React, { useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
+import type { ListRenderItem } from 'react-native';
 
 import { ChangeJournalColor } from '@/components/journal/change-journal-color';
 import { ChangeJournalIcon } from '@/components/journal/change-journal-icon';
@@ -91,6 +92,18 @@ export default function JournalsScreen(): React.JSX.Element {
 	);
 	const sort = useSort({ options: sortOptions, defaultKey: 'createdAt' });
 	const sortedJournals = useMemo(() => sort.sort(journals) ?? [], [sort, journals]);
+
+	const renderItem = useCallback<ListRenderItem<Journal>>(
+		({ item }) => (
+			<JournalRow
+				journal={item}
+				entryCount={entryCounts.get(item.id) ?? 0}
+				isDefault={item.displayOrder === 0}
+				onLongPress={handleLongPress}
+			/>
+		),
+		[entryCounts, handleLongPress],
+	);
 
 	const handleCreate = useCallback(
 		async (name: string, icon: string, color: string) => {
@@ -183,28 +196,12 @@ export default function JournalsScreen(): React.JSX.Element {
 		>
 			<SearchableList
 				data={sortedJournals}
-				keyExtractor={(item) => item.id}
-				renderItem={({ item }) => (
-					<JournalCard
-						journal={item}
-						entryCount={entryCounts.get(item.id) ?? 0}
-						isDefault={item.displayOrder === 0}
-						onPress={() => router.push(`/journal/${item.id}`)}
-						onLongPress={() => handleLongPress(item)}
-					/>
-				)}
-				filter={(item, q) => item.name.toLowerCase().includes(q.toLowerCase())}
+				keyExtractor={journalKeyExtractor}
+				renderItem={renderItem}
+				filter={journalFilter}
 				searchPlaceholder="Search journals..."
-				emptyState={{
-					icon: BookOpen,
-					title: 'No journals yet',
-					description: 'Tap + to create your first journal.',
-				}}
-				noResultsState={{
-					icon: Search,
-					title: 'No results',
-					description: 'Try a different search term.',
-				}}
+				emptyState={EMPTY_STATE}
+				noResultsState={NO_RESULTS_STATE}
 				headerAction={<SortMenu sort={sort} />}
 			/>
 
@@ -263,3 +260,51 @@ export default function JournalsScreen(): React.JSX.Element {
 		</Screen>
 	);
 }
+
+const journalKeyExtractor = (item: Journal): string => item.id;
+const journalFilter = (item: Journal, q: string): boolean =>
+	item.name.toLowerCase().includes(q.toLowerCase());
+
+const EMPTY_STATE = {
+	icon: BookOpen,
+	title: 'No journals yet',
+	description: 'Tap + to create your first journal.',
+} as const;
+
+const NO_RESULTS_STATE = {
+	icon: Search,
+	title: 'No results',
+	description: 'Try a different search term.',
+} as const;
+
+interface JournalRowProps {
+	readonly journal: Journal;
+	readonly entryCount: number;
+	readonly isDefault: boolean;
+	readonly onLongPress: (item: Journal) => void;
+}
+
+const JournalRow = memo(function JournalRow({
+	journal,
+	entryCount,
+	isDefault,
+	onLongPress,
+}: JournalRowProps): React.JSX.Element {
+	const handlePress = useCallback(() => {
+		router.push(`/journal/${journal.id}`);
+	}, [journal.id]);
+
+	const handleLongPress = useCallback(() => {
+		onLongPress(journal);
+	}, [onLongPress, journal]);
+
+	return (
+		<JournalCard
+			journal={journal}
+			entryCount={entryCount}
+			isDefault={isDefault}
+			onPress={handlePress}
+			onLongPress={handleLongPress}
+		/>
+	);
+});

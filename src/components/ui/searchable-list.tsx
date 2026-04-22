@@ -1,5 +1,5 @@
 import { type LucideIcon } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, type FlatListProps, View } from 'react-native';
 
 import { EmptyState } from '@/components/ui/empty-state';
@@ -40,10 +40,13 @@ export function SearchableList<T>({
 	const { muted } = useThemeColors();
 	const [query, setQuery] = useState('');
 
-	const handleQueryChange = (next: string) => {
-		setQuery(next);
-		onQueryChange?.(next);
-	};
+	const handleQueryChange = useCallback(
+		(next: string) => {
+			setQuery(next);
+			onQueryChange?.(next);
+		},
+		[onQueryChange],
+	);
 
 	const filteredData = useMemo(() => {
 		if (!data) return data;
@@ -54,6 +57,22 @@ export function SearchableList<T>({
 	const hasQuery = query.length > 0;
 	const empty = hasQuery ? noResultsState : emptyState;
 	const EmptyIcon = empty.icon;
+
+	const contentContainerStyle = useMemo(
+		() => ({ flexGrow: 1, paddingBottom: contentInsetBottom }),
+		[contentInsetBottom],
+	);
+
+	const emptyComponent = useMemo(
+		() => (
+			<EmptyState
+				icon={<EmptyIcon size={EMPTY_STATE_ICON_SIZE} color={muted} />}
+				title={empty.title}
+				description={empty.description}
+			/>
+		),
+		[EmptyIcon, muted, empty.title, empty.description],
+	);
 
 	return (
 		<>
@@ -72,14 +91,8 @@ export function SearchableList<T>({
 				keyExtractor={keyExtractor}
 				renderItem={renderItem}
 				contentContainerClassName="pt-2 px-4 gap-3"
-				contentContainerStyle={{ flexGrow: 1, paddingBottom: contentInsetBottom }}
-				ListEmptyComponent={
-					<EmptyState
-						icon={<EmptyIcon size={EMPTY_STATE_ICON_SIZE} color={muted} />}
-						title={empty.title}
-						description={empty.description}
-					/>
-				}
+				contentContainerStyle={contentContainerStyle}
+				ListEmptyComponent={emptyComponent}
 			/>
 		</>
 	);

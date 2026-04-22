@@ -1,6 +1,6 @@
 import { Button } from 'heroui-native';
 import { Mic } from 'lucide-react-native';
-import React, { useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { Text, View } from 'react-native';
 import type { EnrichedTextInputInstance } from 'react-native-enriched';
 import type { SharedValue } from 'react-native-reanimated';
@@ -39,22 +39,33 @@ export function useEditorTranscription({
 	);
 
 	const transcription = useWhisperTranscription(handleFinish);
+	const isLoading = transcription.status === 'loading';
 
-	return {
-		isEnabled: isVoiceInputEnabled,
-		isRecording: transcription.isRecording,
-		isLoading: transcription.status === 'loading',
-		liveText: transcription.liveText,
-		amplitudes: transcription.amplitudes,
-		toggle: transcription.toggle,
-	};
+	return useMemo(
+		() => ({
+			isEnabled: isVoiceInputEnabled,
+			isRecording: transcription.isRecording,
+			isLoading,
+			liveText: transcription.liveText,
+			amplitudes: transcription.amplitudes,
+			toggle: transcription.toggle,
+		}),
+		[
+			isVoiceInputEnabled,
+			transcription.isRecording,
+			isLoading,
+			transcription.liveText,
+			transcription.amplitudes,
+			transcription.toggle,
+		],
+	);
 }
 
 interface TranscriptionLiveTextProps {
 	readonly transcription: UseEditorTranscriptionResult;
 }
 
-export function TranscriptionLiveText({
+export const TranscriptionLiveText = memo(function TranscriptionLiveText({
 	transcription,
 }: TranscriptionLiveTextProps): React.JSX.Element | null {
 	if (
@@ -70,13 +81,13 @@ export function TranscriptionLiveText({
 			<Text className="text-sm text-muted italic">{transcription.liveText}</Text>
 		</View>
 	);
-}
+});
 
 interface TranscriptionButtonProps {
 	readonly transcription: UseEditorTranscriptionResult;
 }
 
-export function TranscriptionButton({
+export const TranscriptionButton = memo(function TranscriptionButton({
 	transcription,
 }: TranscriptionButtonProps): React.JSX.Element | null {
 	const { accent, muted } = useThemeColors();
@@ -97,4 +108,4 @@ export function TranscriptionButton({
 			)}
 		</Button>
 	);
-}
+});

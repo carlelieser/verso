@@ -1,5 +1,5 @@
 import { Card, type SurfaceVariant } from 'heroui-native';
-import React from 'react';
+import React, { memo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import type { EntrySummaryWithJournal } from '@/types/entry';
@@ -25,7 +25,7 @@ function formatWordCount(count: number): string {
 	return `${count} words`;
 }
 
-export function EntryCard({
+export const EntryCard = memo(function EntryCard({
 	entry,
 	onPress,
 	onLongPress,
@@ -60,4 +60,4 @@ export function EntryCard({
 			</Card>
 		</Pressable>
 	);
-}
+});

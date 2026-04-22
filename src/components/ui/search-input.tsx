@@ -1,5 +1,6 @@
 import { SearchField } from 'heroui-native';
-import React from 'react';
+import React, { memo } from 'react';
+import { View } from 'react-native';
 
 interface SearchInputProps {
 	readonly value: string;
@@ -8,20 +9,22 @@ interface SearchInputProps {
 	readonly endAdornment?: React.ReactNode;
 }
 
-export function SearchInput({
+export const SearchInput = memo(function SearchInput({
 	value,
 	onChangeText,
 	placeholder,
 	endAdornment,
 }: SearchInputProps): React.JSX.Element {
 	return (
-		<SearchField value={value} onChange={onChangeText}>
-			<SearchField.Group>
-				<SearchField.SearchIcon />
-				<SearchField.Input placeholder={placeholder} />
-				<SearchField.ClearButton />
-				{endAdornment}
-			</SearchField.Group>
-		</SearchField>
+		<View className={'flex flex-row w-full items-center gap-2'}>
+			<SearchField className={'w-full shrink'} value={value} onChange={onChangeText}>
+				<SearchField.Group>
+					<SearchField.SearchIcon />
+					<SearchField.Input placeholder={placeholder} />
+					<SearchField.ClearButton className={'mr-8'} />
+					<View className={'absolute right-0 mr-1'}>{endAdornment}</View>
+				</SearchField.Group>
+			</SearchField>
+		</View>
 	);
-}
+});

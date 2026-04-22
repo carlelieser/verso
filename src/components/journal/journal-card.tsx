@@ -1,5 +1,5 @@
 import { Card, type SurfaceVariant } from 'heroui-native';
-import React from 'react';
+import React, { memo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { JournalColorBanner } from '@/components/journal/journal-color-banner';
@@ -17,7 +17,7 @@ interface JournalCardProps {
 	readonly variant?: SurfaceVariant;
 }
 
-export function JournalCard({
+export const JournalCard = memo(function JournalCard({
 	journal,
 	entryCount,
 	isDefault,
@@ -50,4 +50,4 @@ export function JournalCard({
 			</Card>
 		</Pressable>
 	);
-}
+});
