@@ -7,14 +7,16 @@ import { PortalProvider } from '@gorhom/portal';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { HeroUINativeProvider } from 'heroui-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Uniwind } from 'uniwind';
 
 import { AuthGate } from '@/components/security/auth-gate';
 import { PrivacyScreen } from '@/components/security/privacy-screen';
 import { SETTINGS_THEME_KEY, isValidTheme } from '@/constants/settings';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { DatabaseProvider } from '@/providers/database-provider';
 import { DialogProvider } from '@/providers/dialog-provider';
 import { JournalLockProvider } from '@/providers/journal-lock-provider';
@@ -59,6 +61,18 @@ export default function RootLayout(): React.JSX.Element {
 	const fontsLoaded = dmSerifLoaded && googleSansLoaded && libreBaskervilleLoaded;
 	const [dbReady, setDbReady] = useState(false);
 	const handleDbReady = useCallback(() => setDbReady(true), []);
+	const { background } = useThemeColors();
+	const stackScreenOptions = useMemo(
+		() => ({
+			headerShown: false,
+			contentStyle: { backgroundColor: background },
+		}),
+		[background],
+	);
+
+	useEffect(() => {
+		SystemUI.setBackgroundColorAsync(background).catch(() => {});
+	}, [background]);
 
 	// Hot refresh preserves component state but resets Appearance.setColorScheme.
 	// The guard inside restoreTheme prevents redundant calls when already correct.
@@ -85,17 +99,16 @@ export default function RootLayout(): React.JSX.Element {
 								<JournalLockProvider>
 									<DialogProvider>
 										<ReauthProvider>
-											<Stack
-												screenOptions={{
-													headerShown: false,
-												}}
-											>
+											<Stack screenOptions={stackScreenOptions}>
 												<Stack.Screen
 													name="onboarding"
 													options={{
 														gestureEnabled: false,
 													}}
 												/>
+												<Stack.Screen name="(tabs)" />
+												<Stack.Screen name="journal/[journalId]/index" />
+												<Stack.Screen name="journal/[journalId]/entry/[entryId]" />
 											</Stack>
 											<AuthGate />
 											<PrivacyScreen />
