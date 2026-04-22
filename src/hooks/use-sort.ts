@@ -17,6 +17,7 @@ interface UseSortOptions<T> {
 export interface UseSortResult<T> {
 	readonly sortKey: string;
 	readonly sortDirection: SortDirection;
+	readonly isDefault: boolean;
 	readonly options: readonly SortOption<T>[];
 	readonly setSortKey: (key: string) => void;
 	readonly toggleDirection: () => void;
@@ -28,8 +29,10 @@ export function useSort<T>({
 	defaultKey,
 	defaultDirection = 'desc',
 }: UseSortOptions<T>): UseSortResult<T> {
-	const [sortKey, setSortKey] = useState(defaultKey ?? options[0]?.key ?? '');
+	const initialKey = defaultKey ?? options[0]?.key ?? '';
+	const [sortKey, setSortKey] = useState(initialKey);
 	const [sortDirection, setSortDirection] = useState<SortDirection>(defaultDirection);
+	const isDefault = sortKey === initialKey && sortDirection === defaultDirection;
 
 	const toggleDirection = useCallback(() => {
 		setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -50,11 +53,12 @@ export function useSort<T>({
 		() => ({
 			sortKey,
 			sortDirection,
+			isDefault,
 			options,
 			setSortKey,
 			toggleDirection,
 			sort,
 		}),
-		[sortKey, sortDirection, options, toggleDirection, sort],
+		[sortKey, sortDirection, isDefault, options, toggleDirection, sort],
 	);
 }

@@ -13,7 +13,8 @@ interface SortMenuProps<T> {
 }
 
 export function SortMenu<T>({ sort }: SortMenuProps<T>): React.JSX.Element {
-	const { foreground } = useThemeColors();
+	const { foreground, muted } = useThemeColors();
+	const triggerColor = sort.isDefault ? muted : foreground;
 	const activeArrow = sort.sortDirection === 'asc' ? ArrowUp : ArrowDown;
 
 	const items = useMemo<readonly PopoverMenuItem[]>(
@@ -36,8 +37,8 @@ export function SortMenu<T>({ sort }: SortMenuProps<T>): React.JSX.Element {
 	return (
 		<PopoverMenu
 			trigger={
-				<Button variant="ghost" isIconOnly>
-					<ArrowUpDown size={TRIGGER_ICON_SIZE} color={foreground} />
+				<Button variant="ghost" size={'sm'} isIconOnly>
+					<ArrowUpDown size={TRIGGER_ICON_SIZE} color={triggerColor} />
 				</Button>
 			}
 			items={items}
