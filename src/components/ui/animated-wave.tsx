@@ -90,11 +90,7 @@ export function AutoSizedWave({
 
 	return (
 		<View style={[{ height, overflow: 'hidden' }, containerStyle]} onLayout={handleLayout}>
-			<AnimatedWave
-				width={width + WAVE_RIGHT_OVERSHOOT}
-				height={height}
-				{...waveProps}
-			/>
+			<AnimatedWave width={width + WAVE_RIGHT_OVERSHOOT} height={height} {...waveProps} />
 		</View>
 	);
 }
